@@ -12,6 +12,11 @@ import EstablishmentDashboard from "./pages/establishment/Dashboard";
 import EstablishmentOrders from "./pages/establishment/Orders";
 import EstablishmentMenu from "./pages/establishment/Menu";
 import EstablishmentSettings from "./pages/establishment/Settings";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminEstablishments from "./pages/admin/Establishments";
+import AdminUsers from "./pages/admin/Users";
+import AdminReports from "./pages/admin/Reports";
+import AdminSettings from "./pages/admin/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +37,11 @@ const App = () => (
             <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
             <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />
             <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />
+            <Route path="/admin/usuarios" element={<AdminUsers />} />
+            <Route path="/admin/relatorios" element={<AdminReports />} />
+            <Route path="/admin/configuracoes" element={<AdminSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
