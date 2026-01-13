@@ -17,6 +17,11 @@ import AdminEstablishments from "./pages/admin/Establishments";
 import AdminUsers from "./pages/admin/Users";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
+import DriverDashboard from "./pages/driver/Dashboard";
+import AvailableOrders from "./pages/driver/AvailableOrders";
+import InRoute from "./pages/driver/InRoute";
+import DriverHistory from "./pages/driver/History";
+import DriverSettings from "./pages/driver/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +47,11 @@ const App = () => (
             <Route path="/admin/usuarios" element={<AdminUsers />} />
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/configuracoes" element={<AdminSettings />} />
+            <Route path="/entregador" element={<DriverDashboard />} />
+            <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
+            <Route path="/entregador/em-rota" element={<InRoute />} />
+            <Route path="/entregador/historico" element={<DriverHistory />} />
+            <Route path="/entregador/configuracoes" element={<DriverSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
