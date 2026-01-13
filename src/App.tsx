@@ -7,6 +7,11 @@ import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Restaurant from "./pages/Restaurant";
 import Cart from "./pages/Cart";
+import Auth from "./pages/Auth";
+import EstablishmentDashboard from "./pages/establishment/Dashboard";
+import EstablishmentOrders from "./pages/establishment/Orders";
+import EstablishmentMenu from "./pages/establishment/Menu";
+import EstablishmentSettings from "./pages/establishment/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,7 +27,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/restaurant/:id" element={<Restaurant />} />
             <Route path="/cart" element={<Cart />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/estabelecimento" element={<EstablishmentDashboard />} />
+            <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
+            <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />
+            <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
