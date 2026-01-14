@@ -34,15 +34,31 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) throw error;
 
+      // Check user roles to redirect properly
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id);
+
       toast.success("Login realizado com sucesso!");
-      navigate("/");
+
+      // Redirect based on role
+      if (roles?.some((r) => r.role === "establishment")) {
+        navigate("/estabelecimento");
+      } else if (roles?.some((r) => r.role === "admin")) {
+        navigate("/admin");
+      } else if (roles?.some((r) => r.role === "driver")) {
+        navigate("/entregador");
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer login");
     } finally {
