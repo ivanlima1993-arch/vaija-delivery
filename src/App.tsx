@@ -18,6 +18,7 @@ import EstablishmentMenu from "./pages/establishment/Menu";
 import EstablishmentSettings from "./pages/establishment/Settings";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEstablishments from "./pages/admin/Establishments";
+import AdminCreateEstablishment from "./pages/admin/CreateEstablishment";
 import AdminUsers from "./pages/admin/Users";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />
+            <Route path="/admin/estabelecimentos/novo" element={<AdminCreateEstablishment />} />
             <Route path="/admin/usuarios" element={<AdminUsers />} />
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/configuracoes" element={<AdminSettings />} />

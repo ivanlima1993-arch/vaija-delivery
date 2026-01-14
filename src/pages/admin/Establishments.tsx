@@ -189,6 +189,10 @@ const AdminEstablishments = () => {
                 </p>
               </div>
             </div>
+            <Button onClick={() => navigate("/admin/estabelecimentos/novo")}>
+              <Store className="w-4 h-4 mr-2" />
+              Novo Estabelecimento
+            </Button>
           </div>
         </header>
 

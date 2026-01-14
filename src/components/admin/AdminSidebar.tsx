@@ -37,6 +37,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       badge: pendingEstablishments > 0 ? pendingEstablishments : undefined,
     },
     {
+      icon: Store,
+      label: "Novo Estabelecimento",
+      path: "/admin/estabelecimentos/novo",
+    },
+    {
       icon: Users,
       label: "Usuários",
       path: "/admin/usuarios",
