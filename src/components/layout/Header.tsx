@@ -2,13 +2,24 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ShoppingBag, User, Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const navigate = useNavigate();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+      setMobileMenuOpen(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border">
@@ -32,16 +43,18 @@ const Header = () => {
           </button>
 
           {/* Search - Desktop */}
-          <div className="hidden lg:flex flex-1 max-w-md mx-6">
+          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-md mx-6">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar restaurantes, pratos..."
                 className="w-full h-10 pl-10 pr-4 rounded-full bg-muted border-0 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
-          </div>
+          </form>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
@@ -60,9 +73,11 @@ const Header = () => {
               </Button>
             </Link>
             
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <User className="w-5 h-5" />
-            </Button>
+            <Link to="/perfil">
+              <Button variant="ghost" size="icon" className="hidden sm:flex">
+                <User className="w-5 h-5" />
+              </Button>
+            </Link>
 
             <Button
               variant="ghost"
@@ -73,9 +88,11 @@ const Header = () => {
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
 
-            <Button variant="hero" size="sm" className="hidden sm:flex">
-              Entrar
-            </Button>
+            <Link to="/auth">
+              <Button variant="hero" size="sm" className="hidden sm:flex">
+                Entrar
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -89,23 +106,34 @@ const Header = () => {
               className="md:hidden overflow-hidden"
             >
               <div className="py-4 space-y-3">
-                <div className="relative">
+                <form onSubmit={handleSearch} className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar restaurantes, pratos..."
                     className="w-full h-11 pl-10 pr-4 rounded-xl bg-muted border-0 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
-                </div>
+                </form>
                 
                 <button className="flex items-center gap-2 w-full px-4 py-3 rounded-xl bg-muted hover:bg-accent transition-colors">
                   <MapPin className="w-4 h-4 text-primary" />
                   <span className="text-sm font-medium">Selecionar endereço</span>
                 </button>
 
-                <Button variant="hero" className="w-full">
-                  Entrar ou Cadastrar
-                </Button>
+                <Link to="/perfil" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full mb-2">
+                    <User className="w-4 h-4 mr-2" />
+                    Meu Perfil
+                  </Button>
+                </Link>
+
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="hero" className="w-full">
+                    Entrar ou Cadastrar
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           )}
