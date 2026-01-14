@@ -246,34 +246,15 @@ const Auth = () => {
           {/* Mode Switchers */}
           <div className="mt-6 space-y-3">
             {mode === "login" ? (
-              <>
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setMode("register")}
-                    className="text-primary hover:underline text-sm"
-                  >
-                    Não tem conta? Cadastre-se
-                  </button>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">ou</span>
-                  </div>
-                </div>
-                <Button
+              <div className="text-center">
+                <button
                   type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setMode("register-establishment")}
+                  onClick={() => setMode("register")}
+                  className="text-primary hover:underline text-sm"
                 >
-                  <Store className="w-4 h-4 mr-2" />
-                  Quero cadastrar meu estabelecimento
-                </Button>
-              </>
+                  Não tem conta? Cadastre-se
+                </button>
+              </div>
             ) : (
               <div className="text-center">
                 <button
