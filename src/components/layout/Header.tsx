@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, ShoppingBag, User, Menu, X, Search } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import AddressModal from "@/components/address/AddressModal";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -37,10 +38,9 @@ const Header = () => {
           </Link>
 
           {/* Location - Desktop */}
-          <button className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-muted hover:bg-accent transition-colors">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Selecionar endereço</span>
-          </button>
+          <div className="hidden md:block">
+            <AddressModal />
+          </div>
 
           {/* Search - Desktop */}
           <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-md mx-6">
@@ -117,10 +117,9 @@ const Header = () => {
                   />
                 </form>
                 
-                <button className="flex items-center gap-2 w-full px-4 py-3 rounded-xl bg-muted hover:bg-accent transition-colors">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Selecionar endereço</span>
-                </button>
+                <div className="w-full">
+                  <AddressModal />
+                </div>
 
                 <Link to="/perfil" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full mb-2">
