@@ -22,70 +22,74 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        const user = session?.user ?? null;
-        
-        let isEstablishment = false;
-        let isAdmin = false;
-        let isDriver = false;
+    const fetchRoles = async (userId: string) => {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
 
-        if (user) {
-          // Fetch user roles
-          const { data: roles } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", user.id);
+      return {
+        isEstablishment: roles?.some((r) => r.role === "establishment") ?? false,
+        isAdmin: roles?.some((r) => r.role === "admin") ?? false,
+        isDriver: roles?.some((r) => r.role === "driver") ?? false,
+      };
+    };
 
-          if (roles) {
-            isEstablishment = roles.some((r) => r.role === "establishment");
-            isAdmin = roles.some((r) => r.role === "admin");
-            isDriver = roles.some((r) => r.role === "driver");
-          }
-        }
+    // Get initial session first
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
 
+      if (user) {
+        const roles = await fetchRoles(user.id);
         setAuthState({
           user,
           session,
           loading: false,
-          isEstablishment,
-          isAdmin,
-          isDriver,
+          ...roles,
+        });
+      } else {
+        setAuthState({
+          user: null,
+          session: null,
+          loading: false,
+          isEstablishment: false,
+          isAdmin: false,
+          isDriver: false,
         });
       }
-    );
+    };
 
-    // Then get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const user = session?.user ?? null;
-      
-      let isEstablishment = false;
-      let isAdmin = false;
-      let isDriver = false;
+    initializeAuth();
 
-      if (user) {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user ?? null;
 
-        if (roles) {
-          isEstablishment = roles.some((r) => r.role === "establishment");
-          isAdmin = roles.some((r) => r.role === "admin");
-          isDriver = roles.some((r) => r.role === "driver");
+        if (user) {
+          // Use setTimeout to avoid Supabase deadlock
+          setTimeout(async () => {
+            const roles = await fetchRoles(user.id);
+            setAuthState({
+              user,
+              session,
+              loading: false,
+              ...roles,
+            });
+          }, 0);
+        } else {
+          setAuthState({
+            user: null,
+            session: null,
+            loading: false,
+            isEstablishment: false,
+            isAdmin: false,
+            isDriver: false,
+          });
         }
       }
-
-      setAuthState({
-        user,
-        session,
-        loading: false,
-        isEstablishment,
-        isAdmin,
-        isDriver,
-      });
-    });
+    );
 
     return () => {
       subscription.unsubscribe();
