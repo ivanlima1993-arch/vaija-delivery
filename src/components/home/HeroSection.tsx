@@ -1,7 +1,19 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, Zap, Clock, Shield } from "lucide-react";
 
 const HeroSection = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <section className="relative overflow-hidden gradient-hero">
       {/* Background decoration */}
@@ -49,17 +61,22 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="max-w-xl mx-auto mb-10"
           >
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="O que você quer comer hoje?"
                 className="w-full h-14 pl-12 pr-32 rounded-2xl bg-card shadow-card border border-border text-base focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 gradient-primary text-primary-foreground font-semibold rounded-xl shadow-soft hover:shadow-glow transition-all active:scale-[0.98]">
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 gradient-primary text-primary-foreground font-semibold rounded-xl shadow-soft hover:shadow-glow transition-all active:scale-[0.98]"
+              >
                 Buscar
               </button>
-            </div>
+            </form>
           </motion.div>
 
           {/* Features */}

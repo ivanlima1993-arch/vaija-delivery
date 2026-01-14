@@ -9,6 +9,9 @@ import Restaurant from "./pages/Restaurant";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Search from "./pages/Search";
+import Categories from "./pages/Categories";
+import Restaurants from "./pages/Restaurants";
 import EstablishmentDashboard from "./pages/establishment/Dashboard";
 import EstablishmentOrders from "./pages/establishment/Orders";
 import EstablishmentMenu from "./pages/establishment/Menu";
@@ -40,6 +43,10 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/perfil" element={<Profile />} />
+            <Route path="/buscar" element={<Search />} />
+            <Route path="/categorias" element={<Categories />} />
+            <Route path="/categorias/:slug" element={<Categories />} />
+            <Route path="/restaurantes" element={<Restaurants />} />
             <Route path="/estabelecimento" element={<EstablishmentDashboard />} />
             <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
             <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />

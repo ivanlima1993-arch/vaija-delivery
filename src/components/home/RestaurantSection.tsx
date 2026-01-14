@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import RestaurantCard from "./RestaurantCard";
 
 const restaurants = [
@@ -74,9 +75,9 @@ const RestaurantSection = () => {
             <h2 className="font-display text-xl font-bold">Restaurantes</h2>
             <p className="text-sm text-muted-foreground">Os melhores da região</p>
           </div>
-          <button className="text-sm font-medium text-primary hover:underline">
+          <Link to="/restaurantes" className="text-sm font-medium text-primary hover:underline">
             Ver todos
-          </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
