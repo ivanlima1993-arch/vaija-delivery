@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Restaurant from "./pages/Restaurant";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
+import EstablishmentAuth from "./pages/auth/EstablishmentAuth";
+import DriverAuth from "./pages/auth/DriverAuth";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Categories from "./pages/Categories";
@@ -44,6 +46,8 @@ const App = () => (
             <Route path="/restaurant/:id" element={<Restaurant />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/estabelecimento/auth" element={<EstablishmentAuth />} />
+            <Route path="/entregador/auth" element={<DriverAuth />} />
             <Route path="/perfil" element={<Profile />} />
             <Route path="/buscar" element={<Search />} />
             <Route path="/categorias" element={<Categories />} />
