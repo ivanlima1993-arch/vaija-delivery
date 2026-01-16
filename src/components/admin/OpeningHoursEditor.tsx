@@ -45,15 +45,26 @@ interface OpeningHoursEditorProps {
 }
 
 const OpeningHoursEditor = ({ value, onChange }: OpeningHoursEditorProps) => {
+  // Merge with defaults to ensure all days exist
+  const safeValue: OpeningHours = {
+    monday: value?.monday ?? defaultOpeningHours.monday,
+    tuesday: value?.tuesday ?? defaultOpeningHours.tuesday,
+    wednesday: value?.wednesday ?? defaultOpeningHours.wednesday,
+    thursday: value?.thursday ?? defaultOpeningHours.thursday,
+    friday: value?.friday ?? defaultOpeningHours.friday,
+    saturday: value?.saturday ?? defaultOpeningHours.saturday,
+    sunday: value?.sunday ?? defaultOpeningHours.sunday,
+  };
+
   const handleDayChange = (
     day: keyof OpeningHours,
     field: keyof DaySchedule,
     fieldValue: boolean | string
   ) => {
     onChange({
-      ...value,
+      ...safeValue,
       [day]: {
-        ...value[day],
+        ...safeValue[day],
         [field]: fieldValue,
       },
     });
@@ -75,12 +86,12 @@ const OpeningHoursEditor = ({ value, onChange }: OpeningHoursEditorProps) => {
             <div className="flex items-center justify-between sm:w-40">
               <span className="font-medium text-sm">{label}</span>
               <Switch
-                checked={value[key].isOpen}
+                checked={safeValue[key].isOpen}
                 onCheckedChange={(checked) => handleDayChange(key, "isOpen", checked)}
               />
             </div>
 
-            {value[key].isOpen ? (
+            {safeValue[key].isOpen ? (
               <div className="flex items-center gap-2 flex-1">
                 <div className="flex items-center gap-2">
                   <Label htmlFor={`${key}-open`} className="text-sm text-muted-foreground whitespace-nowrap">
@@ -89,7 +100,7 @@ const OpeningHoursEditor = ({ value, onChange }: OpeningHoursEditorProps) => {
                   <Input
                     id={`${key}-open`}
                     type="time"
-                    value={value[key].openTime}
+                    value={safeValue[key].openTime}
                     onChange={(e) => handleDayChange(key, "openTime", e.target.value)}
                     className="w-28"
                   />
@@ -102,7 +113,7 @@ const OpeningHoursEditor = ({ value, onChange }: OpeningHoursEditorProps) => {
                   <Input
                     id={`${key}-close`}
                     type="time"
-                    value={value[key].closeTime}
+                    value={safeValue[key].closeTime}
                     onChange={(e) => handleDayChange(key, "closeTime", e.target.value)}
                     className="w-28"
                   />
