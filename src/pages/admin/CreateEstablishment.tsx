@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import OpeningHoursEditor, { 
+  OpeningHours, 
+  defaultOpeningHours 
+} from "@/components/admin/OpeningHoursEditor";
 import { toast } from "sonner";
 import {
   Store,
@@ -29,6 +33,7 @@ import {
   Clock,
   DollarSign,
 } from "lucide-react";
+import type { Json } from "@/integrations/supabase/types";
 
 const CATEGORIES = [
   { value: "restaurant", label: "Restaurante" },
@@ -83,7 +88,7 @@ const CreateEstablishment = () => {
   });
 
   const [autoApprove, setAutoApprove] = useState(true);
-
+  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
@@ -160,6 +165,7 @@ const CreateEstablishment = () => {
         min_delivery_time: Number(establishmentData.minDeliveryTime) || 30,
         max_delivery_time: Number(establishmentData.maxDeliveryTime) || 60,
         is_approved: autoApprove,
+        opening_hours: JSON.parse(JSON.stringify(openingHours)) as Json,
       });
 
       if (establishmentError) throw establishmentError;
@@ -504,6 +510,13 @@ const CreateEstablishment = () => {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Opening Hours */}
+            <Card>
+              <CardContent className="pt-6">
+                <OpeningHoursEditor value={openingHours} onChange={setOpeningHours} />
               </CardContent>
             </Card>
 

@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import OpeningHoursEditor, { 
+  OpeningHours, 
+  defaultOpeningHours 
+} from "@/components/admin/OpeningHoursEditor";
 import { toast } from "sonner";
 import {
   Store,
@@ -27,9 +31,7 @@ import {
   DollarSign,
   Save,
 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-
-type Establishment = Database["public"]["Tables"]["establishments"]["Row"];
+import type { Json } from "@/integrations/supabase/types";
 
 const CATEGORIES = [
   { value: "restaurant", label: "Restaurante" },
@@ -61,6 +63,7 @@ const EditEstablishment = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
 
   const [establishmentData, setEstablishmentData] = useState({
     name: "",
@@ -121,6 +124,11 @@ const EditEstablishment = () => {
           isApproved: data.is_approved || false,
           isOpen: data.is_open || false,
         });
+        
+        // Parse opening hours from database
+        if (data.opening_hours && typeof data.opening_hours === 'object') {
+          setOpeningHours(data.opening_hours as unknown as OpeningHours);
+        }
       }
     } catch (error) {
       toast.error("Erro ao carregar estabelecimento");
@@ -161,6 +169,7 @@ const EditEstablishment = () => {
           max_delivery_time: Number(establishmentData.maxDeliveryTime) || 60,
           is_approved: establishmentData.isApproved,
           is_open: establishmentData.isOpen,
+          opening_hours: JSON.parse(JSON.stringify(openingHours)) as Json,
         })
         .eq("id", id);
 
@@ -468,6 +477,13 @@ const EditEstablishment = () => {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Opening Hours */}
+            <Card>
+              <CardContent className="pt-6">
+                <OpeningHoursEditor value={openingHours} onChange={setOpeningHours} />
               </CardContent>
             </Card>
 
