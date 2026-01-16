@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import { UtensilsCrossed, ShoppingCart, Pill, Gift, Coffee, IceCream, Pizza, Sandwich } from "lucide-react";
 
 const categories = [
-  { id: "restaurantes", name: "Restaurantes", icon: UtensilsCrossed, color: "bg-primary/10 text-primary" },
-  { id: "mercados", name: "Mercados", icon: ShoppingCart, color: "bg-success/10 text-success" },
-  { id: "farmacias", name: "Farmácias", icon: Pill, color: "bg-info/10 text-info" },
-  { id: "presentes", name: "Presentes", icon: Gift, color: "bg-warning/10 text-warning" },
-  { id: "cafeteria", name: "Cafeteria", icon: Coffee, color: "bg-amber-100 text-amber-600" },
-  { id: "sorvetes", name: "Sorvetes", icon: IceCream, color: "bg-pink-100 text-pink-600" },
-  { id: "pizzarias", name: "Pizzarias", icon: Pizza, color: "bg-orange-100 text-orange-600" },
-  { id: "lanches", name: "Lanches", icon: Sandwich, color: "bg-yellow-100 text-yellow-600" },
+  { id: "restaurant", name: "Restaurantes", icon: UtensilsCrossed, color: "bg-primary/10 text-primary" },
+  { id: "market", name: "Mercados", icon: ShoppingCart, color: "bg-success/10 text-success" },
+  { id: "pharmacy", name: "Farmácias", icon: Pill, color: "bg-info/10 text-info" },
+  { id: "gifts", name: "Presentes", icon: Gift, color: "bg-warning/10 text-warning" },
+  { id: "coffee", name: "Cafeteria", icon: Coffee, color: "bg-amber-100 text-amber-600" },
+  { id: "ice-cream", name: "Sorvetes", icon: IceCream, color: "bg-pink-100 text-pink-600" },
+  { id: "pizza", name: "Pizzarias", icon: Pizza, color: "bg-orange-100 text-orange-600" },
+  { id: "fast-food", name: "Lanches", icon: Sandwich, color: "bg-yellow-100 text-yellow-600" },
 ];
 
 const CategorySection = () => {
