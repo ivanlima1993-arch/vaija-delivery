@@ -1,122 +1,184 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Star, Clock, Bike, Info, Plus, Minus, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Star, Clock, Bike, Info, Plus, Store, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-const restaurantData = {
-  id: 1,
-  name: "Burger House Premium",
-  image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&h=400&fit=crop",
-  logo: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=200&h=200&fit=crop",
-  category: "Hambúrgueres • Lanches",
-  rating: 4.8,
-  ratingCount: 234,
-  deliveryTime: "25-35 min",
-  deliveryFee: "R$ 5,99",
-  minOrder: "R$ 20,00",
-  isOpen: true,
-  description: "Os melhores hambúrgueres artesanais da cidade. Carnes selecionadas, ingredientes frescos e muito sabor.",
+type Establishment = Database["public"]["Tables"]["establishments"]["Row"];
+type Product = Database["public"]["Tables"]["products"]["Row"];
+type ProductCategory = Database["public"]["Tables"]["product_categories"]["Row"];
+
+interface OpeningHours {
+  [key: string]: {
+    isOpen: boolean;
+    openTime: string;
+    closeTime: string;
+  };
+}
+
+const DAYS_PT: Record<string, string> = {
+  monday: "Segunda",
+  tuesday: "Terça",
+  wednesday: "Quarta",
+  thursday: "Quinta",
+  friday: "Sexta",
+  saturday: "Sábado",
+  sunday: "Domingo",
 };
-
-const menuCategories = [
-  {
-    id: 1,
-    name: "Mais Pedidos",
-    items: [
-      {
-        id: 101,
-        name: "Smash Burger Duplo",
-        description: "Dois hambúrgueres smash de 90g, queijo cheddar, cebola caramelizada, picles e molho especial",
-        price: 32.9,
-        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop",
-        popular: true,
-      },
-      {
-        id: 102,
-        name: "Classic Bacon",
-        description: "Hambúrguer artesanal 180g, bacon crocante, queijo, alface, tomate e maionese",
-        price: 28.9,
-        image: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Hambúrgueres",
-    items: [
-      {
-        id: 201,
-        name: "Cheese Burger",
-        description: "Hambúrguer 150g, queijo cheddar derretido, cebola e molho especial",
-        price: 24.9,
-        image: "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=300&h=200&fit=crop",
-      },
-      {
-        id: 202,
-        name: "BBQ Monster",
-        description: "Hambúrguer duplo 360g, onion rings, bacon, cheddar e molho BBQ",
-        price: 42.9,
-        image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=300&h=200&fit=crop",
-        popular: true,
-      },
-      {
-        id: 203,
-        name: "Veggie Deluxe",
-        description: "Hambúrguer vegetal, queijo, cogumelos, rúcula e maionese de ervas",
-        price: 29.9,
-        image: "https://images.unsplash.com/photo-1520072959219-c595dc870360?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Bebidas",
-    items: [
-      {
-        id: 301,
-        name: "Refrigerante Lata",
-        description: "Coca-Cola, Guaraná ou Fanta 350ml",
-        price: 6.9,
-        image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=300&h=200&fit=crop",
-      },
-      {
-        id: 302,
-        name: "Milkshake",
-        description: "Chocolate, Morango ou Ovomaltine 400ml",
-        price: 16.9,
-        image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-];
 
 const Restaurant = () => {
   const { id } = useParams();
   const { addItem, items, total } = useCart();
-  const [selectedCategory, setSelectedCategory] = useState(menuCategories[0].id);
+  const [establishment, setEstablishment] = useState<Establishment | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showHours, setShowHours] = useState(false);
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleAddItem = (item: { id: number; name: string; price: number; image: string }) => {
-    addItem(item);
-    toast.success(`${item.name} adicionado ao carrinho!`, {
+  useEffect(() => {
+    if (id) {
+      fetchEstablishment();
+      fetchProducts();
+      fetchCategories();
+    }
+  }, [id]);
+
+  const fetchEstablishment = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("establishments")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setEstablishment(data);
+    } catch (error) {
+      console.error("Erro ao carregar estabelecimento:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("establishment_id", id)
+        .eq("is_available", true)
+        .order("sort_order");
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("product_categories")
+        .select("*")
+        .eq("establishment_id", id)
+        .eq("is_active", true)
+        .order("sort_order");
+
+      if (error) throw error;
+      setCategories(data || []);
+      if (data && data.length > 0) {
+        setSelectedCategory(data[0].id);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar categorias:", error);
+    }
+  };
+
+  const handleAddItem = (product: Product) => {
+    addItem({
+      id: parseInt(product.id.substring(0, 8), 16),
+      name: product.name,
+      price: Number(product.price),
+      image: product.image_url || "",
+    });
+    toast.success(`${product.name} adicionado ao carrinho!`, {
       position: "bottom-center",
     });
   };
+
+  const getOpeningHours = (): OpeningHours | null => {
+    if (!establishment?.opening_hours) return null;
+    return establishment.opening_hours as unknown as OpeningHours;
+  };
+
+  const getCurrentDayStatus = () => {
+    const hours = getOpeningHours();
+    if (!hours) return null;
+
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const today = days[new Date().getDay()];
+    const todayHours = hours[today];
+
+    if (!todayHours || !todayHours.isOpen) {
+      return { isOpen: false, text: "Fechado hoje" };
+    }
+
+    return {
+      isOpen: true,
+      text: `${todayHours.openTime} - ${todayHours.closeTime}`,
+    };
+  };
+
+  const filteredProducts = selectedCategory
+    ? products.filter((p) => p.category_id === selectedCategory)
+    : products;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!establishment) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <Store className="w-16 h-16 text-muted-foreground" />
+        <h1 className="text-xl font-semibold">Estabelecimento não encontrado</h1>
+        <Link to="/">
+          <Button>Voltar para início</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const currentStatus = getCurrentDayStatus();
+  const openingHours = getOpeningHours();
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header Image */}
       <div className="relative h-48 md:h-64">
-        <img
-          src={restaurantData.image}
-          alt={restaurantData.name}
-          className="w-full h-full object-cover"
-        />
+        {establishment.cover_url ? (
+          <img
+            src={establishment.cover_url}
+            alt={establishment.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-        
+
         {/* Back Button */}
         <Link to="/">
           <Button
@@ -137,117 +199,209 @@ const Restaurant = () => {
           className="bg-card rounded-2xl shadow-card p-6"
         >
           <div className="flex gap-4">
-            <img
-              src={restaurantData.logo}
-              alt={restaurantData.name}
-              className="w-20 h-20 rounded-xl object-cover shadow-soft"
-            />
+            {establishment.logo_url ? (
+              <img
+                src={establishment.logo_url}
+                alt={establishment.name}
+                className="w-20 h-20 rounded-xl object-cover shadow-soft"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center shadow-soft">
+                <Store className="w-8 h-8 text-muted-foreground" />
+              </div>
+            )}
             <div className="flex-1">
               <h1 className="font-display text-xl md:text-2xl font-bold mb-1">
-                {restaurantData.name}
+                {establishment.name}
               </h1>
-              <p className="text-sm text-muted-foreground mb-2">{restaurantData.category}</p>
-              
+              <p className="text-sm text-muted-foreground mb-2 capitalize">
+                {establishment.category}
+              </p>
+
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 fill-warning text-warning" />
-                  <span className="font-semibold">{restaurantData.rating}</span>
-                  <span className="text-muted-foreground">({restaurantData.ratingCount})</span>
+                  <span className="font-semibold">{establishment.rating || 0}</span>
+                  <span className="text-muted-foreground">
+                    ({establishment.total_reviews || 0})
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="w-4 h-4" />
-                  <span>{restaurantData.deliveryTime}</span>
+                  <span>
+                    {establishment.min_delivery_time}-{establishment.max_delivery_time} min
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 text-success">
                   <Bike className="w-4 h-4" />
-                  <span className="font-medium">{restaurantData.deliveryFee}</span>
+                  <span className="font-medium">
+                    {Number(establishment.delivery_fee) === 0
+                      ? "Grátis"
+                      : `R$ ${Number(establishment.delivery_fee).toFixed(2).replace(".", ",")}`}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-4 p-3 rounded-xl bg-accent/50">
-            <Info className="w-4 h-4 text-accent-foreground shrink-0" />
-            <p className="text-sm text-accent-foreground">{restaurantData.description}</p>
-          </div>
+          {/* Description */}
+          {establishment.description && (
+            <div className="flex items-center gap-2 mt-4 p-3 rounded-xl bg-accent/50">
+              <Info className="w-4 h-4 text-accent-foreground shrink-0" />
+              <p className="text-sm text-accent-foreground">{establishment.description}</p>
+            </div>
+          )}
+
+          {/* Opening Hours */}
+          {openingHours && (
+            <div className="mt-4">
+              <button
+                onClick={() => setShowHours(!showHours)}
+                className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              >
+                <Clock className="w-4 h-4" />
+                <span>
+                  {currentStatus?.isOpen ? "Aberto" : "Fechado"}
+                  {currentStatus?.text && ` • ${currentStatus.text}`}
+                </span>
+                <span className="text-muted-foreground">
+                  {showHours ? "▲" : "▼"}
+                </span>
+              </button>
+
+              <AnimatePresence>
+                {showHours && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 p-3 bg-muted/50 rounded-lg space-y-1">
+                      {Object.entries(DAYS_PT).map(([key, label]) => {
+                        const dayHours = openingHours[key];
+                        return (
+                          <div
+                            key={key}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="text-muted-foreground">{label}</span>
+                            <span className={dayHours?.isOpen ? "" : "text-muted-foreground"}>
+                              {dayHours?.isOpen
+                                ? `${dayHours.openTime} - ${dayHours.closeTime}`
+                                : "Fechado"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Address */}
+          {(establishment.address || establishment.neighborhood) && (
+            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+              <MapPin className="w-4 h-4" />
+              <span>
+                {establishment.address}
+                {establishment.address && establishment.neighborhood && ", "}
+                {establishment.neighborhood}
+                {establishment.city && ` - ${establishment.city}`}
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Category Tabs */}
-        <div className="sticky top-16 z-40 bg-background py-4 -mx-4 px-4 md:mx-0 md:px-0">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {menuCategories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                  selectedCategory === category.id
-                    ? "gradient-primary text-primary-foreground shadow-glow"
-                    : "bg-muted text-muted-foreground hover:bg-accent"
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
+        {categories.length > 0 && (
+          <div className="sticky top-16 z-40 bg-background py-4 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                    selectedCategory === category.id
+                      ? "gradient-primary text-primary-foreground shadow-glow"
+                      : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Menu Items */}
-        <div className="py-4 space-y-8 pb-32">
-          {menuCategories.map((category) => (
-            <motion.div
-              key={category.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-4"
-            >
-              <h2 className="font-display text-lg font-bold">{category.name}</h2>
-              
-              <div className="space-y-3">
-                {category.items.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex gap-4 p-4 bg-card rounded-xl shadow-soft hover:shadow-card transition-shadow"
+        <div className="py-4 space-y-4 pb-32">
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Store className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum produto disponível no momento</p>
+            </div>
+          ) : (
+            filteredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex gap-4 p-4 bg-card rounded-xl shadow-soft hover:shadow-card transition-shadow"
+              >
+                <div className="flex-1">
+                  <div className="flex items-start gap-2">
+                    <h3 className="font-semibold">{product.name}</h3>
+                    {product.is_featured && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold gradient-primary text-primary-foreground rounded-full">
+                        TOP
+                      </span>
+                    )}
+                  </div>
+                  {product.description && (
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {product.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 mt-2">
+                    {product.original_price && Number(product.original_price) > Number(product.price) && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        R$ {Number(product.original_price).toFixed(2).replace(".", ",")}
+                      </span>
+                    )}
+                    <p className="font-display font-bold text-lg text-primary">
+                      R$ {Number(product.price).toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="relative shrink-0">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-24 h-24 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center">
+                      <Store className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="hero"
+                    className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full"
+                    onClick={() => handleAddItem(product)}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-start gap-2">
-                        <h3 className="font-semibold">{item.name}</h3>
-                        {item.popular && (
-                          <span className="px-2 py-0.5 text-[10px] font-bold gradient-primary text-primary-foreground rounded-full">
-                            TOP
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {item.description}
-                      </p>
-                      <p className="font-display font-bold text-lg mt-2 text-primary">
-                        R$ {item.price.toFixed(2).replace(".", ",")}
-                      </p>
-                    </div>
-                    
-                    <div className="relative shrink-0">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-24 h-24 rounded-xl object-cover"
-                      />
-                      <Button
-                        size="icon"
-                        variant="hero"
-                        className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full"
-                        onClick={() => handleAddItem(item)}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </div>
 
