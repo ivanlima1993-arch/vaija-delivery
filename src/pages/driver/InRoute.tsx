@@ -3,11 +3,13 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDriverLocationTracker } from "@/hooks/useDriverLocationTracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import DriverSidebar from "@/components/driver/DriverSidebar";
+import DriverTrackingMap from "@/components/tracking/DriverTrackingMap";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +30,7 @@ import {
   User,
   MessageCircle,
   Bike,
+  Radio,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -43,6 +46,36 @@ const InRoute = () => {
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Location tracker hook - initialized after order is loaded
+  const {
+    isTracking,
+    lastUpdate,
+    startTracking,
+    stopTracking,
+    isSupported: isGeoSupported,
+  } = useDriverLocationTracker({
+    orderId: order?.id || "",
+    driverId: user?.id || "",
+    updateIntervalMs: 5000,
+    onError: (error) => console.error("Tracking error:", error),
+  });
+
+  // Auto-start tracking when order is loaded
+  useEffect(() => {
+    if (order && user && isGeoSupported && !isTracking) {
+      startTracking();
+    }
+  }, [order, user, isGeoSupported]);
+
+  // Stop tracking when leaving page or order is delivered
+  useEffect(() => {
+    return () => {
+      if (isTracking) {
+        stopTracking();
+      }
+    };
+  }, [isTracking, stopTracking]);
 
   useEffect(() => {
     if (!authLoading && (!user || !isDriver)) {
@@ -180,10 +213,57 @@ const InRoute = () => {
         </header>
 
         <div className="p-4 lg:p-6 max-w-2xl mx-auto space-y-4">
+          {/* Live Tracking Map */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Radio className="w-4 h-4" />
+                    Rastreamento ao Vivo
+                  </div>
+                  <Badge variant={isTracking ? "default" : "secondary"} className={isTracking ? "bg-green-500" : ""}>
+                    {isTracking ? "Ativo" : "Pausado"}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <DriverTrackingMap
+                  orderId={order.id}
+                  deliveryLatitude={order.delivery_latitude}
+                  deliveryLongitude={order.delivery_longitude}
+                  establishmentLatitude={establishment?.latitude ? Number(establishment.latitude) : undefined}
+                  establishmentLongitude={establishment?.longitude ? Number(establishment.longitude) : undefined}
+                  className="h-48 rounded-lg"
+                />
+                {lastUpdate && (
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    Última atualização: {lastUpdate.toLocaleTimeString()}
+                  </p>
+                )}
+                <div className="flex gap-2 mt-3">
+                  {isTracking ? (
+                    <Button variant="outline" size="sm" className="flex-1" onClick={stopTracking}>
+                      Pausar Rastreamento
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="flex-1" onClick={startTracking}>
+                      Ativar Rastreamento
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           {/* Timer */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
           >
             <Card className="border-primary bg-primary/5">
               <CardContent className="py-4">
