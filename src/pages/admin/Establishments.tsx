@@ -22,6 +22,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -43,6 +53,7 @@ import {
   Calendar,
   Star,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -59,6 +70,9 @@ const AdminEstablishments = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [establishmentToDelete, setEstablishmentToDelete] = useState<Establishment | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -147,6 +161,55 @@ const AdminEstablishments = () => {
       toast.success("Estabelecimento rejeitado");
     } catch (error) {
       toast.error("Erro ao rejeitar estabelecimento");
+    }
+  };
+
+  const openDeleteDialog = (establishment: Establishment) => {
+    setEstablishmentToDelete(establishment);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!establishmentToDelete) return;
+
+    setDeleting(true);
+    try {
+      // Delete related products first
+      const { error: productsError } = await supabase
+        .from("products")
+        .delete()
+        .eq("establishment_id", establishmentToDelete.id);
+
+      if (productsError) throw productsError;
+
+      // Delete related product categories
+      const { error: categoriesError } = await supabase
+        .from("product_categories")
+        .delete()
+        .eq("establishment_id", establishmentToDelete.id);
+
+      if (categoriesError) throw categoriesError;
+
+      // Delete the establishment
+      const { error } = await supabase
+        .from("establishments")
+        .delete()
+        .eq("id", establishmentToDelete.id);
+
+      if (error) throw error;
+
+      setEstablishments((prev) =>
+        prev.filter((e) => e.id !== establishmentToDelete.id)
+      );
+      toast.success("Estabelecimento excluído com sucesso!");
+      setDeleteDialogOpen(false);
+      setDetailsOpen(false);
+      setEstablishmentToDelete(null);
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      toast.error("Erro ao excluir estabelecimento. Verifique se não há pedidos vinculados.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -326,6 +389,14 @@ const AdminEstablishments = () => {
                                   <XCircle className="w-4 h-4" />
                                 </Button>
                               )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => openDeleteDialog(establishment)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -461,7 +532,7 @@ const AdminEstablishments = () => {
             )}
             {selectedEstablishment && selectedEstablishment.is_approved && (
               <Button
-                variant="destructive"
+                variant="outline"
                 onClick={() => {
                   handleReject(selectedEstablishment.id);
                   setDetailsOpen(false);
@@ -471,9 +542,43 @@ const AdminEstablishments = () => {
                 Revogar Aprovação
               </Button>
             )}
+            {selectedEstablishment && (
+              <Button
+                variant="destructive"
+                onClick={() => openDeleteDialog(selectedEstablishment)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o estabelecimento{" "}
+              <strong>{establishmentToDelete?.name}</strong>? Esta ação não pode
+              ser desfeita e irá remover todos os produtos e categorias
+              associados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
