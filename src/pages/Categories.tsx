@@ -1,147 +1,65 @@
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { UtensilsCrossed, ShoppingCart, Pill, Gift, Coffee, IceCream, Pizza, Sandwich } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import RestaurantCard from "@/components/home/RestaurantCard";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAddress } from "@/contexts/AddressContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const categories = [
-  { id: "restaurantes", name: "Restaurantes", icon: UtensilsCrossed, color: "bg-primary/10 text-primary" },
-  { id: "mercados", name: "Mercados", icon: ShoppingCart, color: "bg-success/10 text-success" },
-  { id: "farmacias", name: "Farmácias", icon: Pill, color: "bg-info/10 text-info" },
-  { id: "presentes", name: "Presentes", icon: Gift, color: "bg-warning/10 text-warning" },
-  { id: "cafeteria", name: "Cafeteria", icon: Coffee, color: "bg-amber-100 text-amber-600" },
-  { id: "sorvetes", name: "Sorvetes", icon: IceCream, color: "bg-pink-100 text-pink-600" },
-  { id: "pizzarias", name: "Pizzarias", icon: Pizza, color: "bg-orange-100 text-orange-600" },
-  { id: "lanches", name: "Lanches", icon: Sandwich, color: "bg-yellow-100 text-yellow-600" },
+  { id: "restaurant", name: "Restaurantes", icon: UtensilsCrossed, color: "bg-primary/10 text-primary" },
+  { id: "market", name: "Mercados", icon: ShoppingCart, color: "bg-success/10 text-success" },
+  { id: "pharmacy", name: "Farmácias", icon: Pill, color: "bg-info/10 text-info" },
+  { id: "gifts", name: "Presentes", icon: Gift, color: "bg-warning/10 text-warning" },
+  { id: "coffee", name: "Cafeteria", icon: Coffee, color: "bg-amber-100 text-amber-600" },
+  { id: "ice-cream", name: "Sorvetes", icon: IceCream, color: "bg-pink-100 text-pink-600" },
+  { id: "pizza", name: "Pizzarias", icon: Pizza, color: "bg-orange-100 text-orange-600" },
+  { id: "fast-food", name: "Lanches", icon: Sandwich, color: "bg-yellow-100 text-yellow-600" },
 ];
-
-const restaurantsByCategory: Record<string, any[]> = {
-  restaurantes: [
-    {
-      id: 1,
-      name: "Burger House Premium",
-      image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&h=300&fit=crop",
-      category: "Hambúrgueres • Lanches",
-      rating: 4.8,
-      deliveryTime: "25-35 min",
-      deliveryFee: "R$ 5,99",
-      isOpen: true,
-      discount: "20% OFF",
-    },
-    {
-      id: 4,
-      name: "Cantina do Italiano",
-      image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&h=300&fit=crop",
-      category: "Massas • Italiana",
-      rating: 4.5,
-      deliveryTime: "30-40 min",
-      deliveryFee: "R$ 4,99",
-      isOpen: true,
-    },
-  ],
-  pizzarias: [
-    {
-      id: 2,
-      name: "Pizzaria Bella Napoli",
-      image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&h=300&fit=crop",
-      category: "Pizzas • Italiana",
-      rating: 4.6,
-      deliveryTime: "40-50 min",
-      deliveryFee: "Grátis",
-      isOpen: true,
-    },
-  ],
-  lanches: [
-    {
-      id: 1,
-      name: "Burger House Premium",
-      image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&h=300&fit=crop",
-      category: "Hambúrgueres • Lanches",
-      rating: 4.8,
-      deliveryTime: "25-35 min",
-      deliveryFee: "R$ 5,99",
-      isOpen: true,
-      discount: "20% OFF",
-    },
-  ],
-  cafeteria: [
-    {
-      id: 7,
-      name: "Café Colonial",
-      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&h=300&fit=crop",
-      category: "Cafeteria • Doces",
-      rating: 4.6,
-      deliveryTime: "15-25 min",
-      deliveryFee: "R$ 4,99",
-      isOpen: true,
-    },
-  ],
-  sorvetes: [
-    {
-      id: 8,
-      name: "Sorveteria Gelatto",
-      image: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=500&h=300&fit=crop",
-      category: "Sorvetes • Sobremesas",
-      rating: 4.8,
-      deliveryTime: "20-30 min",
-      deliveryFee: "R$ 5,99",
-      isOpen: true,
-    },
-    {
-      id: 5,
-      name: "Açaí da Terra",
-      image: "https://images.unsplash.com/photo-1590301157890-4810ed352733?w=500&h=300&fit=crop",
-      category: "Açaí • Saudável",
-      rating: 4.7,
-      deliveryTime: "20-30 min",
-      deliveryFee: "R$ 3,99",
-      isOpen: true,
-    },
-  ],
-  mercados: [
-    {
-      id: 9,
-      name: "Mercado Express",
-      image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=500&h=300&fit=crop",
-      category: "Mercado • Conveniência",
-      rating: 4.3,
-      deliveryTime: "30-45 min",
-      deliveryFee: "R$ 6,99",
-      isOpen: true,
-    },
-  ],
-  farmacias: [
-    {
-      id: 10,
-      name: "Farmácia Saúde Total",
-      image: "https://images.unsplash.com/photo-1576602976047-174e57a47881?w=500&h=300&fit=crop",
-      category: "Farmácia • Saúde",
-      rating: 4.5,
-      deliveryTime: "20-35 min",
-      deliveryFee: "R$ 5,99",
-      isOpen: true,
-    },
-  ],
-  presentes: [
-    {
-      id: 11,
-      name: "Floricultura Encanto",
-      image: "https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=500&h=300&fit=crop",
-      category: "Flores • Presentes",
-      rating: 4.7,
-      deliveryTime: "45-60 min",
-      deliveryFee: "R$ 9,99",
-      isOpen: true,
-    },
-  ],
-};
 
 const Categories = () => {
   const { slug } = useParams();
+  const { selectedCityId, selectedCityName } = useAddress();
   const currentCategory = categories.find((c) => c.id === slug);
-  const restaurants = slug ? restaurantsByCategory[slug] || [] : [];
+
+  const { data: establishments = [], isLoading } = useQuery({
+    queryKey: ["establishments-by-category", slug, selectedCityId],
+    queryFn: async () => {
+      let query = supabase
+        .from("establishments")
+        .select("*")
+        .eq("is_approved", true);
+
+      if (slug) {
+        query = query.eq("category", slug);
+      }
+
+      if (selectedCityId) {
+        query = query.eq("city_id", selectedCityId);
+      }
+
+      const { data, error } = await query.order("rating", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: true,
+  });
+
+  const mapEstablishmentToRestaurant = (establishment: any) => ({
+    id: establishment.id,
+    name: establishment.name,
+    image: establishment.cover_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&h=300&fit=crop",
+    category: establishment.category,
+    rating: establishment.rating || 0,
+    deliveryTime: `${establishment.min_delivery_time || 30}-${establishment.max_delivery_time || 60} min`,
+    deliveryFee: establishment.delivery_fee === 0 ? "Grátis" : `R$ ${establishment.delivery_fee?.toFixed(2).replace(".", ",")}`,
+    isOpen: establishment.is_open || false,
+  });
 
   // Se não tiver slug, mostrar todas as categorias
   if (!slug) {
@@ -153,7 +71,10 @@ const Categories = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-display text-2xl font-bold mb-6">Todas as Categorias</h1>
+            <h1 className="font-display text-2xl font-bold mb-2">Todas as Categorias</h1>
+            {selectedCityName && (
+              <p className="text-muted-foreground mb-6">em {selectedCityName}</p>
+            )}
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {categories.map((category, index) => (
@@ -197,24 +118,42 @@ const Categories = () => {
               </div>
               <div>
                 <h1 className="font-display text-2xl font-bold">{currentCategory.name}</h1>
-                <p className="text-muted-foreground">{restaurants.length} estabelecimentos</p>
+                <p className="text-muted-foreground">
+                  {isLoading ? "Carregando..." : `${establishments.length} estabelecimentos`}
+                  {selectedCityName && ` em ${selectedCityName}`}
+                </p>
               </div>
             </div>
           )}
 
-          {restaurants.length > 0 ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {restaurants.map((restaurant, index) => (
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="rounded-2xl overflow-hidden bg-card">
+                  <Skeleton className="h-40 w-full" />
+                  <div className="p-4 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : establishments.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {establishments.map((establishment, index) => (
                 <RestaurantCard
-                  key={restaurant.id}
-                  restaurant={restaurant}
+                  key={establishment.id}
+                  restaurant={mapEstablishmentToRestaurant(establishment)}
                   index={index}
                 />
               ))}
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-muted-foreground">Nenhum estabelecimento encontrado nesta categoria</p>
+              <p className="text-muted-foreground">
+                Nenhum estabelecimento encontrado nesta categoria
+                {selectedCityName && ` em ${selectedCityName}`}
+              </p>
             </div>
           )}
         </motion.div>
