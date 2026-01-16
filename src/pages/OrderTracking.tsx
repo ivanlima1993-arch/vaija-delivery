@@ -3,7 +3,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrderReview } from "@/hooks/useOrderReview";
 import DriverTrackingMap from "@/components/tracking/DriverTrackingMap";
+import { ReviewModal } from "@/components/reviews/ReviewModal";
+import { StarRating } from "@/components/reviews/StarRating";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +20,7 @@ import {
   MapPin,
   Phone,
   Loader2,
+  Star,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -52,6 +56,9 @@ const OrderTracking = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  
+  const { data: existingReview, refetch: refetchReview } = useOrderReview(orderId);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -160,6 +167,8 @@ const OrderTracking = () => {
   const currentStatusIndex = statusOrder.indexOf(order.status);
   const StatusIcon = statusConfig[order.status]?.icon || Package;
   const isDelivering = order.status === "out_for_delivery";
+  const isDelivered = order.status === "delivered";
+  const canReview = isDelivered && !existingReview;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -361,7 +370,79 @@ const OrderTracking = () => {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Review Section */}
+        {isDelivered && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  Avaliação
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {existingReview ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Estabelecimento</span>
+                      <StarRating rating={existingReview.establishment_rating || 0} size="sm" />
+                    </div>
+                    {existingReview.establishment_comment && (
+                      <p className="text-sm text-muted-foreground">
+                        "{existingReview.establishment_comment}"
+                      </p>
+                    )}
+                    {existingReview.driver_rating && (
+                      <>
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <span className="text-sm text-muted-foreground">Entregador</span>
+                          <StarRating rating={existingReview.driver_rating} size="sm" />
+                        </div>
+                        {existingReview.driver_comment && (
+                          <p className="text-sm text-muted-foreground">
+                            "{existingReview.driver_comment}"
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground mb-4">
+                      Seu pedido foi entregue! Que tal avaliar?
+                    </p>
+                    <Button onClick={() => setShowReviewModal(true)}>
+                      <Star className="w-4 h-4 mr-2" />
+                      Avaliar Pedido
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
+
+      {/* Review Modal */}
+      {establishment && (
+        <ReviewModal
+          open={showReviewModal}
+          onOpenChange={setShowReviewModal}
+          orderId={order.id}
+          establishmentId={establishment.id}
+          establishmentName={establishment.name}
+          driverId={order.driver_id}
+          onSuccess={() => {
+            setShowReviewModal(false);
+            refetchReview();
+          }}
+        />
+      )}
     </div>
   );
 };

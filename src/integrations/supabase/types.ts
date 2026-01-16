@@ -501,6 +501,63 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          created_at: string
+          customer_id: string
+          driver_comment: string | null
+          driver_id: string | null
+          driver_rating: number | null
+          establishment_comment: string | null
+          establishment_id: string | null
+          establishment_rating: number | null
+          id: string
+          order_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          driver_comment?: string | null
+          driver_id?: string | null
+          driver_rating?: number | null
+          establishment_comment?: string | null
+          establishment_id?: string | null
+          establishment_rating?: number | null
+          id?: string
+          order_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          driver_comment?: string | null
+          driver_id?: string | null
+          driver_rating?: number | null
+          establishment_comment?: string | null
+          establishment_id?: string | null
+          establishment_rating?: number | null
+          id?: string
+          order_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
