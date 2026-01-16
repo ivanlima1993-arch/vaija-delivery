@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Store, MapPin, Clock, DollarSign, Phone, Save } from "lucide-react";
 import OpeningHoursEditor, { 
@@ -16,6 +17,12 @@ import OpeningHoursEditor, {
 } from "@/components/admin/OpeningHoursEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import type { Database, Json } from "@/integrations/supabase/types";
+
+interface City {
+  id: string;
+  name: string;
+  state: string;
+}
 
 type Establishment = Database["public"]["Tables"]["establishments"]["Row"];
 
@@ -28,6 +35,8 @@ const EstablishmentSettings = () => {
   const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState<string>("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -51,8 +60,21 @@ const EstablishmentSettings = () => {
 
     if (user) {
       fetchEstablishment();
+      fetchCities();
     }
   }, [user, authLoading, isEstablishment, navigate]);
+
+  const fetchCities = async () => {
+    const { data, error } = await supabase
+      .from("cities")
+      .select("id, name, state")
+      .eq("is_active", true)
+      .order("name");
+
+    if (!error && data) {
+      setCities(data);
+    }
+  };
 
   const fetchEstablishment = async () => {
     try {
@@ -79,6 +101,7 @@ const EstablishmentSettings = () => {
           min_order_value: data.min_order_value ? String(data.min_order_value) : "",
           is_open: data.is_open || false,
         });
+        setSelectedCityId(data.city_id || "");
         setLogoUrl(data.logo_url || null);
         setCoverUrl(data.cover_url || null);
         
@@ -99,6 +122,7 @@ const EstablishmentSettings = () => {
 
     setSaving(true);
     try {
+      const selectedCity = cities.find(c => c.id === selectedCityId);
       const { error } = await supabase
         .from("establishments")
         .update({
@@ -106,7 +130,8 @@ const EstablishmentSettings = () => {
           description: formData.description,
           phone: formData.phone,
           address: formData.address,
-          city: formData.city,
+          city: selectedCity ? `${selectedCity.name} - ${selectedCity.state}` : formData.city,
+          city_id: selectedCityId || null,
           neighborhood: formData.neighborhood,
           delivery_fee: formData.delivery_fee ? parseFloat(formData.delivery_fee) : 0,
           min_delivery_time: formData.min_delivery_time ? parseInt(formData.min_delivery_time) : 30,
@@ -302,14 +327,19 @@ const EstablishmentSettings = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="city">Cidade</Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="Cidade"
-                />
+                <Label>Cidade</Label>
+                <Select value={selectedCityId} onValueChange={setSelectedCityId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a cidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cities.map((city) => (
+                      <SelectItem key={city.id} value={city.id}>
+                        {city.name} - {city.state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
