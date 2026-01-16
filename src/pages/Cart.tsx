@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, Trash2, MapPin, CreditCard, Banknote, QrCode, Clock, Bike } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2, CreditCard, Banknote, QrCode, Clock, Bike } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import DeliveryAddressSelector, { DeliveryAddress } from "@/components/cart/DeliveryAddressSelector";
 
 const paymentMethods = [
   { id: "pix", name: "Pix", icon: QrCode, description: "Aprovação instantânea" },
@@ -15,10 +16,17 @@ const paymentMethods = [
 const Cart = () => {
   const { items, updateQuantity, removeItem, total, clearCart } = useCart();
   const [selectedPayment, setSelectedPayment] = useState("pix");
-  const deliveryFee = 5.99;
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | null>(null);
+  
+  const deliveryFee = deliveryAddress?.deliveryFee ?? 0;
   const finalTotal = total + deliveryFee;
 
   const handleCheckout = () => {
+    if (!deliveryAddress) {
+      toast.error("Selecione um endereço de entrega");
+      return;
+    }
+    
     toast.success("Pedido realizado com sucesso! 🎉", {
       description: "Você receberá atualizações sobre seu pedido.",
     });
@@ -80,26 +88,10 @@ const Cart = () => {
 
       <div className="container py-6 space-y-6">
         {/* Delivery Address */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-card rounded-xl shadow-soft"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Entregar em</p>
-                <p className="font-semibold">Selecionar endereço</p>
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" className="text-primary">
-              Alterar
-            </Button>
-          </div>
-        </motion.div>
+        <DeliveryAddressSelector 
+          selectedAddress={deliveryAddress}
+          onAddressChange={setDeliveryAddress}
+        />
 
         {/* Delivery Time */}
         <motion.div
@@ -222,7 +214,14 @@ const Cart = () => {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Taxa de entrega</span>
-            <span className="text-success">R$ {deliveryFee.toFixed(2).replace(".", ",")}</span>
+            <span className={deliveryFee === 0 ? "text-success" : ""}>
+              {deliveryAddress 
+                ? deliveryFee === 0 
+                  ? "Grátis" 
+                  : `R$ ${deliveryFee.toFixed(2).replace(".", ",")}`
+                : "Selecione o endereço"
+              }
+            </span>
           </div>
           <div className="border-t border-border pt-3 flex justify-between">
             <span className="font-semibold">Total</span>
@@ -236,7 +235,13 @@ const Cart = () => {
       {/* Checkout Footer */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-lg border-t border-border">
         <div className="container">
-          <Button variant="hero" size="lg" className="w-full" onClick={handleCheckout}>
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="w-full" 
+            onClick={handleCheckout}
+            disabled={!deliveryAddress}
+          >
             Finalizar pedido • R$ {finalTotal.toFixed(2).replace(".", ",")}
           </Button>
         </div>
