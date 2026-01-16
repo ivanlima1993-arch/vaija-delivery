@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrderNotification } from "@/hooks/useOrderNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +16,13 @@ import {
   Clock,
   TrendingUp,
   Package,
-  Users,
   Settings,
   LogOut,
   Menu,
   X,
   Zap,
   Bell,
+  Volume2,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -35,6 +36,20 @@ const EstablishmentDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Real-time order notifications
+  const { playNotificationSound } = useOrderNotification({
+    establishmentId: establishment?.id || null,
+    onNewOrder: (order) => {
+      setOrders((prev) => [order, ...prev]);
+    },
+    onOrderUpdate: (order) => {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? order : o))
+      );
+    },
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -66,7 +81,6 @@ const EstablishmentDashboard = () => {
       if (estab) {
         setEstablishment(estab);
         fetchOrders(estab.id);
-        subscribeToOrders(estab.id);
       }
     } catch (error: any) {
       toast.error("Erro ao carregar estabelecimento");
@@ -86,37 +100,6 @@ const EstablishmentDashboard = () => {
     if (data) {
       setOrders(data);
     }
-  };
-
-  const subscribeToOrders = (establishmentId: string) => {
-    const channel = supabase
-      .channel("orders-channel")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-          filter: `establishment_id=eq.${establishmentId}`,
-        },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            setOrders((prev) => [payload.new as Order, ...prev]);
-            toast.success("🔔 Novo pedido recebido!", {
-              description: `Pedido #${(payload.new as Order).order_number}`,
-            });
-          } else if (payload.eventType === "UPDATE") {
-            setOrders((prev) =>
-              prev.map((o) => (o.id === payload.new.id ? (payload.new as Order) : o))
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
 
   const toggleOpen = async () => {
@@ -282,10 +265,24 @@ const EstablishmentDashboard = () => {
                   className="data-[state=checked]:bg-green-500"
                 />
               </div>
+              <button
+                onClick={() => {
+                  setSoundEnabled(!soundEnabled);
+                  if (!soundEnabled) {
+                    playNotificationSound();
+                  }
+                }}
+                className={`relative p-2 rounded-lg transition-colors ${
+                  soundEnabled ? "hover:bg-muted" : "bg-muted/50 text-muted-foreground"
+                }`}
+                title={soundEnabled ? "Som ativado" : "Som desativado"}
+              >
+                <Volume2 className={`w-5 h-5 ${!soundEnabled ? "opacity-50" : ""}`} />
+              </button>
               <button className="relative p-2 hover:bg-muted rounded-lg">
                 <Bell className="w-5 h-5" />
                 {pendingOrders.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white text-xs rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white text-xs rounded-full flex items-center justify-center animate-pulse">
                     {pendingOrders.length}
                   </span>
                 )}
