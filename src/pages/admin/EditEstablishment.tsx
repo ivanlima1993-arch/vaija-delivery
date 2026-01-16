@@ -20,6 +20,7 @@ import OpeningHoursEditor, {
   OpeningHours, 
   defaultOpeningHours 
 } from "@/components/admin/OpeningHoursEditor";
+import ImageUpload from "@/components/admin/ImageUpload";
 import { toast } from "sonner";
 import {
   Store,
@@ -64,6 +65,8 @@ const EditEstablishment = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
   const [establishmentData, setEstablishmentData] = useState({
     name: "",
@@ -129,6 +132,10 @@ const EditEstablishment = () => {
         if (data.opening_hours && typeof data.opening_hours === 'object') {
           setOpeningHours(data.opening_hours as unknown as OpeningHours);
         }
+        
+        // Set images
+        setLogoUrl(data.logo_url || null);
+        setCoverUrl(data.cover_url || null);
       }
     } catch (error) {
       toast.error("Erro ao carregar estabelecimento");
@@ -170,6 +177,8 @@ const EditEstablishment = () => {
           is_approved: establishmentData.isApproved,
           is_open: establishmentData.isOpen,
           opening_hours: JSON.parse(JSON.stringify(openingHours)) as Json,
+          logo_url: logoUrl,
+          cover_url: coverUrl,
         })
         .eq("id", id);
 
@@ -243,6 +252,25 @@ const EditEstablishment = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Image uploads */}
+                <div className="flex flex-wrap gap-6 pb-4 border-b">
+                  <ImageUpload
+                    value={logoUrl}
+                    onChange={setLogoUrl}
+                    folder="logos"
+                    label="Logo"
+                    aspectRatio="square"
+                  />
+                  <ImageUpload
+                    value={coverUrl}
+                    onChange={setCoverUrl}
+                    folder="covers"
+                    label="Imagem de Capa"
+                    aspectRatio="banner"
+                    className="flex-1 min-w-[200px]"
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="flex items-center gap-2 mb-2">
