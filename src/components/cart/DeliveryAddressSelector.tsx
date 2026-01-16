@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Plus, Check, Home, Briefcase, ChevronDown } from "lucide-react";
+import { MapPin, Plus, Check, Home, Briefcase, Map, Navigation } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAddress } from "@/contexts/AddressContext";
+import MapPicker from "@/components/map/MapPicker";
+import { GeocodedAddress, Coordinates } from "@/hooks/useMapbox";
+import { toast } from "sonner";
 
 export interface DeliveryAddress {
   id: string;
@@ -26,12 +30,13 @@ export interface DeliveryAddress {
   street: string;
   number: string;
   complement?: string;
-  neighborhoodId: string;
+  neighborhoodId?: string;
   neighborhoodName: string;
   cityId: string;
   cityName: string;
   deliveryFee: number;
   type: "home" | "work" | "other";
+  coordinates?: Coordinates;
 }
 
 interface Neighborhood {
@@ -55,15 +60,24 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [loadingNeighborhoods, setLoadingNeighborhoods] = useState(false);
-  const { selectedCityId, selectedCityName, cities } = useAddress();
+  const { selectedCityId, selectedCityName } = useAddress();
+  const [addressMode, setAddressMode] = useState<"manual" | "map">("manual");
+  const [mapAddress, setMapAddress] = useState<GeocodedAddress | null>(null);
 
-  const [newAddress, setNewAddress] = useState({
+  const [newAddress, setNewAddress] = useState<{
+    label: string;
+    street: string;
+    number: string;
+    complement: string;
+    neighborhoodId: string;
+    type: "home" | "work" | "other";
+  }>({
     label: "",
     street: "",
     number: "",
     complement: "",
     neighborhoodId: "",
-    type: "home" as const,
+    type: "home",
   });
 
   // Fetch neighborhoods when city changes
@@ -109,7 +123,16 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
     setOpen(false);
   };
 
-  const handleAddAddress = () => {
+  const handleMapLocationSelect = (geocoded: GeocodedAddress) => {
+    setMapAddress(geocoded);
+    // Auto-fill the form fields
+    setNewAddress(prev => ({
+      ...prev,
+      street: geocoded.street || geocoded.address.split(",")[0] || "",
+    }));
+  };
+
+  const handleAddAddressManual = () => {
     const neighborhood = neighborhoods.find(n => n.id === newAddress.neighborhoodId);
     
     if (newAddress.street && newAddress.number && neighborhood && selectedCityId) {
@@ -127,19 +150,64 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
         type: newAddress.type,
       };
       
-      setAddresses(prev => [...prev, address]);
-      onAddressChange(address);
-      setNewAddress({
-        label: "",
-        street: "",
-        number: "",
-        complement: "",
-        neighborhoodId: "",
-        type: "home",
-      });
-      setIsAddingNew(false);
-      setOpen(false);
+      saveAddress(address);
     }
+  };
+
+  const handleAddAddressFromMap = () => {
+    if (!mapAddress || !selectedCityId) {
+      toast.error("Selecione um local no mapa");
+      return;
+    }
+
+    if (!newAddress.number) {
+      toast.error("Informe o número do endereço");
+      return;
+    }
+
+    // Try to find neighborhood or use default fee
+    const neighborhood = neighborhoods.find(
+      n => n.name.toLowerCase() === mapAddress.neighborhood?.toLowerCase()
+    );
+
+    const address: DeliveryAddress = {
+      id: Date.now().toString(),
+      label: newAddress.label || `${mapAddress.street}, ${newAddress.number}`,
+      street: mapAddress.street || mapAddress.address.split(",")[0],
+      number: newAddress.number,
+      complement: newAddress.complement || undefined,
+      neighborhoodId: neighborhood?.id,
+      neighborhoodName: mapAddress.neighborhood || neighborhood?.name || "Centro",
+      cityId: selectedCityId,
+      cityName: mapAddress.city || selectedCityName || "",
+      deliveryFee: neighborhood?.delivery_fee || 5, // Default fee if neighborhood not found
+      type: newAddress.type,
+      coordinates: mapAddress.coordinates,
+    };
+
+    saveAddress(address);
+  };
+
+  const saveAddress = (address: DeliveryAddress) => {
+    setAddresses(prev => [...prev, address]);
+    onAddressChange(address);
+    resetForm();
+    setOpen(false);
+    toast.success("Endereço salvo com sucesso!");
+  };
+
+  const resetForm = () => {
+    setNewAddress({
+      label: "",
+      street: "",
+      number: "",
+      complement: "",
+      neighborhoodId: "",
+      type: "home",
+    });
+    setMapAddress(null);
+    setIsAddingNew(false);
+    setAddressMode("manual");
   };
 
   const filteredAddresses = addresses.filter(a => a.cityId === selectedCityId);
@@ -179,8 +247,11 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
         </div>
       </motion.div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md bg-card">
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) resetForm();
+      }}>
+        <DialogContent className="sm:max-w-lg bg-card max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">
               {isAddingNew ? "Novo Endereço" : "Onde você quer receber?"}
@@ -196,63 +267,122 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-4"
               >
-                <div className="space-y-2">
-                  <Label>Cidade</Label>
-                  <div className="p-3 rounded-lg bg-muted text-sm">
-                    {selectedCityName || "Nenhuma cidade selecionada"}
-                  </div>
-                </div>
+                <Tabs value={addressMode} onValueChange={(v) => setAddressMode(v as "manual" | "map")}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="manual" className="gap-2">
+                      <MapPin className="w-4 h-4" />
+                      Manual
+                    </TabsTrigger>
+                    <TabsTrigger value="map" className="gap-2">
+                      <Map className="w-4 h-4" />
+                      No mapa
+                    </TabsTrigger>
+                  </TabsList>
 
-                <div className="space-y-2">
-                  <Label htmlFor="neighborhood">Bairro *</Label>
-                  <Select
-                    value={newAddress.neighborhoodId}
-                    onValueChange={(value) => setNewAddress({ ...newAddress, neighborhoodId: value })}
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder={loadingNeighborhoods ? "Carregando..." : "Selecione o bairro"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border border-border z-50">
-                      {neighborhoods.map((neighborhood) => (
-                        <SelectItem key={neighborhood.id} value={neighborhood.id}>
-                          {neighborhood.name} - Taxa: R$ {(neighborhood.delivery_fee || 0).toFixed(2).replace(".", ",")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <TabsContent value="map" className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <Navigation className="w-4 h-4" />
+                        Arraste o pino ou clique no mapa
+                      </Label>
+                      <MapPicker
+                        onLocationSelect={handleMapLocationSelect}
+                        height="250px"
+                      />
+                    </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="street">Rua *</Label>
-                    <Input
-                      id="street"
-                      placeholder="Nome da rua"
-                      value={newAddress.street}
-                      onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="number">Nº *</Label>
-                    <Input
-                      id="number"
-                      placeholder="123"
-                      value={newAddress.number}
-                      onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
-                    />
-                  </div>
-                </div>
+                    {mapAddress && (
+                      <div className="p-3 bg-accent/50 rounded-lg text-sm">
+                        <p className="font-medium">{mapAddress.address}</p>
+                        {mapAddress.neighborhood && (
+                          <p className="text-muted-foreground">Bairro: {mapAddress.neighborhood}</p>
+                        )}
+                      </div>
+                    )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="complement">Complemento</Label>
-                  <Input
-                    id="complement"
-                    placeholder="Apto, Bloco, Casa..."
-                    value={newAddress.complement}
-                    onChange={(e) => setNewAddress({ ...newAddress, complement: e.target.value })}
-                  />
-                </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="number-map">Número *</Label>
+                        <Input
+                          id="number-map"
+                          placeholder="123"
+                          value={newAddress.number}
+                          onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="complement-map">Complemento</Label>
+                        <Input
+                          id="complement-map"
+                          placeholder="Apto, Bloco..."
+                          value={newAddress.complement}
+                          onChange={(e) => setNewAddress({ ...newAddress, complement: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
 
+                  <TabsContent value="manual" className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label>Cidade</Label>
+                      <div className="p-3 rounded-lg bg-muted text-sm">
+                        {selectedCityName || "Nenhuma cidade selecionada"}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="neighborhood">Bairro *</Label>
+                      <Select
+                        value={newAddress.neighborhoodId}
+                        onValueChange={(value) => setNewAddress({ ...newAddress, neighborhoodId: value })}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder={loadingNeighborhoods ? "Carregando..." : "Selecione o bairro"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border border-border z-50">
+                          {neighborhoods.map((neighborhood) => (
+                            <SelectItem key={neighborhood.id} value={neighborhood.id}>
+                              {neighborhood.name} - Taxa: R$ {(neighborhood.delivery_fee || 0).toFixed(2).replace(".", ",")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2 space-y-2">
+                        <Label htmlFor="street">Rua *</Label>
+                        <Input
+                          id="street"
+                          placeholder="Nome da rua"
+                          value={newAddress.street}
+                          onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="number">Nº *</Label>
+                        <Input
+                          id="number"
+                          placeholder="123"
+                          value={newAddress.number}
+                          onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="complement">Complemento</Label>
+                      <Input
+                        id="complement"
+                        placeholder="Apto, Bloco, Casa..."
+                        value={newAddress.complement}
+                        onChange={(e) => setNewAddress({ ...newAddress, complement: e.target.value })}
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Common fields for both modes */}
                 <div className="space-y-2">
                   <Label htmlFor="label">Apelido</Label>
                   <Input
@@ -266,15 +396,15 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                 <div className="space-y-2">
                   <Label>Tipo</Label>
                   <div className="flex gap-2">
-                    {[
-                      { value: "home", label: "Casa", icon: Home },
-                      { value: "work", label: "Trabalho", icon: Briefcase },
-                      { value: "other", label: "Outro", icon: MapPin },
-                    ].map((type) => (
+                    {([
+                      { value: "home" as const, label: "Casa", icon: Home },
+                      { value: "work" as const, label: "Trabalho", icon: Briefcase },
+                      { value: "other" as const, label: "Outro", icon: MapPin },
+                    ]).map((type) => (
                       <button
                         key={type.value}
                         type="button"
-                        onClick={() => setNewAddress({ ...newAddress, type: type.value as any })}
+                        onClick={() => setNewAddress({ ...newAddress, type: type.value })}
                         className={`flex-1 p-2 rounded-lg border-2 transition-all ${
                           newAddress.type === type.value
                             ? "border-primary bg-primary/10"
@@ -294,14 +424,18 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => setIsAddingNew(false)}
+                    onClick={resetForm}
                   >
                     Cancelar
                   </Button>
                   <Button 
                     className="flex-1" 
-                    onClick={handleAddAddress}
-                    disabled={!newAddress.street || !newAddress.number || !newAddress.neighborhoodId}
+                    onClick={addressMode === "map" ? handleAddAddressFromMap : handleAddAddressManual}
+                    disabled={
+                      addressMode === "map" 
+                        ? !mapAddress || !newAddress.number
+                        : !newAddress.street || !newAddress.number || !newAddress.neighborhoodId
+                    }
                   >
                     Salvar Endereço
                   </Button>
