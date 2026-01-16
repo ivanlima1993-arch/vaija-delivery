@@ -59,11 +59,18 @@ const CATEGORIES = [
   { value: "outros", label: "Outros" },
 ];
 
+interface City {
+  id: string;
+  name: string;
+  state: string;
+}
+
 const CreateEstablishment = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cities, setCities] = useState<City[]>([]);
 
   // Owner data
   const [ownerData, setOwnerData] = useState({
@@ -82,6 +89,7 @@ const CreateEstablishment = () => {
     address: "",
     neighborhood: "",
     city: "",
+    cityId: "",
     deliveryFee: "",
     minOrderValue: "",
     minDeliveryTime: "30",
@@ -103,7 +111,20 @@ const CreateEstablishment = () => {
       navigate("/");
       return;
     }
+
+    // Fetch cities
+    fetchCities();
   }, [user, authLoading, isAdmin, navigate]);
+
+  const fetchCities = async () => {
+    const { data } = await supabase
+      .from("cities")
+      .select("id, name, state")
+      .eq("is_active", true)
+      .order("state")
+      .order("name");
+    if (data) setCities(data);
+  };
 
   const handleOwnerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOwnerData({ ...ownerData, [e.target.name]: e.target.value });
@@ -161,6 +182,7 @@ const CreateEstablishment = () => {
         address: establishmentData.address || null,
         neighborhood: establishmentData.neighborhood || null,
         city: establishmentData.city || null,
+        city_id: establishmentData.cityId || null,
         delivery_fee: establishmentData.deliveryFee ? Number(establishmentData.deliveryFee) : 0,
         min_order_value: establishmentData.minOrderValue
           ? Number(establishmentData.minOrderValue)
@@ -445,16 +467,36 @@ const CreateEstablishment = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="city" className="mb-2 block">
-                      Cidade
+                    <Label htmlFor="cityId" className="mb-2 block">
+                      Cidade (Cadastrada) *
                     </Label>
-                    <Input
-                      id="city"
-                      name="city"
-                      value={establishmentData.city}
-                      onChange={handleEstablishmentChange}
-                      placeholder="Cidade"
-                    />
+                    <Select
+                      value={establishmentData.cityId}
+                      onValueChange={(value) => {
+                        const selectedCity = cities.find(c => c.id === value);
+                        setEstablishmentData({ 
+                          ...establishmentData, 
+                          cityId: value,
+                          city: selectedCity ? `${selectedCity.name} - ${selectedCity.state}` : ""
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a cidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map((city) => (
+                          <SelectItem key={city.id} value={city.id}>
+                            {city.name} - {city.state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {cities.length === 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Nenhuma cidade cadastrada. <a href="/admin/regioes" className="text-primary underline">Cadastrar cidades</a>
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>

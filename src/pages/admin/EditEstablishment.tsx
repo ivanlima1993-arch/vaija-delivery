@@ -57,6 +57,12 @@ const CATEGORIES = [
   { value: "outros", label: "Outros" },
 ];
 
+interface City {
+  id: string;
+  name: string;
+  state: string;
+}
+
 const EditEstablishment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -67,6 +73,7 @@ const EditEstablishment = () => {
   const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [cities, setCities] = useState<City[]>([]);
 
   const [establishmentData, setEstablishmentData] = useState({
     name: "",
@@ -76,6 +83,7 @@ const EditEstablishment = () => {
     address: "",
     neighborhood: "",
     city: "",
+    cityId: "",
     deliveryFee: "",
     minOrderValue: "",
     minDeliveryTime: "30",
@@ -98,8 +106,19 @@ const EditEstablishment = () => {
 
     if (user && isAdmin && id) {
       fetchEstablishment();
+      fetchCities();
     }
   }, [user, authLoading, isAdmin, navigate, id]);
+
+  const fetchCities = async () => {
+    const { data } = await supabase
+      .from("cities")
+      .select("id, name, state")
+      .eq("is_active", true)
+      .order("state")
+      .order("name");
+    if (data) setCities(data);
+  };
 
   const fetchEstablishment = async () => {
     try {
@@ -120,6 +139,7 @@ const EditEstablishment = () => {
           address: data.address || "",
           neighborhood: data.neighborhood || "",
           city: data.city || "",
+          cityId: (data as any).city_id || "",
           deliveryFee: data.delivery_fee?.toString() || "",
           minOrderValue: data.min_order_value?.toString() || "",
           minDeliveryTime: data.min_delivery_time?.toString() || "30",
@@ -166,6 +186,7 @@ const EditEstablishment = () => {
           address: establishmentData.address || null,
           neighborhood: establishmentData.neighborhood || null,
           city: establishmentData.city || null,
+          city_id: establishmentData.cityId || null,
           delivery_fee: establishmentData.deliveryFee
             ? Number(establishmentData.deliveryFee)
             : 0,
@@ -416,16 +437,36 @@ const EditEstablishment = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="city" className="mb-2 block">
-                      Cidade
+                    <Label htmlFor="cityId" className="mb-2 block">
+                      Cidade (Cadastrada) *
                     </Label>
-                    <Input
-                      id="city"
-                      name="city"
-                      value={establishmentData.city}
-                      onChange={handleChange}
-                      placeholder="Cidade"
-                    />
+                    <Select
+                      value={establishmentData.cityId}
+                      onValueChange={(value) => {
+                        const selectedCity = cities.find(c => c.id === value);
+                        setEstablishmentData({ 
+                          ...establishmentData, 
+                          cityId: value,
+                          city: selectedCity ? `${selectedCity.name} - ${selectedCity.state}` : ""
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a cidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map((city) => (
+                          <SelectItem key={city.id} value={city.id}>
+                            {city.name} - {city.state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {cities.length === 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Nenhuma cidade cadastrada. <a href="/admin/regioes" className="text-primary underline">Cadastrar cidades</a>
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
