@@ -4,7 +4,7 @@ import { ShoppingBag, User, Menu, X, Search, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
-import AddressModal from "@/components/address/AddressModal";
+import CitySelector from "@/components/address/CitySelector";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -89,9 +89,9 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Location - Desktop */}
+          {/* City Selector - Desktop */}
           <div className="hidden md:block">
-            <AddressModal />
+            <CitySelector />
           </div>
 
           {/* Search - Desktop */}
@@ -201,7 +201,7 @@ const Header = () => {
                 </form>
                 
                 <div className="w-full">
-                  <AddressModal />
+                  <CitySelector />
                 </div>
 
                 {user && profile ? (

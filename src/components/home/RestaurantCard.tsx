@@ -3,7 +3,7 @@ import { Star, Clock, Bike } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Restaurant {
-  id: number;
+  id: number | string;
   name: string;
   image: string;
   category: string;
