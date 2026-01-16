@@ -32,6 +32,7 @@ import AvailableOrders from "./pages/driver/AvailableOrders";
 import InRoute from "./pages/driver/InRoute";
 import DriverHistory from "./pages/driver/History";
 import DriverSettings from "./pages/driver/Settings";
+import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ const App = () => (
               <Route path="/entregador/em-rota" element={<InRoute />} />
               <Route path="/entregador/historico" element={<DriverHistory />} />
               <Route path="/entregador/configuracoes" element={<DriverSettings />} />
+              <Route path="/pedido/:orderId" element={<OrderTracking />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

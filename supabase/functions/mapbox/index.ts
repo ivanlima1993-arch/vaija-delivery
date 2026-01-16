@@ -35,6 +35,12 @@ serve(async (req) => {
     let result;
 
     switch (action) {
+      case "get_token": {
+        // Return the Mapbox token for client-side map rendering
+        result = { token: MAPBOX_ACCESS_TOKEN };
+        break;
+      }
+
       case "reverse_geocode": {
         // Convert coordinates to address
         const { longitude, latitude } = params;
