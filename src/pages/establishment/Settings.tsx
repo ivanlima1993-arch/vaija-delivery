@@ -3,13 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ArrowLeft, Store, MapPin, Clock, DollarSign, Phone, Save } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
+import OpeningHoursEditor, { 
+  OpeningHours, 
+  defaultOpeningHours 
+} from "@/components/admin/OpeningHoursEditor";
+import ImageUpload from "@/components/admin/ImageUpload";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 type Establishment = Database["public"]["Tables"]["establishments"]["Row"];
 
@@ -19,6 +25,9 @@ const EstablishmentSettings = () => {
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,8 +40,7 @@ const EstablishmentSettings = () => {
     min_delivery_time: "",
     max_delivery_time: "",
     min_order_value: "",
-    logo_url: "",
-    cover_url: "",
+    is_open: false,
   });
 
   useEffect(() => {
@@ -69,9 +77,15 @@ const EstablishmentSettings = () => {
           min_delivery_time: data.min_delivery_time ? String(data.min_delivery_time) : "",
           max_delivery_time: data.max_delivery_time ? String(data.max_delivery_time) : "",
           min_order_value: data.min_order_value ? String(data.min_order_value) : "",
-          logo_url: data.logo_url || "",
-          cover_url: data.cover_url || "",
+          is_open: data.is_open || false,
         });
+        setLogoUrl(data.logo_url || null);
+        setCoverUrl(data.cover_url || null);
+        
+        // Parse opening hours from database
+        if (data.opening_hours && typeof data.opening_hours === 'object') {
+          setOpeningHours(data.opening_hours as unknown as OpeningHours);
+        }
       }
     } catch (error) {
       toast.error("Erro ao carregar dados");
@@ -98,8 +112,10 @@ const EstablishmentSettings = () => {
           min_delivery_time: formData.min_delivery_time ? parseInt(formData.min_delivery_time) : 30,
           max_delivery_time: formData.max_delivery_time ? parseInt(formData.max_delivery_time) : 60,
           min_order_value: formData.min_order_value ? parseFloat(formData.min_order_value) : 0,
-          logo_url: formData.logo_url || null,
-          cover_url: formData.cover_url || null,
+          logo_url: logoUrl,
+          cover_url: coverUrl,
+          is_open: formData.is_open,
+          opening_hours: JSON.parse(JSON.stringify(openingHours)) as Json,
         })
         .eq("id", establishment.id);
 
@@ -147,6 +163,51 @@ const EstablishmentSettings = () => {
       </header>
 
       <div className="p-4 lg:p-6 space-y-6 max-w-3xl mx-auto">
+        {/* Status */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-medium">Estabelecimento Aberto</Label>
+                <p className="text-sm text-muted-foreground">
+                  Clientes podem fazer pedidos quando aberto
+                </p>
+              </div>
+              <Switch
+                checked={formData.is_open}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_open: checked })}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Images */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Imagens</CardTitle>
+            <CardDescription>Logo e capa do seu estabelecimento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-6">
+              <ImageUpload
+                value={logoUrl}
+                onChange={setLogoUrl}
+                folder="logos"
+                label="Logo"
+                aspectRatio="square"
+              />
+              <ImageUpload
+                value={coverUrl}
+                onChange={setCoverUrl}
+                folder="covers"
+                label="Imagem de Capa"
+                aspectRatio="banner"
+                className="flex-1 min-w-[200px]"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Basic Info */}
         <Card>
           <CardHeader>
@@ -191,6 +252,22 @@ const EstablishmentSettings = () => {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Opening Hours */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Horário de Funcionamento
+            </CardTitle>
+            <CardDescription>
+              Configure os horários de abertura e fechamento para cada dia
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <OpeningHoursEditor value={openingHours} onChange={setOpeningHours} />
           </CardContent>
         </Card>
 
@@ -242,7 +319,7 @@ const EstablishmentSettings = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
+              <DollarSign className="w-5 h-5" />
               Configurações de Entrega
             </CardTitle>
           </CardHeader>
@@ -308,48 +385,13 @@ const EstablishmentSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Images */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Imagens</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="logo_url">URL do Logo</Label>
-              <Input
-                id="logo_url"
-                name="logo_url"
-                value={formData.logo_url}
-                onChange={handleChange}
-                placeholder="https://..."
-              />
-              {formData.logo_url && (
-                <img
-                  src={formData.logo_url}
-                  alt="Logo preview"
-                  className="mt-2 w-24 h-24 object-cover rounded-xl"
-                />
-              )}
-            </div>
-            <div>
-              <Label htmlFor="cover_url">URL da Capa</Label>
-              <Input
-                id="cover_url"
-                name="cover_url"
-                value={formData.cover_url}
-                onChange={handleChange}
-                placeholder="https://..."
-              />
-              {formData.cover_url && (
-                <img
-                  src={formData.cover_url}
-                  alt="Cover preview"
-                  className="mt-2 w-full h-32 object-cover rounded-xl"
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Save Button (mobile friendly) */}
+        <div className="pb-6">
+          <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? "Salvando..." : "Salvar Alterações"}
+          </Button>
+        </div>
       </div>
     </div>
   );
