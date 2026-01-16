@@ -20,6 +20,7 @@ import OpeningHoursEditor, {
   OpeningHours, 
   defaultOpeningHours 
 } from "@/components/admin/OpeningHoursEditor";
+import ImageUpload from "@/components/admin/ImageUpload";
 import { toast } from "sonner";
 import {
   Store,
@@ -89,6 +90,8 @@ const CreateEstablishment = () => {
 
   const [autoApprove, setAutoApprove] = useState(true);
   const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
@@ -166,6 +169,8 @@ const CreateEstablishment = () => {
         max_delivery_time: Number(establishmentData.maxDeliveryTime) || 60,
         is_approved: autoApprove,
         opening_hours: JSON.parse(JSON.stringify(openingHours)) as Json,
+        logo_url: logoUrl,
+        cover_url: coverUrl,
       });
 
       if (establishmentError) throw establishmentError;
@@ -316,6 +321,25 @@ const CreateEstablishment = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Image uploads */}
+                <div className="flex flex-wrap gap-6 pb-4 border-b">
+                  <ImageUpload
+                    value={logoUrl}
+                    onChange={setLogoUrl}
+                    folder="logos"
+                    label="Logo"
+                    aspectRatio="square"
+                  />
+                  <ImageUpload
+                    value={coverUrl}
+                    onChange={setCoverUrl}
+                    folder="covers"
+                    label="Imagem de Capa"
+                    aspectRatio="banner"
+                    className="flex-1 min-w-[200px]"
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="flex items-center gap-2 mb-2">
