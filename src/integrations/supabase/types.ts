@@ -14,11 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      cities: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       establishments: {
         Row: {
           address: string | null
           category: string
           city: string | null
+          city_id: string | null
           cover_url: string | null
           created_at: string
           delivery_fee: number | null
@@ -45,6 +73,7 @@ export type Database = {
           address?: string | null
           category?: string
           city?: string | null
+          city_id?: string | null
           cover_url?: string | null
           created_at?: string
           delivery_fee?: number | null
@@ -71,6 +100,7 @@ export type Database = {
           address?: string | null
           category?: string
           city?: string | null
+          city_id?: string | null
           cover_url?: string | null
           created_at?: string
           delivery_fee?: number | null
@@ -93,7 +123,53 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "establishments_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neighborhoods: {
+        Row: {
+          city_id: string
+          created_at: string
+          delivery_fee: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          city_id: string
+          created_at?: string
+          delivery_fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string
+          created_at?: string
+          delivery_fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neighborhoods_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {

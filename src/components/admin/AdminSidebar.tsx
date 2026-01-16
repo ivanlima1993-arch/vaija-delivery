@@ -11,6 +11,7 @@ import {
   Zap,
   X,
   Shield,
+  MapPin,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -40,6 +41,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       icon: Store,
       label: "Novo Estabelecimento",
       path: "/admin/estabelecimentos/novo",
+    },
+    {
+      icon: MapPin,
+      label: "Cidades e Regiões",
+      path: "/admin/regioes",
     },
     {
       icon: Users,
