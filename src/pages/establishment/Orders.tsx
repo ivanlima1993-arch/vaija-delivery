@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrderNotification } from "@/hooks/useOrderNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import {
   ChefHat,
   Truck,
   Package,
+  Volume2,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -44,6 +46,21 @@ const EstablishmentOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [establishmentId, setEstablishmentId] = useState<string | null>(null);
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Real-time order notifications
+  const { playNotificationSound } = useOrderNotification({
+    establishmentId,
+    onNewOrder: (order) => {
+      setOrders((prev) => [order, ...prev]);
+      fetchOrderItems(order.id);
+    },
+    onOrderUpdate: (order) => {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? order : o))
+      );
+    },
+  });
 
   useEffect(() => {
     if (!authLoading && (!user || !isEstablishment)) {
@@ -67,7 +84,6 @@ const EstablishmentOrders = () => {
       if (estab) {
         setEstablishmentId(estab.id);
         await fetchOrders(estab.id);
-        subscribeToOrders(estab.id);
       }
     } catch (error) {
       toast.error("Erro ao carregar pedidos");
@@ -99,35 +115,6 @@ const EstablishmentOrders = () => {
     if (data) {
       setOrderItems((prev) => ({ ...prev, [orderId]: data }));
     }
-  };
-
-  const subscribeToOrders = (estabId: string) => {
-    const channel = supabase
-      .channel("orders-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-          filter: `establishment_id=eq.${estabId}`,
-        },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const newOrder = payload.new as Order;
-            setOrders((prev) => [newOrder, ...prev]);
-            fetchOrderItems(newOrder.id);
-            toast.success(`🔔 Novo pedido #${newOrder.order_number}!`);
-          } else if (payload.eventType === "UPDATE") {
-            setOrders((prev) =>
-              prev.map((o) => (o.id === payload.new.id ? (payload.new as Order) : o))
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
@@ -186,14 +173,30 @@ const EstablishmentOrders = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/estabelecimento")}
+              className="p-2 hover:bg-muted rounded-lg"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="font-bold text-lg">Pedidos</h1>
+          </div>
           <button
-            onClick={() => navigate("/estabelecimento")}
-            className="p-2 hover:bg-muted rounded-lg"
+            onClick={() => {
+              setSoundEnabled(!soundEnabled);
+              if (!soundEnabled) {
+                playNotificationSound();
+              }
+            }}
+            className={`p-2 rounded-lg transition-colors ${
+              soundEnabled ? "hover:bg-muted" : "bg-muted/50 text-muted-foreground"
+            }`}
+            title={soundEnabled ? "Som ativado" : "Som desativado"}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <Volume2 className={`w-5 h-5 ${!soundEnabled ? "opacity-50" : ""}`} />
           </button>
-          <h1 className="font-bold text-lg">Pedidos</h1>
         </div>
       </header>
 
