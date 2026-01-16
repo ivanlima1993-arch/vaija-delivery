@@ -42,6 +42,7 @@ import {
   Phone,
   Calendar,
   Star,
+  Pencil,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -298,6 +299,13 @@ const AdminEstablishments = () => {
                               >
                                 <Eye className="w-4 h-4" />
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(`/admin/estabelecimentos/${establishment.id}/editar`)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
                               {!establishment.is_approved && (
                                 <Button
                                   variant="ghost"
@@ -426,7 +434,19 @@ const AdminEstablishments = () => {
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {selectedEstablishment && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDetailsOpen(false);
+                  navigate(`/admin/estabelecimentos/${selectedEstablishment.id}/editar`);
+                }}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Editar
+              </Button>
+            )}
             {selectedEstablishment && !selectedEstablishment.is_approved && (
               <Button
                 onClick={() => {
