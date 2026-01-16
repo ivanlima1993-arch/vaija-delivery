@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
+import { AddressProvider } from "@/contexts/AddressContext";
 import Index from "./pages/Index";
 import Restaurant from "./pages/Restaurant";
 import Cart from "./pages/Cart";
@@ -37,45 +38,47 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <CartProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/restaurant/:id" element={<Restaurant />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/estabelecimento/auth" element={<EstablishmentAuth />} />
-            <Route path="/entregador/auth" element={<DriverAuth />} />
-            <Route path="/perfil" element={<Profile />} />
-            <Route path="/buscar" element={<Search />} />
-            <Route path="/categorias" element={<Categories />} />
-            <Route path="/categorias/:slug" element={<Categories />} />
-            <Route path="/restaurantes" element={<Restaurants />} />
-            <Route path="/estabelecimento" element={<EstablishmentDashboard />} />
-            <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
-            <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />
-            <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />
-            <Route path="/admin/estabelecimentos/novo" element={<AdminCreateEstablishment />} />
-            <Route path="/admin/estabelecimentos/:id/editar" element={<AdminEditEstablishment />} />
-            <Route path="/admin/usuarios" element={<AdminUsers />} />
-            <Route path="/admin/regioes" element={<AdminRegions />} />
-            <Route path="/admin/relatorios" element={<AdminReports />} />
-            <Route path="/admin/configuracoes" element={<AdminSettings />} />
-            <Route path="/entregador" element={<DriverDashboard />} />
-            <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
-            <Route path="/entregador/em-rota" element={<InRoute />} />
-            <Route path="/entregador/historico" element={<DriverHistory />} />
-            <Route path="/entregador/configuracoes" element={<DriverSettings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </CartProvider>
+    <AddressProvider>
+      <CartProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/restaurant/:id" element={<Restaurant />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/estabelecimento/auth" element={<EstablishmentAuth />} />
+              <Route path="/entregador/auth" element={<DriverAuth />} />
+              <Route path="/perfil" element={<Profile />} />
+              <Route path="/buscar" element={<Search />} />
+              <Route path="/categorias" element={<Categories />} />
+              <Route path="/categorias/:slug" element={<Categories />} />
+              <Route path="/restaurantes" element={<Restaurants />} />
+              <Route path="/estabelecimento" element={<EstablishmentDashboard />} />
+              <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
+              <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />
+              <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />
+              <Route path="/admin/estabelecimentos/novo" element={<AdminCreateEstablishment />} />
+              <Route path="/admin/estabelecimentos/:id/editar" element={<AdminEditEstablishment />} />
+              <Route path="/admin/usuarios" element={<AdminUsers />} />
+              <Route path="/admin/regioes" element={<AdminRegions />} />
+              <Route path="/admin/relatorios" element={<AdminReports />} />
+              <Route path="/admin/configuracoes" element={<AdminSettings />} />
+              <Route path="/entregador" element={<DriverDashboard />} />
+              <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
+              <Route path="/entregador/em-rota" element={<InRoute />} />
+              <Route path="/entregador/historico" element={<DriverHistory />} />
+              <Route path="/entregador/configuracoes" element={<DriverSettings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CartProvider>
+    </AddressProvider>
   </QueryClientProvider>
 );
 
