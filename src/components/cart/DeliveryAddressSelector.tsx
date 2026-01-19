@@ -76,6 +76,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
     number: string;
     complement: string;
     neighborhoodId: string;
+    neighborhoodName: string;
     type: "home" | "work" | "other";
   }>({
     label: "",
@@ -83,8 +84,10 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
     number: "",
     complement: "",
     neighborhoodId: "",
+    neighborhoodName: "",
     type: "home",
   });
+
 
   // Fetch neighborhoods when city changes
   useEffect(() => {
@@ -147,46 +150,55 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
 
   const handleMapLocationSelect = (geocoded: GeocodedAddress) => {
     setMapAddress(geocoded);
+
     // Auto-fill the form fields
-    setNewAddress(prev => ({
+    setNewAddress((prev) => ({
       ...prev,
       street: geocoded.street || geocoded.address.split(",")[0] || "",
+      neighborhoodName: geocoded.neighborhood || prev.neighborhoodName,
     }));
-    
+
     // Auto-select neighborhood if detected and matches
     if (geocoded.neighborhood) {
       const matchingNeighborhood = neighborhoods.find(
-        n => n.name.toLowerCase().includes(geocoded.neighborhood?.toLowerCase() || "") ||
-             geocoded.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
+        (n) =>
+          n.name.toLowerCase().includes(geocoded.neighborhood?.toLowerCase() || "") ||
+          geocoded.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
       );
       if (matchingNeighborhood) {
-        setNewAddress(prev => ({
+        setNewAddress((prev) => ({
           ...prev,
           street: geocoded.street || geocoded.address.split(",")[0] || "",
           neighborhoodId: matchingNeighborhood.id,
+          neighborhoodName: matchingNeighborhood.name,
         }));
       }
     }
   };
 
   const handleAddAddressManual = () => {
-    const neighborhood = neighborhoods.find(n => n.id === newAddress.neighborhoodId);
-    
-    if (newAddress.street && newAddress.number && neighborhood && selectedCityId) {
+    const hasNeighborhoodList = neighborhoods.length > 0;
+    const neighborhood = hasNeighborhoodList
+      ? neighborhoods.find((n) => n.id === newAddress.neighborhoodId)
+      : null;
+
+    const neighborhoodName = hasNeighborhoodList ? neighborhood?.name : newAddress.neighborhoodName.trim();
+
+    if (newAddress.street && newAddress.number && neighborhoodName && selectedCityId) {
       const address: DeliveryAddress = {
         id: Date.now().toString(),
         label: newAddress.label || `${newAddress.street}, ${newAddress.number}`,
         street: newAddress.street,
         number: newAddress.number,
         complement: newAddress.complement || undefined,
-        neighborhoodId: neighborhood.id,
-        neighborhoodName: neighborhood.name,
+        neighborhoodId: neighborhood?.id,
+        neighborhoodName,
         cityId: selectedCityId,
         cityName: selectedCityName || "",
-        deliveryFee: neighborhood.delivery_fee || 0,
+        deliveryFee: neighborhood?.delivery_fee || 0,
         type: newAddress.type,
       };
-      
+
       saveAddress(address);
     }
   };
@@ -202,13 +214,19 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       return;
     }
 
-    if (!newAddress.neighborhoodId) {
-      toast.error("Selecione um bairro");
+    const hasNeighborhoodList = neighborhoods.length > 0;
+    const neighborhood = hasNeighborhoodList
+      ? neighborhoods.find((n) => n.id === newAddress.neighborhoodId)
+      : null;
+
+    const neighborhoodName = hasNeighborhoodList
+      ? neighborhood?.name
+      : (newAddress.neighborhoodName || mapAddress.neighborhood || "").trim();
+
+    if (!neighborhoodName) {
+      toast.error("Informe o bairro");
       return;
     }
-
-    // Get selected neighborhood
-    const neighborhood = neighborhoods.find(n => n.id === newAddress.neighborhoodId);
 
     let deliveryFee = neighborhood?.delivery_fee || 5;
     let distanceKm: number | undefined;
@@ -231,7 +249,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       number: newAddress.number,
       complement: newAddress.complement || undefined,
       neighborhoodId: neighborhood?.id,
-      neighborhoodName: neighborhood?.name || mapAddress.neighborhood || "Centro",
+      neighborhoodName,
       cityId: selectedCityId,
       cityName: mapAddress.city || selectedCityName || "",
       deliveryFee,
@@ -259,6 +277,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       number: "",
       complement: "",
       neighborhoodId: "",
+      neighborhoodName: "",
       type: "home",
     });
     setMapAddress(null);
@@ -371,56 +390,83 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
 
                     <div className="space-y-2">
                       <Label htmlFor="neighborhood-map">Bairro *</Label>
-                      <Select
-                        value={newAddress.neighborhoodId}
-                        onValueChange={(value) => setNewAddress({ ...newAddress, neighborhoodId: value })}
-                      >
-                        <SelectTrigger className="bg-background">
-                          <SelectValue placeholder={loadingNeighborhoods ? "Carregando..." : "Selecione o bairro"} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover border border-border z-50 max-h-[200px]">
-                          {/* Show suggested neighborhood first if detected from map */}
-                          {mapAddress?.neighborhood && (() => {
-                            const suggestedNeighborhood = neighborhoods.find(
-                              n => n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
-                                   mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
-                            );
-                            if (suggestedNeighborhood) {
-                              return (
-                                <SelectItem 
-                                  key={`suggested-${suggestedNeighborhood.id}`} 
-                                  value={suggestedNeighborhood.id}
-                                  className="bg-primary/10 font-medium"
-                                >
-                                  ⭐ {suggestedNeighborhood.name} (Sugerido)
-                                </SelectItem>
+
+                      {loadingNeighborhoods ? (
+                        <div className="p-3 rounded-lg bg-muted text-sm text-muted-foreground">Carregando bairros...</div>
+                      ) : neighborhoods.length > 0 ? (
+                        <Select
+                          value={newAddress.neighborhoodId}
+                          onValueChange={(value) =>
+                            setNewAddress({ ...newAddress, neighborhoodId: value, neighborhoodName: "" })
+                          }
+                        >
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Selecione o bairro" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border border-border z-50 max-h-[200px]">
+                            {/* Show suggested neighborhood first if detected from map */}
+                            {mapAddress?.neighborhood && (() => {
+                              const suggestedNeighborhood = neighborhoods.find(
+                                (n) =>
+                                  n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
+                                  mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
                               );
-                            }
-                            return null;
-                          })()}
-                          {neighborhoods
-                            .filter(n => {
-                              // Don't show duplicate if already suggested
-                              if (mapAddress?.neighborhood) {
-                                const isSuggested = n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
-                                                   mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase());
-                                return !isSuggested;
+                              if (suggestedNeighborhood) {
+                                return (
+                                  <SelectItem
+                                    key={`suggested-${suggestedNeighborhood.id}`}
+                                    value={suggestedNeighborhood.id}
+                                    className="bg-primary/10 font-medium"
+                                  >
+                                    ⭐ {suggestedNeighborhood.name} (Sugerido)
+                                  </SelectItem>
+                                );
                               }
-                              return true;
-                            })
-                            .map((neighborhood) => (
-                              <SelectItem key={neighborhood.id} value={neighborhood.id}>
-                                {neighborhood.name} - R$ {(neighborhood.delivery_fee || 0).toFixed(2).replace(".", ",")}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      {mapAddress?.neighborhood && !neighborhoods.some(
-                        n => n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
-                             mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
-                      ) && (
-                        <p className="text-xs text-warning">
-                          Bairro "{mapAddress.neighborhood}" não encontrado. Selecione o mais próximo.
+                              return null;
+                            })()}
+                            {neighborhoods
+                              .filter((n) => {
+                                // Don't show duplicate if already suggested
+                                if (mapAddress?.neighborhood) {
+                                  const isSuggested =
+                                    n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
+                                    mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase());
+                                  return !isSuggested;
+                                }
+                                return true;
+                              })
+                              .map((neighborhood) => (
+                                <SelectItem key={neighborhood.id} value={neighborhood.id}>
+                                  {neighborhood.name} - R$ {(neighborhood.delivery_fee || 0).toFixed(2).replace(".", ",")}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="neighborhood-map"
+                          placeholder={mapAddress?.neighborhood ? mapAddress.neighborhood : "Ex: Centro"}
+                          value={newAddress.neighborhoodName}
+                          onChange={(e) =>
+                            setNewAddress({ ...newAddress, neighborhoodName: e.target.value, neighborhoodId: "" })
+                          }
+                        />
+                      )}
+
+                      {mapAddress?.neighborhood && neighborhoods.length > 0 &&
+                        !neighborhoods.some(
+                          (n) =>
+                            n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
+                            mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
+                        ) && (
+                          <p className="text-xs text-muted-foreground">
+                            Bairro "{mapAddress.neighborhood}" não encontrado. Selecione o mais próximo.
+                          </p>
+                        )}
+
+                      {!loadingNeighborhoods && neighborhoods.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Não há bairros cadastrados para esta cidade — você pode digitar o bairro.
                         </p>
                       )}
                     </div>
@@ -457,21 +503,43 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
 
                     <div className="space-y-2">
                       <Label htmlFor="neighborhood">Bairro *</Label>
-                      <Select
-                        value={newAddress.neighborhoodId}
-                        onValueChange={(value) => setNewAddress({ ...newAddress, neighborhoodId: value })}
-                      >
-                        <SelectTrigger className="bg-background">
-                          <SelectValue placeholder={loadingNeighborhoods ? "Carregando..." : "Selecione o bairro"} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover border border-border z-50">
-                          {neighborhoods.map((neighborhood) => (
-                            <SelectItem key={neighborhood.id} value={neighborhood.id}>
-                              {neighborhood.name} - Taxa: R$ {(neighborhood.delivery_fee || 0).toFixed(2).replace(".", ",")}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+
+                      {loadingNeighborhoods ? (
+                        <div className="p-3 rounded-lg bg-muted text-sm text-muted-foreground">Carregando bairros...</div>
+                      ) : neighborhoods.length > 0 ? (
+                        <Select
+                          value={newAddress.neighborhoodId}
+                          onValueChange={(value) =>
+                            setNewAddress({ ...newAddress, neighborhoodId: value, neighborhoodName: "" })
+                          }
+                        >
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Selecione o bairro" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border border-border z-50">
+                            {neighborhoods.map((neighborhood) => (
+                              <SelectItem key={neighborhood.id} value={neighborhood.id}>
+                                {neighborhood.name} - Taxa: R$ {(neighborhood.delivery_fee || 0).toFixed(2).replace(".", ",")}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="neighborhood"
+                          placeholder="Ex: Centro"
+                          value={newAddress.neighborhoodName}
+                          onChange={(e) =>
+                            setNewAddress({ ...newAddress, neighborhoodName: e.target.value, neighborhoodId: "" })
+                          }
+                        />
+                      )}
+
+                      {!loadingNeighborhoods && neighborhoods.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Não há bairros cadastrados para esta cidade — você pode digitar o bairro.
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
@@ -557,9 +625,9 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                     className="flex-1" 
                     onClick={addressMode === "map" ? handleAddAddressFromMap : handleAddAddressManual}
                     disabled={
-                      addressMode === "map" 
-                        ? !mapAddress || !newAddress.number
-                        : !newAddress.street || !newAddress.number || !newAddress.neighborhoodId
+                      addressMode === "map"
+                        ? !mapAddress || !newAddress.number || (neighborhoods.length > 0 ? !newAddress.neighborhoodId : !newAddress.neighborhoodName.trim() && !(mapAddress?.neighborhood || "").trim())
+                        : !newAddress.street || !newAddress.number || (neighborhoods.length > 0 ? !newAddress.neighborhoodId : !newAddress.neighborhoodName.trim())
                     }
                   >
                     Salvar Endereço
