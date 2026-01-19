@@ -28,6 +28,7 @@ import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminRegions from "./pages/admin/Regions";
 import AdminCoupons from "./pages/admin/Coupons";
+import AdminPromotions from "./pages/admin/Promotions";
 import DriverDashboard from "./pages/driver/Dashboard";
 import AvailableOrders from "./pages/driver/AvailableOrders";
 import InRoute from "./pages/driver/InRoute";
@@ -69,6 +70,7 @@ const App = () => (
               <Route path="/admin/usuarios" element={<AdminUsers />} />
               <Route path="/admin/regioes" element={<AdminRegions />} />
               <Route path="/admin/cupons" element={<AdminCoupons />} />
+              <Route path="/admin/promocoes" element={<AdminPromotions />} />
               <Route path="/admin/relatorios" element={<AdminReports />} />
               <Route path="/admin/configuracoes" element={<AdminSettings />} />
               <Route path="/entregador" element={<DriverDashboard />} />
