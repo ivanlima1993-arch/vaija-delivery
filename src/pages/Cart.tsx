@@ -6,6 +6,27 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import DeliveryAddressSelector, { DeliveryAddress } from "@/components/cart/DeliveryAddressSelector";
+import { CouponInput, calculateCouponDiscount } from "@/components/cart/CouponInput";
+import { RegionalPromotions } from "@/components/cart/RegionalPromotions";
+
+interface Coupon {
+  id: string;
+  code: string;
+  description: string | null;
+  discount_type: "percentage" | "fixed";
+  discount_value: number;
+  min_order_value: number | null;
+  max_discount: number | null;
+}
+
+interface Promotion {
+  id: string;
+  title: string;
+  description: string | null;
+  discount_type: "percentage" | "fixed" | "free_delivery";
+  discount_value: number;
+  min_order_value: number | null;
+}
 
 const paymentMethods = [
   { id: "pix", name: "Pix", icon: QrCode, description: "Aprovação instantânea" },
@@ -17,9 +38,31 @@ const Cart = () => {
   const { items, updateQuantity, removeItem, total, clearCart } = useCart();
   const [selectedPayment, setSelectedPayment] = useState("pix");
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [appliedPromotion, setAppliedPromotion] = useState<Promotion | null>(null);
   
   const deliveryFee = deliveryAddress?.deliveryFee ?? 0;
-  const finalTotal = total + deliveryFee;
+  const couponDiscount = calculateCouponDiscount(appliedCoupon, total);
+  
+  // Apply promotion discount
+  const getPromotionDiscount = () => {
+    if (!appliedPromotion) return { discount: 0, freeDelivery: false };
+    
+    if (appliedPromotion.discount_type === "free_delivery") {
+      return { discount: 0, freeDelivery: true };
+    }
+    
+    if (appliedPromotion.discount_type === "percentage") {
+      return { discount: (total * appliedPromotion.discount_value) / 100, freeDelivery: false };
+    }
+    
+    return { discount: appliedPromotion.discount_value, freeDelivery: false };
+  };
+  
+  const { discount: promotionDiscount, freeDelivery } = getPromotionDiscount();
+  const totalDiscount = couponDiscount + promotionDiscount;
+  const finalDeliveryFee = freeDelivery ? 0 : deliveryFee;
+  const finalTotal = Math.max(0, total - totalDiscount) + finalDeliveryFee;
 
   const handleCheckout = () => {
     if (!deliveryAddress) {
@@ -169,6 +212,23 @@ const Cart = () => {
           </div>
         </motion.div>
 
+        {/* Regional Promotions */}
+        <RegionalPromotions
+          cityId={deliveryAddress?.cityId}
+          neighborhoodId={deliveryAddress?.neighborhoodId}
+          subtotal={total}
+          onPromotionApply={setAppliedPromotion}
+        />
+
+        {/* Coupon Input */}
+        <CouponInput
+          subtotal={total}
+          cityId={deliveryAddress?.cityId}
+          neighborhoodId={deliveryAddress?.neighborhoodId}
+          appliedCoupon={appliedCoupon}
+          onApplyCoupon={setAppliedCoupon}
+        />
+
         {/* Payment Method */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -212,17 +272,42 @@ const Cart = () => {
             <span className="text-muted-foreground">Subtotal</span>
             <span>R$ {total.toFixed(2).replace(".", ",")}</span>
           </div>
+          
+          {/* Coupon Discount */}
+          {couponDiscount > 0 && (
+            <div className="flex justify-between text-sm text-success">
+              <span>Cupom ({appliedCoupon?.code})</span>
+              <span>-R$ {couponDiscount.toFixed(2).replace(".", ",")}</span>
+            </div>
+          )}
+          
+          {/* Promotion Discount */}
+          {promotionDiscount > 0 && (
+            <div className="flex justify-between text-sm text-success">
+              <span>Promoção</span>
+              <span>-R$ {promotionDiscount.toFixed(2).replace(".", ",")}</span>
+            </div>
+          )}
+          
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Taxa de entrega</span>
-            <span className={deliveryFee === 0 ? "text-success" : ""}>
+            <span className={finalDeliveryFee === 0 ? "text-success" : ""}>
               {deliveryAddress 
-                ? deliveryFee === 0 
-                  ? "Grátis" 
-                  : `R$ ${deliveryFee.toFixed(2).replace(".", ",")}`
+                ? finalDeliveryFee === 0 
+                  ? freeDelivery ? "Grátis (promoção)" : "Grátis" 
+                  : `R$ ${finalDeliveryFee.toFixed(2).replace(".", ",")}`
                 : "Selecione o endereço"
               }
             </span>
           </div>
+          
+          {totalDiscount > 0 && (
+            <div className="flex justify-between text-sm font-medium text-success bg-success/10 -mx-4 px-4 py-2">
+              <span>Você está economizando</span>
+              <span>R$ {(totalDiscount + (freeDelivery ? deliveryFee : 0)).toFixed(2).replace(".", ",")}</span>
+            </div>
+          )}
+          
           <div className="border-t border-border pt-3 flex justify-between">
             <span className="font-semibold">Total</span>
             <span className="font-display font-bold text-lg text-primary">
