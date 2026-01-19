@@ -33,6 +33,7 @@ import DriverDashboard from "./pages/driver/Dashboard";
 import AvailableOrders from "./pages/driver/AvailableOrders";
 import InRoute from "./pages/driver/InRoute";
 import DriverHistory from "./pages/driver/History";
+import DriverEarnings from "./pages/driver/Earnings";
 import DriverSettings from "./pages/driver/Settings";
 import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
               <Route path="/entregador/em-rota" element={<InRoute />} />
               <Route path="/entregador/historico" element={<DriverHistory />} />
+              <Route path="/entregador/ganhos" element={<DriverEarnings />} />
               <Route path="/entregador/configuracoes" element={<DriverSettings />} />
               <Route path="/pedido/:orderId" element={<OrderTracking />} />
               <Route path="*" element={<NotFound />} />
