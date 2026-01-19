@@ -13,6 +13,7 @@ import {
   Shield,
   MapPin,
   Ticket,
+  Megaphone,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -52,6 +53,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       icon: Ticket,
       label: "Cupons",
       path: "/admin/cupons",
+    },
+    {
+      icon: Megaphone,
+      label: "Promoções",
+      path: "/admin/promocoes",
     },
     {
       icon: Users,
