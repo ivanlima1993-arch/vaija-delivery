@@ -7,6 +7,7 @@ export interface CartItem {
   quantity: number;
   image: string;
   notes?: string;
+  establishmentId?: string;
 }
 
 interface CartContextType {
@@ -16,6 +17,7 @@ interface CartContextType {
   updateQuantity: (id: number, quantity: number) => void;
   clearCart: () => void;
   total: number;
+  establishmentId: string | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -53,9 +55,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  // Get establishment ID from first item (all items should be from same establishment)
+  const establishmentId = items.length > 0 ? items[0].establishmentId || null : null;
+
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, total }}
+      value={{ items, addItem, removeItem, updateQuantity, clearCart, total, establishmentId }}
     >
       {children}
     </CartContext.Provider>

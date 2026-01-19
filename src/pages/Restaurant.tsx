@@ -108,6 +108,7 @@ const Restaurant = () => {
       name: product.name,
       price: Number(product.price),
       image: product.image_url || "",
+      establishmentId: id,
     });
     toast.success(`${product.name} adicionado ao carrinho!`, {
       position: "bottom-center",
