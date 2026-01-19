@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrderReview } from "@/hooks/useOrderReview";
+import { useCustomerOrderNotification } from "@/hooks/useCustomerOrderNotification";
 import DriverTrackingMap from "@/components/tracking/DriverTrackingMap";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
 import { StarRating } from "@/components/reviews/StarRating";
@@ -21,6 +22,8 @@ import {
   Phone,
   Loader2,
   Star,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -57,8 +60,19 @@ const OrderTracking = () => {
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    "Notification" in window && Notification.permission === "granted"
+  );
   
   const { data: existingReview, refetch: refetchReview } = useOrderReview(orderId);
+  
+  // Customer order notification hook
+  const { requestNotificationPermission, initializeStatus } = useCustomerOrderNotification({
+    orderId: orderId || null,
+    onStatusChange: (updatedOrder) => {
+      setOrder(updatedOrder);
+    },
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -68,7 +82,6 @@ const OrderTracking = () => {
 
     if (orderId && user) {
       fetchOrder();
-      subscribeToOrder();
     }
   }, [orderId, user, authLoading]);
 
@@ -82,6 +95,9 @@ const OrderTracking = () => {
 
       if (error) throw error;
       setOrder(orderData);
+      
+      // Initialize status for notification hook (prevents notification on first load)
+      initializeStatus(orderData.status);
 
       // Fetch order items
       const { data: items } = await supabase
@@ -106,27 +122,11 @@ const OrderTracking = () => {
     }
   };
 
-  const subscribeToOrder = () => {
-    const channel = supabase
-      .channel(`order-tracking-${orderId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "orders",
-          filter: `id=eq.${orderId}`,
-        },
-        (payload) => {
-          console.log("Order updated:", payload.new);
-          setOrder(payload.new as Order);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+  const handleEnableNotifications = async () => {
+    await requestNotificationPermission();
+    setNotificationsEnabled(
+      "Notification" in window && Notification.permission === "granted"
+    );
   };
 
   if (authLoading || loading) {
@@ -186,6 +186,24 @@ const OrderTracking = () => {
               {new Date(order.created_at).toLocaleDateString("pt-BR")}
             </p>
           </div>
+          
+          {/* Notification Toggle */}
+          {!isDelivered && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleEnableNotifications}
+              className={notificationsEnabled ? "text-primary" : "text-muted-foreground"}
+              title={notificationsEnabled ? "Notificações ativadas" : "Ativar notificações"}
+            >
+              {notificationsEnabled ? (
+                <Bell className="w-5 h-5" />
+              ) : (
+                <BellOff className="w-5 h-5" />
+              )}
+            </Button>
+          )}
+          
           <Badge className={statusConfig[order.status]?.color}>
             {statusConfig[order.status]?.label}
           </Badge>
