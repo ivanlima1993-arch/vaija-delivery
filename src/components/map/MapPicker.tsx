@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
-import { Locate, MapPin, Loader2 } from "lucide-react";
+import { Locate, MapPin, Loader2, AlertTriangle } from "lucide-react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useMapbox, GeocodedAddress, Coordinates } from "@/hooks/useMapbox";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
   const [currentCoords, setCurrentCoords] = useState<Coordinates | null>(initialCoordinates || null);
   
   const { getCurrentPosition, isLoading: geoLoading } = useGeolocation();
@@ -46,8 +47,25 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
     }
   }, [reverseGeocode, onLocationSelect]);
 
+  // Check WebGL support
+  const checkWebGLSupport = useCallback(() => {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      return !!gl;
+    } catch {
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
+
+    // Check WebGL support first
+    if (!checkWebGLSupport()) {
+      setMapError("Seu navegador não suporta WebGL. Tente abrir em uma nova aba ou use outro navegador.");
+      return;
+    }
 
     // For demo purposes - in production, fetch token from edge function
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || MAPBOX_PUBLIC_TOKEN;
@@ -87,9 +105,14 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
       map.current.on("load", () => {
         setMapLoaded(true);
       });
+
+      map.current.on("error", (e) => {
+        console.error("Map error:", e);
+        setMapError("Erro ao carregar o mapa. Tente abrir em uma nova aba.");
+      });
     } catch (err) {
       console.error("Error initializing map:", err);
-      toast.error("Erro ao carregar o mapa");
+      setMapError("Erro ao carregar o mapa. O WebGL pode não estar disponível neste ambiente.");
     }
 
     return () => {
@@ -119,6 +142,38 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
     }
   };
 
+  // Show error state with fallback UI
+  if (mapError) {
+    return (
+      <div 
+        className="relative rounded-xl overflow-hidden border border-border bg-muted flex flex-col items-center justify-center gap-4 p-6"
+        style={{ height }}
+      >
+        <AlertTriangle className="w-12 h-12 text-warning" />
+        <div className="text-center">
+          <p className="font-medium text-sm mb-1">Mapa indisponível</p>
+          <p className="text-xs text-muted-foreground max-w-[250px]">
+            {mapError}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleUseMyLocation}
+          disabled={isLoading}
+        >
+          {geoLoading ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Locate className="w-4 h-4 mr-2" />
+          )}
+          Usar minha localização
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="relative rounded-xl overflow-hidden border border-border">
       <div
@@ -134,7 +189,7 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
         size="sm"
         className="absolute bottom-4 left-4 shadow-lg"
         onClick={handleUseMyLocation}
-        disabled={isLoading}
+        disabled={isLoading || !!mapError}
       >
         {geoLoading ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -154,8 +209,8 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
         </div>
       )}
 
-      {/* Crosshair in center */}
-      {!mapLoaded && (
+      {/* Loading state */}
+      {!mapLoaded && !mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
