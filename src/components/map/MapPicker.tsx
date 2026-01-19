@@ -2,13 +2,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
-import { Locate, MapPin, Loader2, AlertTriangle } from "lucide-react";
+import { Locate, Loader2, AlertTriangle } from "lucide-react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useMapbox, GeocodedAddress, Coordinates } from "@/hooks/useMapbox";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-// Mapbox public token (loaded from edge function for security)
-const MAPBOX_PUBLIC_TOKEN = "pk.eyJ1IjoibG92YWJsZWRldiIsImEiOiJjbTRxNHNiZDYwMmtvMnFzOGN3bGdqdG9jIn0.example";
 
 interface MapPickerProps {
   initialCoordinates?: Coordinates;
@@ -23,117 +21,143 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [currentCoords, setCurrentCoords] = useState<Coordinates | null>(initialCoordinates || null);
-  
+
   const { getCurrentPosition, isLoading: geoLoading } = useGeolocation();
   const { reverseGeocode, isLoading: mapboxLoading } = useMapbox();
 
   const isLoading = geoLoading || mapboxLoading;
 
   // Default to Brazil center
-  const defaultCenter: [number, number] = initialCoordinates 
+  const defaultCenter: [number, number] = initialCoordinates
     ? [initialCoordinates.longitude, initialCoordinates.latitude]
     : [-49.2648, -25.4284]; // Curitiba as default
 
-  const updateMarkerPosition = useCallback(async (lng: number, lat: number) => {
-    setCurrentCoords({ latitude: lat, longitude: lng });
-    
-    try {
-      const address = await reverseGeocode({ latitude: lat, longitude: lng });
-      if (address) {
-        onLocationSelect(address);
+  const updateMarkerPosition = useCallback(
+    async (lng: number, lat: number) => {
+      setCurrentCoords({ latitude: lat, longitude: lng });
+
+      try {
+        const address = await reverseGeocode({ latitude: lat, longitude: lng });
+        if (address) {
+          onLocationSelect(address);
+        }
+      } catch (err) {
+        console.error("Error reverse geocoding:", err);
       }
-    } catch (err) {
-      console.error("Error reverse geocoding:", err);
-    }
-  }, [reverseGeocode, onLocationSelect]);
+    },
+    [reverseGeocode, onLocationSelect]
+  );
 
   // Check WebGL support
   const checkWebGLSupport = useCallback(() => {
     try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
       return !!gl;
     } catch {
       return false;
     }
   }, []);
 
+  const fetchMapboxToken = useCallback(async () => {
+    const { data, error } = await supabase.functions.invoke("mapbox", {
+      body: { action: "get_token" },
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || "Falha ao obter token do mapa");
+
+    const token = data.data?.token;
+    if (!token) throw new Error("Token do mapa não retornado");
+
+    return token as string;
+  }, []);
+
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Check WebGL support first
-    if (!checkWebGLSupport()) {
-      setMapError("Seu navegador não suporta WebGL. Tente abrir em uma nova aba ou use outro navegador.");
-      return;
-    }
+    let cancelled = false;
 
-    // For demo purposes - in production, fetch token from edge function
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || MAPBOX_PUBLIC_TOKEN;
+    const init = async () => {
+      // Check WebGL support first
+      if (!checkWebGLSupport()) {
+        setMapError("Seu navegador não suporta WebGL. Tente abrir em uma nova aba ou use outro navegador.");
+        return;
+      }
 
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/streets-v12",
-        center: defaultCenter,
-        zoom: 15,
-      });
+      try {
+        const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || (await fetchMapboxToken());
+        if (cancelled) return;
 
-      // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+        mapboxgl.accessToken = token;
 
-      // Create draggable marker
-      marker.current = new mapboxgl.Marker({
-        draggable: true,
-        color: "#f97316", // primary color
-      })
-        .setLngLat(defaultCenter)
-        .addTo(map.current);
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current!,
+          style: "mapbox://styles/mapbox/streets-v12",
+          center: defaultCenter,
+          zoom: 15,
+        });
 
-      // Handle marker drag
-      marker.current.on("dragend", () => {
-        const lngLat = marker.current!.getLngLat();
-        updateMarkerPosition(lngLat.lng, lngLat.lat);
-      });
+        // Add navigation controls
+        map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
 
-      // Handle map click
-      map.current.on("click", (e) => {
-        const { lng, lat } = e.lngLat;
-        marker.current?.setLngLat([lng, lat]);
-        updateMarkerPosition(lng, lat);
-      });
+        // Create draggable marker
+        marker.current = new mapboxgl.Marker({
+          draggable: true,
+          color: "hsl(var(--primary))",
+        })
+          .setLngLat(defaultCenter)
+          .addTo(map.current);
 
-      map.current.on("load", () => {
-        setMapLoaded(true);
-      });
+        // Handle marker drag
+        marker.current.on("dragend", () => {
+          const lngLat = marker.current!.getLngLat();
+          updateMarkerPosition(lngLat.lng, lngLat.lat);
+        });
 
-      map.current.on("error", (e) => {
-        console.error("Map error:", e);
-        setMapError("Erro ao carregar o mapa. Tente abrir em uma nova aba.");
-      });
-    } catch (err) {
-      console.error("Error initializing map:", err);
-      setMapError("Erro ao carregar o mapa. O WebGL pode não estar disponível neste ambiente.");
-    }
+        // Handle map click
+        map.current.on("click", (e) => {
+          const { lng, lat } = e.lngLat;
+          marker.current?.setLngLat([lng, lat]);
+          updateMarkerPosition(lng, lat);
+        });
+
+        map.current.on("load", () => {
+          setMapLoaded(true);
+        });
+
+        map.current.on("error", (e) => {
+          console.error("Map error:", e);
+          setMapError("Erro ao carregar o mapa. Verifique sua conexão e tente novamente.");
+        });
+      } catch (err) {
+        console.error("Error initializing map:", err);
+        setMapError("Erro ao carregar o mapa. Tente novamente em instantes.");
+      }
+    };
+
+    init();
 
     return () => {
+      cancelled = true;
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [checkWebGLSupport, defaultCenter, fetchMapboxToken, updateMarkerPosition]);
 
   const handleUseMyLocation = async () => {
     try {
       const position = await getCurrentPosition();
       const coords: [number, number] = [position.longitude, position.latitude];
-      
+
       map.current?.flyTo({
         center: coords,
         zoom: 17,
       });
-      
+
       marker.current?.setLngLat(coords);
       updateMarkerPosition(position.longitude, position.latitude);
-      
+
       toast.success("Localização encontrada!");
     } catch (err) {
       if (err instanceof Error) {
@@ -145,29 +169,17 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
   // Show error state with fallback UI
   if (mapError) {
     return (
-      <div 
+      <div
         className="relative rounded-xl overflow-hidden border border-border bg-muted flex flex-col items-center justify-center gap-4 p-6"
         style={{ height }}
       >
-        <AlertTriangle className="w-12 h-12 text-warning" />
+        <AlertTriangle className="w-12 h-12 text-muted-foreground" />
         <div className="text-center">
           <p className="font-medium text-sm mb-1">Mapa indisponível</p>
-          <p className="text-xs text-muted-foreground max-w-[250px]">
-            {mapError}
-          </p>
+          <p className="text-xs text-muted-foreground max-w-[250px]">{mapError}</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleUseMyLocation}
-          disabled={isLoading}
-        >
-          {geoLoading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Locate className="w-4 h-4 mr-2" />
-          )}
+        <Button type="button" variant="outline" size="sm" onClick={handleUseMyLocation} disabled={isLoading}>
+          {geoLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Locate className="w-4 h-4 mr-2" />}
           Usar minha localização
         </Button>
       </div>
@@ -176,12 +188,8 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-border">
-      <div
-        ref={mapContainer}
-        style={{ height }}
-        className="w-full"
-      />
-      
+      <div ref={mapContainer} style={{ height }} className="w-full" />
+
       {/* GPS Button */}
       <Button
         type="button"
@@ -191,15 +199,11 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
         onClick={handleUseMyLocation}
         disabled={isLoading || !!mapError}
       >
-        {geoLoading ? (
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-        ) : (
-          <Locate className="w-4 h-4 mr-2" />
-        )}
+        {geoLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Locate className="w-4 h-4 mr-2" />}
         Usar minha localização
       </Button>
 
-      {/* Loading overlay */}
+      {/* Loading overlay: reverse geocoding */}
       {mapboxLoading && (
         <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
           <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-lg shadow-lg">
@@ -209,7 +213,7 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
         </div>
       )}
 
-      {/* Loading state */}
+      {/* Map loading state */}
       {!mapLoaded && !mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -220,3 +224,4 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
 };
 
 export default MapPicker;
+
