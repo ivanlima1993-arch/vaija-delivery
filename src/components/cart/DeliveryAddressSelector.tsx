@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Plus, Check, Home, Briefcase, Map, Navigation } from "lucide-react";
+import { MapPin, Plus, Check, Home, Briefcase, Map, Navigation, Loader2, Route } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAddress } from "@/contexts/AddressContext";
 import MapPicker from "@/components/map/MapPicker";
 import { GeocodedAddress, Coordinates } from "@/hooks/useMapbox";
+import { useDeliveryFee } from "@/hooks/useDeliveryFee";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 export interface DeliveryAddress {
@@ -37,6 +39,8 @@ export interface DeliveryAddress {
   deliveryFee: number;
   type: "home" | "work" | "other";
   coordinates?: Coordinates;
+  distanceKm?: number;
+  durationMinutes?: number;
 }
 
 interface Neighborhood {
@@ -63,6 +67,8 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
   const { selectedCityId, selectedCityName } = useAddress();
   const [addressMode, setAddressMode] = useState<"manual" | "map">("manual");
   const [mapAddress, setMapAddress] = useState<GeocodedAddress | null>(null);
+  const { calculateFee, isLoading: calculatingFee } = useDeliveryFee();
+  const { establishmentId } = useCart();
 
   const [newAddress, setNewAddress] = useState<{
     label: string;
@@ -118,10 +124,26 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
     }
   };
 
-  const handleSelectAddress = (address: DeliveryAddress) => {
+  const handleSelectAddress = useCallback(async (address: DeliveryAddress) => {
+    // If address has coordinates and we have an establishment, try to calculate distance-based fee
+    if (address.coordinates && establishmentId) {
+      const result = await calculateFee(establishmentId, address.coordinates);
+      if (result) {
+        const updatedAddress: DeliveryAddress = {
+          ...address,
+          deliveryFee: result.fee,
+          distanceKm: result.distanceKm,
+          durationMinutes: result.durationMinutes,
+        };
+        onAddressChange(updatedAddress);
+        setOpen(false);
+        return;
+      }
+    }
+    
     onAddressChange(address);
     setOpen(false);
-  };
+  }, [establishmentId, calculateFee, onAddressChange]);
 
   const handleMapLocationSelect = (geocoded: GeocodedAddress) => {
     setMapAddress(geocoded);
@@ -154,7 +176,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
     }
   };
 
-  const handleAddAddressFromMap = () => {
+  const handleAddAddressFromMap = async () => {
     if (!mapAddress || !selectedCityId) {
       toast.error("Selecione um local no mapa");
       return;
@@ -170,6 +192,20 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       n => n.name.toLowerCase() === mapAddress.neighborhood?.toLowerCase()
     );
 
+    let deliveryFee = neighborhood?.delivery_fee || 5;
+    let distanceKm: number | undefined;
+    let durationMinutes: number | undefined;
+
+    // Calculate distance-based fee if we have establishment
+    if (establishmentId && mapAddress.coordinates) {
+      const result = await calculateFee(establishmentId, mapAddress.coordinates);
+      if (result) {
+        deliveryFee = result.fee;
+        distanceKm = result.distanceKm;
+        durationMinutes = result.durationMinutes;
+      }
+    }
+
     const address: DeliveryAddress = {
       id: Date.now().toString(),
       label: newAddress.label || `${mapAddress.street}, ${newAddress.number}`,
@@ -180,9 +216,11 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       neighborhoodName: mapAddress.neighborhood || neighborhood?.name || "Centro",
       cityId: selectedCityId,
       cityName: mapAddress.city || selectedCityName || "",
-      deliveryFee: neighborhood?.delivery_fee || 5, // Default fee if neighborhood not found
+      deliveryFee,
       type: newAddress.type,
       coordinates: mapAddress.coordinates,
+      distanceKm,
+      durationMinutes,
     };
 
     saveAddress(address);
@@ -235,9 +273,22 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                 <p className="font-semibold text-destructive">Selecione um endereço</p>
               )}
               {selectedAddress && (
-                <p className="text-xs text-muted-foreground">
-                  {selectedAddress.neighborhoodName} • Taxa: R$ {selectedAddress.deliveryFee.toFixed(2).replace(".", ",")}
-                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{selectedAddress.neighborhoodName}</span>
+                  {selectedAddress.distanceKm && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Route className="w-3 h-3" />
+                        {selectedAddress.distanceKm.toFixed(1)} km
+                      </span>
+                    </>
+                  )}
+                  <span>•</span>
+                  <span className="text-success font-medium">
+                    R$ {selectedAddress.deliveryFee.toFixed(2).replace(".", ",")}
+                  </span>
+                </div>
               )}
             </div>
           </div>
@@ -480,9 +531,17 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                               {address.street}, {address.number}
                               {address.complement ? ` - ${address.complement}` : ""} • {address.neighborhoodName}
                             </p>
-                            <p className="text-xs text-success">
-                              Taxa de entrega: R$ {address.deliveryFee.toFixed(2).replace(".", ",")}
-                            </p>
+                            <div className="flex items-center gap-2 text-xs">
+                              {address.distanceKm && (
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Route className="w-3 h-3" />
+                                  {address.distanceKm.toFixed(1)} km
+                                </span>
+                              )}
+                              <span className="text-success font-medium">
+                                R$ {address.deliveryFee.toFixed(2).replace(".", ",")}
+                              </span>
+                            </div>
                           </div>
                           {isSelected && (
                             <Check className="w-5 h-5 text-primary shrink-0" />

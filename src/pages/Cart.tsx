@@ -290,7 +290,14 @@ const Cart = () => {
           )}
           
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Taxa de entrega</span>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>Taxa de entrega</span>
+              {deliveryAddress?.distanceKm && (
+                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                  {deliveryAddress.distanceKm.toFixed(1)} km
+                </span>
+              )}
+            </div>
             <span className={finalDeliveryFee === 0 ? "text-success" : ""}>
               {deliveryAddress 
                 ? finalDeliveryFee === 0 
