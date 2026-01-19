@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   Bike,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/entregador" },
   { icon: Package, label: "Disponíveis", path: "/entregador/disponiveis" },
   { icon: MapPin, label: "Em Rota", path: "/entregador/em-rota" },
+  { icon: Wallet, label: "Ganhos", path: "/entregador/ganhos" },
   { icon: History, label: "Histórico", path: "/entregador/historico" },
   { icon: Settings, label: "Configurações", path: "/entregador/configuracoes" },
 ];
