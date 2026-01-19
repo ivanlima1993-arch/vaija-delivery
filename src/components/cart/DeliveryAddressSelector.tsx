@@ -152,6 +152,21 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       ...prev,
       street: geocoded.street || geocoded.address.split(",")[0] || "",
     }));
+    
+    // Auto-select neighborhood if detected and matches
+    if (geocoded.neighborhood) {
+      const matchingNeighborhood = neighborhoods.find(
+        n => n.name.toLowerCase().includes(geocoded.neighborhood?.toLowerCase() || "") ||
+             geocoded.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
+      );
+      if (matchingNeighborhood) {
+        setNewAddress(prev => ({
+          ...prev,
+          street: geocoded.street || geocoded.address.split(",")[0] || "",
+          neighborhoodId: matchingNeighborhood.id,
+        }));
+      }
+    }
   };
 
   const handleAddAddressManual = () => {
@@ -187,10 +202,13 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       return;
     }
 
-    // Try to find neighborhood or use default fee
-    const neighborhood = neighborhoods.find(
-      n => n.name.toLowerCase() === mapAddress.neighborhood?.toLowerCase()
-    );
+    if (!newAddress.neighborhoodId) {
+      toast.error("Selecione um bairro");
+      return;
+    }
+
+    // Get selected neighborhood
+    const neighborhood = neighborhoods.find(n => n.id === newAddress.neighborhoodId);
 
     let deliveryFee = neighborhood?.delivery_fee || 5;
     let distanceKm: number | undefined;
@@ -213,7 +231,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       number: newAddress.number,
       complement: newAddress.complement || undefined,
       neighborhoodId: neighborhood?.id,
-      neighborhoodName: mapAddress.neighborhood || neighborhood?.name || "Centro",
+      neighborhoodName: neighborhood?.name || mapAddress.neighborhood || "Centro",
       cityId: selectedCityId,
       cityName: mapAddress.city || selectedCityName || "",
       deliveryFee,
@@ -346,10 +364,66 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                       <div className="p-3 bg-accent/50 rounded-lg text-sm">
                         <p className="font-medium">{mapAddress.address}</p>
                         {mapAddress.neighborhood && (
-                          <p className="text-muted-foreground">Bairro: {mapAddress.neighborhood}</p>
+                          <p className="text-muted-foreground">Detectado: {mapAddress.neighborhood}</p>
                         )}
                       </div>
                     )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="neighborhood-map">Bairro *</Label>
+                      <Select
+                        value={newAddress.neighborhoodId}
+                        onValueChange={(value) => setNewAddress({ ...newAddress, neighborhoodId: value })}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder={loadingNeighborhoods ? "Carregando..." : "Selecione o bairro"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border border-border z-50 max-h-[200px]">
+                          {/* Show suggested neighborhood first if detected from map */}
+                          {mapAddress?.neighborhood && (() => {
+                            const suggestedNeighborhood = neighborhoods.find(
+                              n => n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
+                                   mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
+                            );
+                            if (suggestedNeighborhood) {
+                              return (
+                                <SelectItem 
+                                  key={`suggested-${suggestedNeighborhood.id}`} 
+                                  value={suggestedNeighborhood.id}
+                                  className="bg-primary/10 font-medium"
+                                >
+                                  ⭐ {suggestedNeighborhood.name} (Sugerido)
+                                </SelectItem>
+                              );
+                            }
+                            return null;
+                          })()}
+                          {neighborhoods
+                            .filter(n => {
+                              // Don't show duplicate if already suggested
+                              if (mapAddress?.neighborhood) {
+                                const isSuggested = n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
+                                                   mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase());
+                                return !isSuggested;
+                              }
+                              return true;
+                            })
+                            .map((neighborhood) => (
+                              <SelectItem key={neighborhood.id} value={neighborhood.id}>
+                                {neighborhood.name} - R$ {(neighborhood.delivery_fee || 0).toFixed(2).replace(".", ",")}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      {mapAddress?.neighborhood && !neighborhoods.some(
+                        n => n.name.toLowerCase().includes(mapAddress.neighborhood?.toLowerCase() || "") ||
+                             mapAddress.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
+                      ) && (
+                        <p className="text-xs text-warning">
+                          Bairro "{mapAddress.neighborhood}" não encontrado. Selecione o mais próximo.
+                        </p>
+                      )}
+                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
