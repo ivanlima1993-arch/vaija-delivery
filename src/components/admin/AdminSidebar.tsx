@@ -12,6 +12,7 @@ import {
   X,
   Shield,
   MapPin,
+  Ticket,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -46,6 +47,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       icon: MapPin,
       label: "Cidades e Regiões",
       path: "/admin/regioes",
+    },
+    {
+      icon: Ticket,
+      label: "Cupons",
+      path: "/admin/cupons",
     },
     {
       icon: Users,
