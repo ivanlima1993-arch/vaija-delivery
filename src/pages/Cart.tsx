@@ -86,16 +86,16 @@ const Cart = () => {
       return;
     }
 
-    // Get user profile for name and phone
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name, phone")
-      .eq("user_id", user.id)
-      .single();
-
     setIsSubmitting(true);
 
     try {
+      // Get user profile for name and phone
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("user_id", user.id)
+        .single();
+
       // Build full address string
       const fullAddress = `${deliveryAddress.street}, ${deliveryAddress.number}${deliveryAddress.complement ? ` - ${deliveryAddress.complement}` : ""}, ${deliveryAddress.neighborhoodName}, ${deliveryAddress.cityName}`;
 
