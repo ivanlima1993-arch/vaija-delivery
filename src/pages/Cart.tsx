@@ -144,7 +144,7 @@ const Cart = () => {
       });
       
       clearCart();
-      navigate(`/order/${order.id}`);
+      navigate(`/pedido/${order.id}`);
     } catch (error) {
       console.error("Erro ao criar pedido:", error);
       toast.error("Erro ao finalizar pedido. Tente novamente.");
