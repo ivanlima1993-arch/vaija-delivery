@@ -11,8 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
 import {
-  ArrowLeft,
   Plus,
   Pencil,
   Trash2,
@@ -20,6 +20,7 @@ import {
   FolderOpen,
   X,
   Image,
+  Menu,
   DollarSign,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -34,6 +35,7 @@ const EstablishmentMenu = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modal states
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -238,23 +240,29 @@ const EstablishmentMenu = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/estabelecimento")}
-              className="p-2 hover:bg-muted rounded-lg"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="font-bold text-lg">Cardápio</h1>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex">
+      <EstablishmentSidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      <div className="p-4 lg:p-6 space-y-6">
+      <main className="flex-1 overflow-auto">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                className="lg:hidden p-2 hover:bg-muted rounded-lg"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <h1 className="font-bold text-lg">Cardápio</h1>
+            </div>
+          </div>
+        </header>
+
+        <div className="p-4 lg:p-6 space-y-6">
         {/* Categories Section */}
         <Card>
           <CardHeader>
@@ -449,7 +457,8 @@ const EstablishmentMenu = () => {
             )}
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </main>
 
       {/* Category Modal */}
       <AnimatePresence>

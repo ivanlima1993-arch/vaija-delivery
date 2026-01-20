@@ -9,18 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
 import {
   Store,
   ShoppingBag,
   DollarSign,
   Clock,
-  TrendingUp,
   Package,
-  Settings,
-  LogOut,
   Menu,
-  X,
-  Zap,
   Bell,
   Volume2,
 } from "lucide-react";
@@ -159,77 +155,11 @@ const EstablishmentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
-      >
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-primary p-1.5 rounded-lg">
-                <Zap className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-lg">VAIJÁ</span>
-            </div>
-            <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <nav className="p-4 space-y-1">
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
-            <TrendingUp className="w-5 h-5" />
-            Dashboard
-          </button>
-          <button
-            onClick={() => navigate("/estabelecimento/pedidos")}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            Pedidos
-            {pendingOrders.length > 0 && (
-              <Badge variant="destructive" className="ml-auto">
-                {pendingOrders.length}
-              </Badge>
-            )}
-          </button>
-          <button
-            onClick={() => navigate("/estabelecimento/cardapio")}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground"
-          >
-            <Package className="w-5 h-5" />
-            Cardápio
-          </button>
-          <button
-            onClick={() => navigate("/estabelecimento/configuracoes")}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground"
-          >
-            <Settings className="w-5 h-5" />
-            Configurações
-          </button>
-        </nav>
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
-          <button
-            onClick={signOut}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/10 text-destructive"
-          >
-            <LogOut className="w-5 h-5" />
-            Sair
-          </button>
-        </div>
-      </aside>
+      <EstablishmentSidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+        pendingOrdersCount={pendingOrders.length}
+      />
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
