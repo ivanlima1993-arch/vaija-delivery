@@ -8,7 +8,6 @@ import {
   LogOut,
   Store,
   X,
-  Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -111,13 +110,6 @@ const EstablishmentSidebar = ({
 
         {/* Footer */}
         <div className="p-4 border-t">
-          <button
-            onClick={() => handleNavigate("/")}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground mb-2"
-          >
-            <Zap className="w-5 h-5" />
-            Voltar ao Site
-          </button>
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/10 text-destructive"
