@@ -104,7 +104,7 @@ const Restaurant = () => {
 
   const handleAddItem = (product: Product) => {
     addItem({
-      id: parseInt(product.id.substring(0, 8), 16),
+      id: product.id,
       name: product.name,
       price: Number(product.price),
       image: product.image_url || "",
