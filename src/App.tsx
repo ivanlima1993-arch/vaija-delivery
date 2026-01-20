@@ -37,6 +37,7 @@ import DriverEarnings from "./pages/driver/Earnings";
 import DriverSettings from "./pages/driver/Settings";
 import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
+import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <GlobalOrderNotifications />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/restaurant/:id" element={<Restaurant />} />
