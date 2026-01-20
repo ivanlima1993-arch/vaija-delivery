@@ -38,9 +38,14 @@ const EstablishmentDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Real-time order notifications
-  const { playNotificationSound } = useOrderNotification({
+  // Real-time order notifications with persistent sound
+  const { 
+    playNotificationSound, 
+    stopAllSounds, 
+    hasPendingSounds 
+  } = useOrderNotification({
     establishmentId: establishment?.id || null,
+    soundEnabled,
     onNewOrder: (order) => {
       setOrders((prev) => [order, ...prev]);
     },
@@ -267,22 +272,49 @@ const EstablishmentDashboard = () => {
               </div>
               <button
                 onClick={() => {
-                  setSoundEnabled(!soundEnabled);
-                  if (!soundEnabled) {
-                    playNotificationSound();
+                  if (hasPendingSounds) {
+                    stopAllSounds();
+                  } else {
+                    setSoundEnabled(!soundEnabled);
+                    if (!soundEnabled) {
+                      playNotificationSound();
+                    }
                   }
                 }}
                 className={`relative p-2 rounded-lg transition-colors ${
-                  soundEnabled ? "hover:bg-muted" : "bg-muted/50 text-muted-foreground"
+                  hasPendingSounds 
+                    ? "bg-destructive/10 hover:bg-destructive/20" 
+                    : soundEnabled 
+                      ? "hover:bg-muted" 
+                      : "bg-muted/50 text-muted-foreground"
                 }`}
-                title={soundEnabled ? "Som ativado" : "Som desativado"}
+                title={
+                  hasPendingSounds 
+                    ? "Clique para silenciar alarme" 
+                    : soundEnabled 
+                      ? "Som ativado" 
+                      : "Som desativado"
+                }
               >
-                <Volume2 className={`w-5 h-5 ${!soundEnabled ? "opacity-50" : ""}`} />
+                <Volume2 
+                  className={`w-5 h-5 ${
+                    hasPendingSounds 
+                      ? "text-destructive animate-pulse" 
+                      : !soundEnabled 
+                        ? "opacity-50" 
+                        : ""
+                  }`} 
+                />
+                {hasPendingSounds && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-xs rounded-full flex items-center justify-center">
+                    !
+                  </span>
+                )}
               </button>
               <button className="relative p-2 hover:bg-muted rounded-lg">
                 <Bell className="w-5 h-5" />
                 {pendingOrders.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center animate-pulse">
                     {pendingOrders.length}
                   </span>
                 )}
