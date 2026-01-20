@@ -200,7 +200,7 @@ export const useOrderNotification = ({
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification("🔔 Novo Pedido!", {
         body: `Pedido #${order.order_number} - R$ ${Number(order.total).toFixed(2)}`,
-        icon: "/favicon.ico",
+        icon: "/pwa-192x192.png",
         requireInteraction: true,
         tag: `order-${order.id}`,
       });

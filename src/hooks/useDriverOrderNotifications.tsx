@@ -132,7 +132,7 @@ export const useDriverOrderNotifications = () => {
       if ("Notification" in window && Notification.permission === "granted") {
         const notification = new Notification("🛵 Novo Pedido Disponível!", {
           body: `${establishmentName}\nTaxa de entrega: R$ ${deliveryFee}`,
-          icon: "/favicon.ico",
+          icon: "/pwa-192x192.png",
           tag: `driver-order-${order.id}`,
           requireInteraction: true,
         });
