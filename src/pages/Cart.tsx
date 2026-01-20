@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, Trash2, CreditCard, Banknote, QrCode, Clock, Bike } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2, CreditCard, Banknote, QrCode, Clock, Bike, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import DeliveryAddressSelector, { DeliveryAddress } from "@/components/cart/DeliveryAddressSelector";
 import { CouponInput, calculateCouponDiscount } from "@/components/cart/CouponInput";
 import { RegionalPromotions } from "@/components/cart/RegionalPromotions";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Coupon {
   id: string;
@@ -30,16 +32,19 @@ interface Promotion {
 
 const paymentMethods = [
   { id: "pix", name: "Pix", icon: QrCode, description: "Aprovação instantânea" },
-  { id: "card", name: "Cartão", icon: CreditCard, description: "Crédito ou débito" },
+  { id: "credit_card", name: "Cartão", icon: CreditCard, description: "Crédito ou débito" },
   { id: "cash", name: "Dinheiro", icon: Banknote, description: "Pague na entrega" },
 ];
 
 const Cart = () => {
-  const { items, updateQuantity, removeItem, total, clearCart } = useCart();
+  const { items, updateQuantity, removeItem, total, clearCart, establishmentId } = useCart();
   const [selectedPayment, setSelectedPayment] = useState("pix");
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [appliedPromotion, setAppliedPromotion] = useState<Promotion | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   const deliveryFee = deliveryAddress?.deliveryFee ?? 0;
   const couponDiscount = calculateCouponDiscount(appliedCoupon, total);
@@ -64,16 +69,88 @@ const Cart = () => {
   const finalDeliveryFee = freeDelivery ? 0 : deliveryFee;
   const finalTotal = Math.max(0, total - totalDiscount) + finalDeliveryFee;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!deliveryAddress) {
       toast.error("Selecione um endereço de entrega");
       return;
     }
-    
-    toast.success("Pedido realizado com sucesso! 🎉", {
-      description: "Você receberá atualizações sobre seu pedido.",
-    });
-    clearCart();
+
+    if (!user) {
+      toast.error("Faça login para finalizar o pedido");
+      navigate("/auth");
+      return;
+    }
+
+    if (!establishmentId) {
+      toast.error("Erro ao identificar o estabelecimento");
+      return;
+    }
+
+    // Get user profile for name and phone
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, phone")
+      .eq("user_id", user.id)
+      .single();
+
+    setIsSubmitting(true);
+
+    try {
+      // Build full address string
+      const fullAddress = `${deliveryAddress.street}, ${deliveryAddress.number}${deliveryAddress.complement ? ` - ${deliveryAddress.complement}` : ""}, ${deliveryAddress.neighborhoodName}, ${deliveryAddress.cityName}`;
+
+      // Create the order
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          customer_id: user.id,
+          customer_name: profile?.full_name || "Cliente",
+          customer_phone: profile?.phone || "",
+          establishment_id: establishmentId,
+          delivery_address: fullAddress,
+          delivery_latitude: deliveryAddress.coordinates?.latitude || null,
+          delivery_longitude: deliveryAddress.coordinates?.longitude || null,
+          subtotal: total,
+          delivery_fee: finalDeliveryFee,
+          discount: totalDiscount,
+          total: finalTotal,
+          payment_method: selectedPayment as "pix" | "credit_card" | "debit_card" | "cash",
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map((item) => ({
+        order_id: order.id,
+        product_id: String(item.id),
+        product_name: item.name,
+        product_price: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity,
+        notes: item.notes || null,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      toast.success("Pedido realizado com sucesso! 🎉", {
+        description: "Você receberá atualizações sobre seu pedido.",
+      });
+      
+      clearCart();
+      navigate(`/order/${order.id}`);
+    } catch (error) {
+      console.error("Erro ao criar pedido:", error);
+      toast.error("Erro ao finalizar pedido. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (items.length === 0) {
@@ -332,9 +409,16 @@ const Cart = () => {
             size="lg" 
             className="w-full" 
             onClick={handleCheckout}
-            disabled={!deliveryAddress}
+            disabled={!deliveryAddress || isSubmitting}
           >
-            Finalizar pedido • R$ {finalTotal.toFixed(2).replace(".", ",")}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Finalizando...
+              </>
+            ) : (
+              `Finalizar pedido • R$ ${finalTotal.toFixed(2).replace(".", ",")}`
+            )}
           </Button>
         </div>
       </div>
