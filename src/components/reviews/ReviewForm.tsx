@@ -55,6 +55,7 @@ export const ReviewForm = ({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
         toast.error("Você precisa estar logado para avaliar");
+        setIsSubmitting(false);
         return;
       }
 
@@ -75,6 +76,7 @@ export const ReviewForm = ({
         } else {
           throw error;
         }
+        setIsSubmitting(false);
         return;
       }
 
