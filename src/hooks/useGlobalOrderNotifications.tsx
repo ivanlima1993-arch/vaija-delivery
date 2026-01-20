@@ -132,7 +132,7 @@ export const useGlobalOrderNotifications = () => {
     if ("Notification" in window && Notification.permission === "granted") {
       const notification = new Notification(message.title, {
         body: `${message.body}\nPedido #${order.order_number}`,
-        icon: "/favicon.ico",
+        icon: "/pwa-192x192.png",
         tag: `order-${order.id}-${order.status}`,
         requireInteraction: order.status === "out_for_delivery",
       });
