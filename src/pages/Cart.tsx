@@ -125,7 +125,7 @@ const Cart = () => {
       // Create order items
       const orderItems = items.map((item) => ({
         order_id: order.id,
-        product_id: String(item.id),
+        product_id: item.id,
         product_name: item.name,
         product_price: item.price,
         quantity: item.quantity,
