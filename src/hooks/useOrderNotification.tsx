@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -9,75 +9,168 @@ interface UseOrderNotificationOptions {
   establishmentId: string | null;
   onNewOrder?: (order: Order) => void;
   onOrderUpdate?: (order: Order) => void;
+  soundEnabled?: boolean;
 }
 
 export const useOrderNotification = ({
   establishmentId,
   onNewOrder,
   onOrderUpdate,
+  soundEnabled = true,
 }: UseOrderNotificationOptions) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [pendingOrdersWithSound, setPendingOrdersWithSound] = useState<Set<string>>(new Set());
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPlayingRef = useRef(false);
 
-  // Create audio element for notification sound
+  // Initialize audio context
   useEffect(() => {
-    // Using a Web Audio API beep sound
-    audioRef.current = new Audio();
-    audioRef.current.volume = 0.7;
+    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
   }, []);
 
-  const playNotificationSound = useCallback(() => {
-    // Create a simple beep using Web Audio API
+  const playBeepSequence = useCallback(() => {
+    if (!audioContextRef.current || isPlayingRef.current) return;
+    
+    isPlayingRef.current = true;
+    
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = audioContextRef.current;
       
-      // Create oscillator for the beep
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      // Ensure audio context is running
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // First beep - higher pitch
+      const oscillator1 = audioContext.createOscillator();
+      const gainNode1 = audioContext.createGain();
       
-      oscillator.frequency.value = 800;
-      oscillator.type = "sine";
+      oscillator1.connect(gainNode1);
+      gainNode1.connect(audioContext.destination);
       
-      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      oscillator1.frequency.value = 880;
+      oscillator1.type = "sine";
       
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
+      gainNode1.gain.setValueAtTime(0.6, audioContext.currentTime);
+      gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
       
-      // Second beep
+      oscillator1.start(audioContext.currentTime);
+      oscillator1.stop(audioContext.currentTime + 0.3);
+      
+      // Second beep - even higher
+      const oscillator2 = audioContext.createOscillator();
+      const gainNode2 = audioContext.createGain();
+      
+      oscillator2.connect(gainNode2);
+      gainNode2.connect(audioContext.destination);
+      
+      oscillator2.frequency.value = 1100;
+      oscillator2.type = "sine";
+      
+      gainNode2.gain.setValueAtTime(0.6, audioContext.currentTime + 0.15);
+      gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.45);
+      
+      oscillator2.start(audioContext.currentTime + 0.15);
+      oscillator2.stop(audioContext.currentTime + 0.45);
+      
+      // Third beep - highest
+      const oscillator3 = audioContext.createOscillator();
+      const gainNode3 = audioContext.createGain();
+      
+      oscillator3.connect(gainNode3);
+      gainNode3.connect(audioContext.destination);
+      
+      oscillator3.frequency.value = 1320;
+      oscillator3.type = "sine";
+      
+      gainNode3.gain.setValueAtTime(0.6, audioContext.currentTime + 0.3);
+      gainNode3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+      
+      oscillator3.start(audioContext.currentTime + 0.3);
+      oscillator3.stop(audioContext.currentTime + 0.6);
+      
       setTimeout(() => {
-        const osc2 = audioContext.createOscillator();
-        const gain2 = audioContext.createGain();
-        
-        osc2.connect(gain2);
-        gain2.connect(audioContext.destination);
-        
-        osc2.frequency.value = 1000;
-        osc2.type = "sine";
-        
-        gain2.gain.setValueAtTime(0.5, audioContext.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-        
-        osc2.start(audioContext.currentTime);
-        osc2.stop(audioContext.currentTime + 0.5);
-      }, 200);
+        isPlayingRef.current = false;
+      }, 700);
     } catch (error) {
       console.log("Audio notification not supported");
+      isPlayingRef.current = false;
     }
   }, []);
 
+  // Play persistent sound for pending orders
+  useEffect(() => {
+    if (pendingOrdersWithSound.size > 0 && soundEnabled) {
+      // Play immediately
+      playBeepSequence();
+      
+      // Start interval to repeat every 3 seconds
+      if (!intervalRef.current) {
+        intervalRef.current = setInterval(() => {
+          if (pendingOrdersWithSound.size > 0 && soundEnabled) {
+            playBeepSequence();
+          }
+        }, 3000);
+      }
+    } else {
+      // Stop interval when no pending orders
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+    
+    return () => {
+      if (intervalRef.current && pendingOrdersWithSound.size === 0) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [pendingOrdersWithSound.size, soundEnabled, playBeepSequence]);
+
+  // Stop sound for a specific order (when confirmed)
+  const stopSoundForOrder = useCallback((orderId: string) => {
+    setPendingOrdersWithSound(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(orderId);
+      return newSet;
+    });
+  }, []);
+
+  // Stop all sounds
+  const stopAllSounds = useCallback(() => {
+    setPendingOrdersWithSound(new Set());
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  // Add order to sound list
+  const addOrderToSoundList = useCallback((orderId: string) => {
+    setPendingOrdersWithSound(prev => {
+      const newSet = new Set(prev);
+      newSet.add(orderId);
+      return newSet;
+    });
+  }, []);
+
   const showNotification = useCallback((order: Order) => {
-    // Play sound
-    playNotificationSound();
+    // Add order to persistent sound list
+    if (order.status === "pending") {
+      addOrderToSoundList(order.id);
+    }
     
     // Show toast with custom styling
     toast.success(
@@ -93,9 +186,13 @@ export const useOrderNotification = ({
         </div>
       </div>,
       {
-        duration: 10000,
+        duration: Infinity, // Keep until dismissed
         position: "top-center",
         className: "border-2 border-primary bg-card shadow-lg",
+        action: {
+          label: "Ver",
+          onClick: () => {},
+        },
       }
     );
 
@@ -105,15 +202,35 @@ export const useOrderNotification = ({
         body: `Pedido #${order.order_number} - R$ ${Number(order.total).toFixed(2)}`,
         icon: "/favicon.ico",
         requireInteraction: true,
+        tag: `order-${order.id}`,
       });
     }
-  }, [playNotificationSound]);
+  }, [addOrderToSoundList]);
 
   const requestNotificationPermission = useCallback(async () => {
     if ("Notification" in window && Notification.permission === "default") {
       await Notification.requestPermission();
     }
   }, []);
+
+  // Fetch initial pending orders to resume sound
+  useEffect(() => {
+    if (!establishmentId) return;
+
+    const fetchPendingOrders = async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("establishment_id", establishmentId)
+        .eq("status", "pending");
+      
+      if (data && data.length > 0) {
+        setPendingOrdersWithSound(new Set(data.map(o => o.id)));
+      }
+    };
+
+    fetchPendingOrders();
+  }, [establishmentId]);
 
   useEffect(() => {
     if (!establishmentId) return;
@@ -147,6 +264,12 @@ export const useOrderNotification = ({
         },
         (payload) => {
           const updatedOrder = payload.new as Order;
+          
+          // Stop sound when order is no longer pending
+          if (updatedOrder.status !== "pending") {
+            stopSoundForOrder(updatedOrder.id);
+          }
+          
           onOrderUpdate?.(updatedOrder);
         }
       )
@@ -155,7 +278,14 @@ export const useOrderNotification = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [establishmentId, showNotification, onNewOrder, onOrderUpdate, requestNotificationPermission]);
+  }, [establishmentId, showNotification, onNewOrder, onOrderUpdate, requestNotificationPermission, stopSoundForOrder]);
 
-  return { playNotificationSound, requestNotificationPermission };
+  return { 
+    playNotificationSound: playBeepSequence, 
+    requestNotificationPermission,
+    stopSoundForOrder,
+    stopAllSounds,
+    pendingOrdersWithSound: Array.from(pendingOrdersWithSound),
+    hasPendingSounds: pendingOrdersWithSound.size > 0,
+  };
 };
