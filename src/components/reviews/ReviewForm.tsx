@@ -106,16 +106,23 @@ export const ReviewForm = ({
               <FormField
                 control={form.control}
                 name="establishmentRating"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Avaliação</FormLabel>
+                    <FormLabel>Avaliação *</FormLabel>
                     <FormControl>
-                      <StarRating
-                        rating={field.value}
-                        interactive
-                        size="lg"
-                        onRatingChange={field.onChange}
-                      />
+                      <div>
+                        <StarRating
+                          rating={field.value}
+                          interactive
+                          size="lg"
+                          onRatingChange={field.onChange}
+                        />
+                        {field.value === 0 && fieldState.error && (
+                          <p className="text-sm text-destructive mt-2">
+                            Toque nas estrelas para avaliar
+                          </p>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -152,16 +159,23 @@ export const ReviewForm = ({
                 <FormField
                   control={form.control}
                   name="driverRating"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
-                      <FormLabel>Avaliação da entrega</FormLabel>
+                      <FormLabel>Avaliação da entrega *</FormLabel>
                       <FormControl>
-                        <StarRating
-                          rating={field.value || 0}
-                          interactive
-                          size="lg"
-                          onRatingChange={field.onChange}
-                        />
+                        <div>
+                          <StarRating
+                            rating={field.value || 0}
+                            interactive
+                            size="lg"
+                            onRatingChange={field.onChange}
+                          />
+                          {(field.value === 0 || !field.value) && fieldState.error && (
+                            <p className="text-sm text-destructive mt-2">
+                              Toque nas estrelas para avaliar
+                            </p>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
