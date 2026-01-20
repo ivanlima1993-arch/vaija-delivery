@@ -104,7 +104,7 @@ export const useDriverOrderNotifications = () => {
       toast.success(
         <div
           className="flex items-center gap-3 cursor-pointer"
-          onClick={() => navigate("/entregador/pedidos")}
+          onClick={() => navigate("/entregador/disponiveis")}
         >
           <div className="flex-shrink-0 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
             <span className="text-white text-xl">🛵</span>
@@ -139,7 +139,7 @@ export const useDriverOrderNotifications = () => {
 
         notification.onclick = () => {
           window.focus();
-          navigate("/entregador/pedidos");
+          navigate("/entregador/disponiveis");
           notification.close();
         };
       }
