@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+
+const CART_STORAGE_KEY = "vaija-cart";
 
 export interface CartItem {
   id: string;
@@ -22,8 +24,33 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const loadCartFromStorage = (): CartItem[] => {
+  try {
+    const stored = localStorage.getItem(CART_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error("Erro ao carregar carrinho:", error);
+  }
+  return [];
+};
+
+const saveCartToStorage = (items: CartItem[]) => {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch (error) {
+    console.error("Erro ao salvar carrinho:", error);
+  }
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => loadCartFromStorage());
+
+  // Salva no localStorage sempre que os itens mudarem
+  useEffect(() => {
+    saveCartToStorage(items);
+  }, [items]);
 
   const addItem = (item: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
