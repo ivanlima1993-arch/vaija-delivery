@@ -174,6 +174,7 @@ export type Database = {
           city: string | null
           city_id: string | null
           cover_url: string | null
+          cpf_cnpj: string | null
           created_at: string
           delivery_fee: number | null
           description: string | null
@@ -201,6 +202,7 @@ export type Database = {
           city?: string | null
           city_id?: string | null
           cover_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           delivery_fee?: number | null
           description?: string | null
@@ -228,6 +230,7 @@ export type Database = {
           city?: string | null
           city_id?: string | null
           cover_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           delivery_fee?: number | null
           description?: string | null

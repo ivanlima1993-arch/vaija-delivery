@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Store, Mail, Lock, User, Phone, ArrowLeft } from "lucide-react";
+import { Store, Mail, Lock, User, Phone, ArrowLeft, FileText } from "lucide-react";
 
 type AuthMode = "login" | "register";
 
@@ -20,6 +20,7 @@ const EstablishmentAuth = () => {
     fullName: "",
     phone: "",
     establishmentName: "",
+    cpfCnpj: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,6 +91,7 @@ const EstablishmentAuth = () => {
           owner_id: data.user.id,
           name: formData.establishmentName,
           phone: formData.phone,
+          cpf_cnpj: formData.cpfCnpj,
         });
 
         toast.success("Cadastro realizado! Aguarde aprovação do seu estabelecimento.");
@@ -173,6 +175,22 @@ const EstablishmentAuth = () => {
                       type="tel"
                       placeholder="(00) 00000-0000"
                       value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      className="h-12 focus-visible:ring-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cpfCnpj" className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-orange-500" />
+                      CPF ou CNPJ
+                    </Label>
+                    <Input
+                      id="cpfCnpj"
+                      name="cpfCnpj"
+                      type="text"
+                      placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                      value={formData.cpfCnpj}
                       onChange={handleChange}
                       required
                       className="h-12 focus-visible:ring-orange-500"
