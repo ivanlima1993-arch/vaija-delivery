@@ -31,6 +31,7 @@ import {
   MessageCircle,
   Bike,
   Radio,
+  Menu,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -46,6 +47,7 @@ const InRoute = () => {
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Location tracker hook - initialized after order is loaded
   const {
@@ -164,7 +166,7 @@ const InRoute = () => {
   if (!order) {
     return (
       <div className="min-h-screen bg-background flex">
-        <DriverSidebar />
+        <DriverSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Bike className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
@@ -187,17 +189,17 @@ const InRoute = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <DriverSidebar />
+      <DriverSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1">
         {/* Header */}
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/entregador")}
+              onClick={() => setSidebarOpen(true)}
               className="p-2 hover:bg-muted rounded-lg lg:hidden"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <Menu className="w-5 h-5" />
             </button>
             <div className="flex-1">
               <h1 className="font-bold text-lg">Entrega em Andamento</h1>

@@ -34,6 +34,7 @@ import {
   PiggyBank,
   Clock,
   Star,
+  Menu,
 } from "lucide-react";
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -55,6 +56,7 @@ const Earnings = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
   const [chartData, setChartData] = useState<DailyEarning[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Stats
   const [stats, setStats] = useState({
@@ -231,7 +233,7 @@ const Earnings = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <DriverSidebar />
+      <DriverSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1">
         {/* Header */}
@@ -239,10 +241,10 @@ const Earnings = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate("/entregador")}
+                onClick={() => setSidebarOpen(true)}
                 className="p-2 hover:bg-muted rounded-lg lg:hidden"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <Menu className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-2">
                 <Wallet className="w-6 h-6 text-primary" />
