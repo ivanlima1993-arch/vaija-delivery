@@ -1,15 +1,31 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, User, Lock, Save, Upload, Camera } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, User, Lock, Save, Upload, Camera, Package, Clock, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import type { Database } from "@/integrations/supabase/types";
+
+type Order = Database["public"]["Tables"]["orders"]["Row"];
+type OrderStatus = Database["public"]["Enums"]["order_status"];
+
+const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
+  pending: { label: "Aguardando", color: "bg-yellow-500" },
+  confirmed: { label: "Confirmado", color: "bg-blue-500" },
+  preparing: { label: "Preparando", color: "bg-orange-500" },
+  ready: { label: "Pronto", color: "bg-purple-500" },
+  out_for_delivery: { label: "Em entrega", color: "bg-green-500" },
+  delivered: { label: "Entregue", color: "bg-green-700" },
+  cancelled: { label: "Cancelado", color: "bg-red-500" },
+};
+
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -18,6 +34,8 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [profileData, setProfileData] = useState({
@@ -40,6 +58,7 @@ const Profile = () => {
 
     if (user) {
       fetchProfile();
+      fetchOrders();
     }
   }, [user, authLoading, navigate]);
 
@@ -65,6 +84,24 @@ const Profile = () => {
       toast.error("Erro ao carregar perfil");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("customer_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -202,6 +239,81 @@ const Profile = () => {
           </Button>
 
           <h1 className="text-3xl font-bold mb-8">Meu Perfil</h1>
+
+          {/* Orders Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Meus Pedidos
+              </CardTitle>
+              <CardDescription>
+                Acompanhe seus pedidos recentes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingOrders ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-muted-foreground">Você ainda não fez nenhum pedido</p>
+                  <Link to="/">
+                    <Button variant="outline" className="mt-4">
+                      Explorar restaurantes
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {orders.slice(0, 5).map((order) => {
+                    const isActive = !["delivered", "cancelled"].includes(order.status);
+                    return (
+                      <Link
+                        key={order.id}
+                        to={`/pedido/${order.id}`}
+                        className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                      >
+                        <div className={`p-2 rounded-full ${isActive ? "bg-primary/10" : "bg-muted"}`}>
+                          {isActive ? (
+                            <Clock className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Package className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">Pedido #{order.order_number}</p>
+                            <Badge className={`${statusConfig[order.status].color} text-xs`}>
+                              {statusConfig[order.status].label}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {new Date(order.created_at).toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })} • R$ {Number(order.total).toFixed(2).replace(".", ",")}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      </Link>
+                    );
+                  })}
+                  
+                  {orders.length > 5 && (
+                    <p className="text-center text-sm text-muted-foreground pt-2">
+                      Mostrando 5 de {orders.length} pedidos
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Personal Data Card */}
           <Card className="mb-6">
