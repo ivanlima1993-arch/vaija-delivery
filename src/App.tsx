@@ -36,6 +36,7 @@ import DriverHistory from "./pages/driver/History";
 import DriverEarnings from "./pages/driver/Earnings";
 import DriverSettings from "./pages/driver/Settings";
 import OrderTracking from "./pages/OrderTracking";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
 
@@ -83,6 +84,7 @@ const App = () => (
               <Route path="/entregador/ganhos" element={<DriverEarnings />} />
               <Route path="/entregador/configuracoes" element={<DriverSettings />} />
               <Route path="/pedido/:orderId" element={<OrderTracking />} />
+              <Route path="/instalar" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
