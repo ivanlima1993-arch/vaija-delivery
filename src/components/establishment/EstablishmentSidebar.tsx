@@ -2,33 +2,35 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
+  ShoppingBag,
   Package,
-  MapPin,
-  History,
   Settings,
   LogOut,
-  Bike,
-  Wallet,
+  Store,
   X,
   Zap,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface DriverSidebarProps {
+interface EstablishmentSidebarProps {
   open?: boolean;
   onClose?: () => void;
+  pendingOrdersCount?: number;
 }
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/entregador" },
-  { icon: Package, label: "Disponíveis", path: "/entregador/disponiveis" },
-  { icon: MapPin, label: "Em Rota", path: "/entregador/em-rota" },
-  { icon: Wallet, label: "Ganhos", path: "/entregador/ganhos" },
-  { icon: History, label: "Histórico", path: "/entregador/historico" },
-  { icon: Settings, label: "Configurações", path: "/entregador/configuracoes" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/estabelecimento" },
+  { icon: ShoppingBag, label: "Pedidos", path: "/estabelecimento/pedidos" },
+  { icon: Package, label: "Cardápio", path: "/estabelecimento/cardapio" },
+  { icon: Settings, label: "Configurações", path: "/estabelecimento/configuracoes" },
 ];
 
-const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
+const EstablishmentSidebar = ({ 
+  open = true, 
+  onClose, 
+  pendingOrdersCount = 0 
+}: EstablishmentSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
@@ -64,12 +66,12 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-r from-green-500 to-green-600 p-1.5 rounded-lg">
-                <Bike className="w-5 h-5 text-white" />
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-1.5 rounded-lg">
+                <Store className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-lg">Entregador</span>
-                <p className="text-xs text-muted-foreground">Painel de Entregas</p>
+                <span className="font-bold text-lg">Estabelecimento</span>
+                <p className="text-xs text-muted-foreground">Painel de Gestão</p>
               </div>
             </div>
             <button className="lg:hidden" onClick={onClose}>
@@ -82,6 +84,8 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
         <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
+            const showBadge = item.path === "/estabelecimento/pedidos" && pendingOrdersCount > 0;
+            
             return (
               <button
                 key={item.path}
@@ -89,12 +93,17 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-green-500 text-white"
+                    ? "bg-orange-500 text-white"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 <item.icon className="w-5 h-5" />
                 {item.label}
+                {showBadge && (
+                  <Badge variant="destructive" className="ml-auto">
+                    {pendingOrdersCount}
+                  </Badge>
+                )}
               </button>
             );
           })}
@@ -122,4 +131,4 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
   );
 };
 
-export default DriverSidebar;
+export default EstablishmentSidebar;

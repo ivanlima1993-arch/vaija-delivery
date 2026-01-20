@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Store, MapPin, Clock, DollarSign, Phone, Save } from "lucide-react";
+import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
+import { Store, MapPin, Clock, DollarSign, Phone, Save, Menu as MenuIcon } from "lucide-react";
 import OpeningHoursEditor, { 
   OpeningHours, 
   defaultOpeningHours 
@@ -32,6 +33,7 @@ const EstablishmentSettings = () => {
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
@@ -167,27 +169,33 @@ const EstablishmentSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/estabelecimento")}
-              className="p-2 hover:bg-muted rounded-lg"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="font-bold text-lg">Configurações</h1>
-          </div>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? "Salvando..." : "Salvar"}
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex">
+      <EstablishmentSidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      <div className="p-4 lg:p-6 space-y-6 max-w-3xl mx-auto">
+      <main className="flex-1 overflow-auto">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                className="lg:hidden p-2 hover:bg-muted rounded-lg"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <MenuIcon className="w-5 h-5" />
+              </button>
+              <h1 className="font-bold text-lg">Configurações</h1>
+            </div>
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </header>
+
+        <div className="p-4 lg:p-6 space-y-6 max-w-3xl mx-auto">
         {/* Status */}
         <Card>
           <CardContent className="pt-6">
@@ -422,7 +430,8 @@ const EstablishmentSettings = () => {
             {saving ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

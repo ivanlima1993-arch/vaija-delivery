@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
 import {
-  ArrowLeft,
   Clock,
   MapPin,
   Phone,
@@ -20,6 +20,7 @@ import {
   Truck,
   Package,
   Volume2,
+  Menu,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -47,10 +48,12 @@ const EstablishmentOrders = () => {
   const [establishmentId, setEstablishmentId] = useState<string | null>(null);
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Real-time order notifications
   const { playNotificationSound } = useOrderNotification({
     establishmentId,
+    soundEnabled,
     onNewOrder: (order) => {
       setOrders((prev) => [order, ...prev]);
       fetchOrderItems(order.id);
@@ -169,38 +172,47 @@ const EstablishmentOrders = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/estabelecimento")}
-              className="p-2 hover:bg-muted rounded-lg"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="font-bold text-lg">Pedidos</h1>
-          </div>
-          <button
-            onClick={() => {
-              setSoundEnabled(!soundEnabled);
-              if (!soundEnabled) {
-                playNotificationSound();
-              }
-            }}
-            className={`p-2 rounded-lg transition-colors ${
-              soundEnabled ? "hover:bg-muted" : "bg-muted/50 text-muted-foreground"
-            }`}
-            title={soundEnabled ? "Som ativado" : "Som desativado"}
-          >
-            <Volume2 className={`w-5 h-5 ${!soundEnabled ? "opacity-50" : ""}`} />
-          </button>
-        </div>
-      </header>
+  const pendingOrdersCount = orders.filter((o) => o.status === "pending").length;
 
-      <div className="p-4 lg:p-6">
+  return (
+    <div className="min-h-screen bg-background flex">
+      <EstablishmentSidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+        pendingOrdersCount={pendingOrdersCount}
+      />
+
+      <main className="flex-1 overflow-auto">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                className="lg:hidden p-2 hover:bg-muted rounded-lg"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <h1 className="font-bold text-lg">Pedidos</h1>
+            </div>
+            <button
+              onClick={() => {
+                setSoundEnabled(!soundEnabled);
+                if (!soundEnabled) {
+                  playNotificationSound();
+                }
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                soundEnabled ? "hover:bg-muted" : "bg-muted/50 text-muted-foreground"
+              }`}
+              title={soundEnabled ? "Som ativado" : "Som desativado"}
+            >
+              <Volume2 className={`w-5 h-5 ${!soundEnabled ? "opacity-50" : ""}`} />
+            </button>
+          </div>
+        </header>
+
+        <div className="p-4 lg:p-6">
         {/* Filters */}
         <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
           <Button
@@ -318,8 +330,8 @@ const EstablishmentOrders = () => {
             <p className="text-lg">Nenhum pedido encontrado</p>
           </div>
         )}
-      </div>
-
+        </div>
+      </main>
       {/* Order Detail Modal */}
       <AnimatePresence>
         {selectedOrder && (
