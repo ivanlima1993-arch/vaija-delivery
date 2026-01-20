@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDriverOrderNotifications } from "@/hooks/useDriverOrderNotifications";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   TrendingUp,
   Menu,
   ChevronRight,
+  Bell,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import DriverSidebar from "@/components/driver/DriverSidebar";
@@ -43,9 +45,11 @@ interface Order {
 const DriverDashboard = () => {
   const navigate = useNavigate();
   const { user, isDriver, loading: authLoading } = useAuth();
+  const { requestNotificationPermission } = useDriverOrderNotifications();
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [stats, setStats] = useState<Stats>({
     todayDeliveries: 0,
     todayEarnings: 0,
@@ -55,6 +59,23 @@ const DriverDashboard = () => {
   });
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
+
+  // Check notification permission status
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationsEnabled(Notification.permission === "granted");
+    }
+  }, []);
+
+  const handleEnableNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    setNotificationsEnabled(granted);
+    if (granted) {
+      toast.success("Notificações ativadas! Você receberá alertas de novos pedidos.");
+    } else {
+      toast.error("Permissão negada. Ative nas configurações do navegador.");
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && (!user || !isDriver)) {
@@ -216,16 +237,29 @@ const DriverDashboard = () => {
               </div>
             </div>
             
-            {/* Status Toggle */}
-            <div className="flex items-center gap-2">
-              <span className={`text-sm font-medium ${isOnline ? "text-green-600" : "text-muted-foreground"}`}>
-                {isOnline ? "Online" : "Offline"}
-              </span>
-              <Switch
-                checked={isOnline}
-                onCheckedChange={setIsOnline}
-                className="data-[state=checked]:bg-green-500"
-              />
+            {/* Status Toggle & Notifications */}
+            <div className="flex items-center gap-3">
+              {!notificationsEnabled && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleEnableNotifications}
+                  className="gap-1.5 text-xs"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Ativar Notificações</span>
+                </Button>
+              )}
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-medium ${isOnline ? "text-green-600" : "text-muted-foreground"}`}>
+                  {isOnline ? "Online" : "Offline"}
+                </span>
+                <Switch
+                  checked={isOnline}
+                  onCheckedChange={setIsOnline}
+                  className="data-[state=checked]:bg-green-500"
+                />
+              </div>
             </div>
           </div>
         </header>
