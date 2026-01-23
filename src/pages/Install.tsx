@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Download, Smartphone, Share, Plus, Check, ChefHat, Bike, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.png";
 
 const Install = () => {
   const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
@@ -18,11 +19,12 @@ const Install = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       {/* Header */}
       <header className="p-4 text-center">
-        <Link to="/" className="inline-flex items-center gap-2">
-          <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-xl">VJ</span>
-          </div>
-          <span className="font-bold text-2xl text-orange-600">Vai Já Delivery</span>
+        <Link to="/" className="inline-block">
+          <img 
+            src={logo} 
+            alt="Vai Já Delivery" 
+            className="h-14 w-auto object-contain mx-auto"
+          />
         </Link>
       </header>
 
