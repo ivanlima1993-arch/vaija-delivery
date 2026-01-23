@@ -8,6 +8,7 @@ import CitySelector from "@/components/address/CitySelector";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import logo from "@/assets/logo.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,14 +80,12 @@ const Header = () => {
       <div className="container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-glow">
-              <span className="text-primary-foreground font-display font-bold text-lg">VJ</span>
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="font-display font-bold text-lg leading-tight">VAIJÁ</h1>
-              <p className="text-[10px] text-muted-foreground -mt-1">DELIVERY</p>
-            </div>
+          <Link to="/" className="flex items-center">
+            <img 
+              src={logo} 
+              alt="Vai Já Delivery" 
+              className="h-12 w-auto object-contain"
+            />
           </Link>
 
           {/* City Selector - Desktop */}
