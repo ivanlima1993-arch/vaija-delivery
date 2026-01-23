@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Zap, Mail, Lock, User, Phone, Store, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, Phone, Store, ArrowLeft } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 type AuthMode = "login" | "register" | "register-establishment";
 
@@ -121,14 +122,11 @@ const Auth = () => {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="bg-gradient-primary p-2 rounded-xl">
-              <Zap className="w-8 h-8 text-white" />
-            </div>
-            <span className="text-2xl font-black text-foreground tracking-tight">
-              VAIJÁ
-            </span>
-          </div>
+          <img 
+            src={logo} 
+            alt="Vai Já Delivery" 
+            className="h-16 w-auto object-contain mx-auto mb-4"
+          />
           <p className="text-muted-foreground">
             {mode === "login" && "Entre na sua conta"}
             {mode === "register" && "Crie sua conta"}
