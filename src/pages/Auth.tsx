@@ -125,7 +125,7 @@ const Auth = () => {
           <img 
             src={logo} 
             alt="Vai Já Delivery" 
-            className="h-16 w-auto object-contain mx-auto mb-4 animate-logo-pulse"
+            className="h-24 w-auto object-contain mx-auto mb-4 animate-logo-pulse"
           />
           <p className="text-muted-foreground">
             {mode === "login" && "Entre na sua conta"}

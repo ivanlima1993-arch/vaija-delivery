@@ -13,7 +13,7 @@ const Footer = () => {
               <img 
                 src={logo} 
                 alt="Vai Já Delivery" 
-                className="h-14 w-auto object-contain"
+                className="h-20 w-auto object-contain"
               />
             </Link>
             <p className="text-sm text-muted-foreground mb-4">

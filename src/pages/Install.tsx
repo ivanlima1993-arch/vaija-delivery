@@ -23,7 +23,7 @@ const Install = () => {
           <img 
             src={logo} 
             alt="Vai Já Delivery" 
-            className="h-14 w-auto object-contain mx-auto animate-logo-pulse"
+            className="h-20 w-auto object-contain mx-auto animate-logo-pulse"
           />
         </Link>
       </header>
