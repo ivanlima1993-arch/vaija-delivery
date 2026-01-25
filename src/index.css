@@ -149,4 +149,20 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* Logo pulse animation */
+  @keyframes logo-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+  }
+
+  .animate-logo-pulse {
+    animation: logo-pulse 2s ease-in-out 3;
+  }
 }

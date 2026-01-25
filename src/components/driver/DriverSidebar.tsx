@@ -7,11 +7,11 @@ import {
   History,
   Settings,
   LogOut,
-  Bike,
   Wallet,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 interface DriverSidebarProps {
   open?: boolean;
@@ -62,10 +62,12 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
         {/* Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-r from-green-500 to-green-600 p-1.5 rounded-lg">
-                <Bike className="w-5 h-5 text-white" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img 
+                src={logo} 
+                alt="Vai Já Delivery" 
+                className="h-10 w-auto object-contain animate-logo-pulse"
+              />
               <div>
                 <span className="font-bold text-lg">Entregador</span>
                 <p className="text-xs text-muted-foreground">Painel de Entregas</p>

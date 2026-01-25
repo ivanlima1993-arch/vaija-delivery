@@ -6,11 +6,11 @@ import {
   Package,
   Settings,
   LogOut,
-  Store,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 interface EstablishmentSidebarProps {
   open?: boolean;
@@ -64,10 +64,12 @@ const EstablishmentSidebar = ({
         {/* Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-1.5 rounded-lg">
-                <Store className="w-5 h-5 text-white" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img 
+                src={logo} 
+                alt="Vai Já Delivery" 
+                className="h-10 w-auto object-contain animate-logo-pulse"
+              />
               <div>
                 <span className="font-bold text-lg">Estabelecimento</span>
                 <p className="text-xs text-muted-foreground">Painel de Gestão</p>
