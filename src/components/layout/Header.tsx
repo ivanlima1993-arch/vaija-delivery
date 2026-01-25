@@ -84,7 +84,7 @@ const Header = () => {
             <img 
               src={logo} 
               alt="Vai Já Delivery" 
-              className="h-12 w-auto object-contain animate-logo-pulse"
+              className="h-16 w-auto object-contain animate-logo-pulse"
             />
           </Link>
 

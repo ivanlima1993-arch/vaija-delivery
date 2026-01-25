@@ -68,7 +68,7 @@ const EstablishmentSidebar = ({
               <img 
                 src={logo} 
                 alt="Vai Já Delivery" 
-                className="h-10 w-auto object-contain animate-logo-pulse"
+                className="h-14 w-auto object-contain animate-logo-pulse"
               />
               <div>
                 <span className="font-bold text-lg">Estabelecimento</span>
