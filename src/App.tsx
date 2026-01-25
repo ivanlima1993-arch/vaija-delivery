@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,9 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { AddressProvider } from "@/contexts/AddressContext";
+import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index";
-import Restaurant from "./pages/Restaurant";
-import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import EstablishmentAuth from "./pages/auth/EstablishmentAuth";
 import DriverAuth from "./pages/auth/DriverAuth";
@@ -40,58 +40,83 @@ import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
 
+import Restaurant from "./pages/Restaurant";
+import Cart from "./pages/Cart";
+
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AddressProvider>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <GlobalOrderNotifications />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/restaurant/:id" element={<Restaurant />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/estabelecimento/auth" element={<EstablishmentAuth />} />
-              <Route path="/entregador/auth" element={<DriverAuth />} />
-              <Route path="/perfil" element={<Profile />} />
-              <Route path="/buscar" element={<Search />} />
-              <Route path="/categorias" element={<Categories />} />
-              <Route path="/categorias/:slug" element={<Categories />} />
-              <Route path="/restaurantes" element={<Restaurants />} />
-              <Route path="/estabelecimento" element={<EstablishmentDashboard />} />
-              <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
-              <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />
-              <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />
-              <Route path="/admin/estabelecimentos/novo" element={<AdminCreateEstablishment />} />
-              <Route path="/admin/estabelecimentos/:id/editar" element={<AdminEditEstablishment />} />
-              <Route path="/admin/usuarios" element={<AdminUsers />} />
-              <Route path="/admin/regioes" element={<AdminRegions />} />
-              <Route path="/admin/cupons" element={<AdminCoupons />} />
-              <Route path="/admin/promocoes" element={<AdminPromotions />} />
-              <Route path="/admin/relatorios" element={<AdminReports />} />
-              <Route path="/admin/configuracoes" element={<AdminSettings />} />
-              <Route path="/entregador" element={<DriverDashboard />} />
-              <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
-              <Route path="/entregador/em-rota" element={<InRoute />} />
-              <Route path="/entregador/historico" element={<DriverHistory />} />
-              <Route path="/entregador/ganhos" element={<DriverEarnings />} />
-              <Route path="/entregador/configuracoes" element={<DriverSettings />} />
-              <Route path="/pedido/:orderId" element={<OrderTracking />} />
-              <Route path="/instalar" element={<Install />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
-    </AddressProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // Check if splash was already shown in this session
+    const splashShown = sessionStorage.getItem("splashShown");
+    if (splashShown) {
+      setShowSplash(false);
+      setIsReady(true);
+    }
+  }, []);
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem("splashShown", "true");
+    setIsReady(true);
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AddressProvider>
+        <CartProvider>
+          <TooltipProvider>
+            {showSplash && !sessionStorage.getItem("splashShown") && (
+              <SplashScreen onComplete={handleSplashComplete} duration={3000} />
+            )}
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <GlobalOrderNotifications />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/restaurant/:id" element={<Restaurant />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/estabelecimento/auth" element={<EstablishmentAuth />} />
+                <Route path="/entregador/auth" element={<DriverAuth />} />
+                <Route path="/perfil" element={<Profile />} />
+                <Route path="/buscar" element={<Search />} />
+                <Route path="/categorias" element={<Categories />} />
+                <Route path="/categorias/:slug" element={<Categories />} />
+                <Route path="/restaurantes" element={<Restaurants />} />
+                <Route path="/estabelecimento" element={<EstablishmentDashboard />} />
+                <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
+                <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />
+                <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />
+                <Route path="/admin/estabelecimentos/novo" element={<AdminCreateEstablishment />} />
+                <Route path="/admin/estabelecimentos/:id/editar" element={<AdminEditEstablishment />} />
+                <Route path="/admin/usuarios" element={<AdminUsers />} />
+                <Route path="/admin/regioes" element={<AdminRegions />} />
+                <Route path="/admin/cupons" element={<AdminCoupons />} />
+                <Route path="/admin/promocoes" element={<AdminPromotions />} />
+                <Route path="/admin/relatorios" element={<AdminReports />} />
+                <Route path="/admin/configuracoes" element={<AdminSettings />} />
+                <Route path="/entregador" element={<DriverDashboard />} />
+                <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
+                <Route path="/entregador/em-rota" element={<InRoute />} />
+                <Route path="/entregador/historico" element={<DriverHistory />} />
+                <Route path="/entregador/ganhos" element={<DriverEarnings />} />
+                <Route path="/entregador/configuracoes" element={<DriverSettings />} />
+                <Route path="/pedido/:orderId" element={<OrderTracking />} />
+                <Route path="/instalar" element={<Install />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CartProvider>
+      </AddressProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
