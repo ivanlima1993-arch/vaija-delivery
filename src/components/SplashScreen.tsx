@@ -51,7 +51,7 @@ const SplashScreen = ({ onComplete, duration = 3000 }: SplashScreenProps) => {
             <img
               src={logo}
               alt="Vai Já Delivery"
-              className="h-28 md:h-36 w-auto object-contain drop-shadow-lg"
+              className="h-40 md:h-52 w-auto object-contain drop-shadow-lg"
             />
           </motion.div>
 
