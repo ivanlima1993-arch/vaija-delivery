@@ -1,35 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { 
-  UtensilsCrossed, 
-  ShoppingCart, 
-  Pill, 
-  Gift, 
-  Coffee, 
-  IceCream, 
-  Pizza, 
-  Sandwich,
-  Wine,
-  Croissant,
-  Beef,
-  Flower2,
-  Dog,
-  Zap,
-  Shirt,
-  FileText,
-  Store
-} from "lucide-react";
+import { DISPLAY_CATEGORIES } from "@/constants/categories";
 
-const categories = [
-  { id: "restaurant", name: "Restaurantes", icon: UtensilsCrossed, color: "bg-primary/10 text-primary" },
-  { id: "market", name: "Mercados", icon: ShoppingCart, color: "bg-success/10 text-success" },
-  { id: "pharmacy", name: "Farmácias", icon: Pill, color: "bg-info/10 text-info" },
-  { id: "fast-food", name: "Lanches", icon: Sandwich, color: "bg-yellow-100 text-yellow-600" },
-  { id: "pizza", name: "Pizzarias", icon: Pizza, color: "bg-orange-100 text-orange-600" },
-  { id: "drinks", name: "Bebidas", icon: Wine, color: "bg-purple-100 text-purple-600" },
-  { id: "bakery", name: "Padarias", icon: Croissant, color: "bg-amber-100 text-amber-600" },
-  { id: "coffee", name: "Cafeteria", icon: Coffee, color: "bg-brown-100 text-amber-700" },
-];
+// Show first 8 categories on homepage
+const categories = DISPLAY_CATEGORIES.slice(0, 8);
 
 const CategorySection = () => {
   return (

@@ -5,8 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Store, Mail, Lock, User, Phone, ArrowLeft, FileText } from "lucide-react";
+import { ESTABLISHMENT_CATEGORIES } from "@/constants/categories";
 
 type AuthMode = "login" | "register";
 
@@ -21,6 +29,7 @@ const EstablishmentAuth = () => {
     phone: "",
     establishmentName: "",
     cpfCnpj: "",
+    category: "restaurant",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +101,7 @@ const EstablishmentAuth = () => {
           name: formData.establishmentName,
           phone: formData.phone,
           cpf_cnpj: formData.cpfCnpj,
+          category: formData.category,
         });
 
         toast.success("Cadastro realizado! Aguarde aprovação do seu estabelecimento.");
@@ -163,6 +173,29 @@ const EstablishmentAuth = () => {
                       required
                       className="h-12 focus-visible:ring-orange-500"
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="category" className="flex items-center gap-2 mb-2">
+                      <Store className="w-4 h-4 text-orange-500" />
+                      Categoria
+                    </Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, category: value })
+                      }
+                    >
+                      <SelectTrigger className="h-12 focus:ring-orange-500">
+                        <SelectValue placeholder="Selecione a categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ESTABLISHMENT_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="phone" className="flex items-center gap-2 mb-2">

@@ -18,6 +18,7 @@ import OpeningHoursEditor, {
 } from "@/components/admin/OpeningHoursEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import type { Database, Json } from "@/integrations/supabase/types";
+import { ESTABLISHMENT_CATEGORIES, getEstablishmentCategoryLabel } from "@/constants/categories";
 
 interface City {
   id: string;
@@ -43,6 +44,7 @@ const EstablishmentSettings = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    category: "restaurant",
     phone: "",
     address: "",
     city: "",
@@ -93,6 +95,7 @@ const EstablishmentSettings = () => {
         setFormData({
           name: data.name || "",
           description: data.description || "",
+          category: data.category || "restaurant",
           phone: data.phone || "",
           address: data.address || "",
           city: data.city || "",
@@ -130,6 +133,7 @@ const EstablishmentSettings = () => {
         .update({
           name: formData.name,
           description: formData.description,
+          category: formData.category,
           phone: formData.phone,
           address: formData.address,
           city: selectedCity ? `${selectedCity.name} - ${selectedCity.state}` : formData.city,
@@ -259,6 +263,26 @@ const EstablishmentSettings = () => {
                 onChange={handleChange}
                 placeholder="Nome do seu negócio"
               />
+            </div>
+            <div>
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, category: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ESTABLISHMENT_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="description">Descrição</Label>

@@ -35,29 +35,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
-
-const CATEGORIES = [
-  { value: "restaurant", label: "Restaurante" },
-  { value: "pizzaria", label: "Pizzaria" },
-  { value: "hamburgueria", label: "Hamburgueria" },
-  { value: "japonesa", label: "Comida Japonesa" },
-  { value: "brasileira", label: "Comida Brasileira" },
-  { value: "italiana", label: "Comida Italiana" },
-  { value: "chinesa", label: "Comida Chinesa" },
-  { value: "mexicana", label: "Comida Mexicana" },
-  { value: "acai", label: "Açaí" },
-  { value: "sorveteria", label: "Sorveteria" },
-  { value: "padaria", label: "Padaria" },
-  { value: "cafeteria", label: "Cafeteria" },
-  { value: "doceria", label: "Doceria" },
-  { value: "saudavel", label: "Saudável" },
-  { value: "vegano", label: "Vegano" },
-  { value: "bebidas", label: "Bebidas" },
-  { value: "mercado", label: "Mercado" },
-  { value: "farmacia", label: "Farmácia" },
-  { value: "petshop", label: "Pet Shop" },
-  { value: "outros", label: "Outros" },
-];
+import { ESTABLISHMENT_CATEGORIES } from "@/constants/categories";
 
 interface City {
   id: string;
@@ -391,7 +369,7 @@ const CreateEstablishment = () => {
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map((cat) => (
+                        {ESTABLISHMENT_CATEGORIES.map((cat) => (
                           <SelectItem key={cat.value} value={cat.value}>
                             {cat.label}
                           </SelectItem>
