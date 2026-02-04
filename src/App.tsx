@@ -38,6 +38,8 @@ import DriverSettings from "./pages/driver/Settings";
 import OrderTracking from "./pages/OrderTracking";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
+import TermsOfUse from "./pages/TermsOfUse";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
 
 import Restaurant from "./pages/Restaurant";
@@ -109,6 +111,8 @@ const App = () => {
                 <Route path="/entregador/configuracoes" element={<DriverSettings />} />
                 <Route path="/pedido/:orderId" element={<OrderTracking />} />
                 <Route path="/instalar" element={<Install />} />
+                <Route path="/termos-de-uso" element={<TermsOfUse />} />
+                <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
