@@ -53,11 +53,15 @@ const Footer = () => {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>(11) 99999-9999</span>
+                <a href="https://wa.me/5579988320546" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  (79) 98832-0546
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>contato@vaija.delivery</span>
+                <a href="mailto:vaijadeliveryoficial@gmail.com" className="hover:text-primary transition-colors">
+                  vaijadeliveryoficial@gmail.com
+                </a>
               </li>
             </ul>
           </div>
