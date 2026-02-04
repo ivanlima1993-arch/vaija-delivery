@@ -29,22 +29,22 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Links */}
-          <div>
-            <h4 className="font-display font-semibold mb-4">Para você</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/" className="hover:text-primary transition-colors">Como funciona</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Cupons</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Suporte</Link></li>
-            </ul>
-          </div>
-
+          {/* Parceiros */}
           <div>
             <h4 className="font-display font-semibold mb-4">Parceiros</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/" className="hover:text-primary transition-colors">Cadastre seu restaurante</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Seja entregador</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Portal do parceiro</Link></li>
+              <li><Link to="/estabelecimento/auth" className="hover:text-primary transition-colors">Cadastre seu estabelecimento</Link></li>
+              <li><Link to="/entregador/auth" className="hover:text-primary transition-colors">Seja entregador</Link></li>
+            </ul>
+          </div>
+
+          {/* Institucional */}
+          <div>
+            <h4 className="font-display font-semibold mb-4">Institucional</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link to="/" className="hover:text-primary transition-colors">Sobre nós</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Termos de uso</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Política de privacidade</Link></li>
             </ul>
           </div>
 
