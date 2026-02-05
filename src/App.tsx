@@ -40,6 +40,7 @@ import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AboutUs from "./pages/AboutUs";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
 
 import Restaurant from "./pages/Restaurant";
@@ -113,6 +114,7 @@ const App = () => {
                 <Route path="/instalar" element={<Install />} />
                 <Route path="/termos-de-uso" element={<TermsOfUse />} />
                 <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+                <Route path="/sobre-nos" element={<AboutUs />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
