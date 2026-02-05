@@ -7,6 +7,17 @@ import {
   Settings,
   LogOut,
   X,
+  Star,
+  CreditCard,
+  Percent,
+  Gift,
+  FileText,
+  Wallet,
+  Receipt,
+  Building2,
+  TruckIcon,
+  Users,
+  MapPin,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -22,6 +33,17 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/estabelecimento" },
   { icon: ShoppingBag, label: "Pedidos", path: "/estabelecimento/pedidos" },
   { icon: Package, label: "Cardápio", path: "/estabelecimento/cardapio" },
+  { icon: Star, label: "Avaliações", path: "/estabelecimento/avaliacoes" },
+  { icon: CreditCard, label: "Formas de Pagamento", path: "/estabelecimento/pagamentos" },
+  { icon: Percent, label: "Cashback", path: "/estabelecimento/cashback" },
+  { icon: Gift, label: "Cartão Fidelidade", path: "/estabelecimento/fidelidade" },
+  { icon: FileText, label: "Faturas", path: "/estabelecimento/faturas" },
+  { icon: Wallet, label: "Saques", path: "/estabelecimento/saques" },
+  { icon: Receipt, label: "Extratos", path: "/estabelecimento/extratos" },
+  { icon: Building2, label: "Conta Bancária", path: "/estabelecimento/conta-bancaria" },
+  { icon: TruckIcon, label: "Extrato de Entregas", path: "/estabelecimento/extrato-entregas" },
+  { icon: Users, label: "Entregadores", path: "/estabelecimento/entregadores" },
+  { icon: MapPin, label: "Entregas", path: "/estabelecimento/entregas" },
   { icon: Settings, label: "Configurações", path: "/estabelecimento/configuracoes" },
 ];
 

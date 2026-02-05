@@ -19,6 +19,17 @@ import EstablishmentDashboard from "./pages/establishment/Dashboard";
 import EstablishmentOrders from "./pages/establishment/Orders";
 import EstablishmentMenu from "./pages/establishment/Menu";
 import EstablishmentSettings from "./pages/establishment/Settings";
+import EstablishmentReviews from "./pages/establishment/Reviews";
+import EstablishmentPaymentMethods from "./pages/establishment/PaymentMethods";
+import EstablishmentCashback from "./pages/establishment/Cashback";
+import EstablishmentLoyaltyCard from "./pages/establishment/LoyaltyCard";
+import EstablishmentInvoices from "./pages/establishment/Invoices";
+import EstablishmentWithdrawals from "./pages/establishment/Withdrawals";
+import EstablishmentStatements from "./pages/establishment/Statements";
+import EstablishmentBankAccount from "./pages/establishment/BankAccount";
+import EstablishmentDeliveryStatements from "./pages/establishment/DeliveryStatements";
+import EstablishmentDrivers from "./pages/establishment/Drivers";
+import EstablishmentDeliveries from "./pages/establishment/Deliveries";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEstablishments from "./pages/admin/Establishments";
 import AdminCreateEstablishment from "./pages/admin/CreateEstablishment";
@@ -93,6 +104,17 @@ const App = () => {
                 <Route path="/estabelecimento" element={<EstablishmentDashboard />} />
                 <Route path="/estabelecimento/pedidos" element={<EstablishmentOrders />} />
                 <Route path="/estabelecimento/cardapio" element={<EstablishmentMenu />} />
+                <Route path="/estabelecimento/avaliacoes" element={<EstablishmentReviews />} />
+                <Route path="/estabelecimento/pagamentos" element={<EstablishmentPaymentMethods />} />
+                <Route path="/estabelecimento/cashback" element={<EstablishmentCashback />} />
+                <Route path="/estabelecimento/fidelidade" element={<EstablishmentLoyaltyCard />} />
+                <Route path="/estabelecimento/faturas" element={<EstablishmentInvoices />} />
+                <Route path="/estabelecimento/saques" element={<EstablishmentWithdrawals />} />
+                <Route path="/estabelecimento/extratos" element={<EstablishmentStatements />} />
+                <Route path="/estabelecimento/conta-bancaria" element={<EstablishmentBankAccount />} />
+                <Route path="/estabelecimento/extrato-entregas" element={<EstablishmentDeliveryStatements />} />
+                <Route path="/estabelecimento/entregadores" element={<EstablishmentDrivers />} />
+                <Route path="/estabelecimento/entregas" element={<EstablishmentDeliveries />} />
                 <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />
