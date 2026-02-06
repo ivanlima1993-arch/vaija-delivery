@@ -1,45 +1,93 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
-import { Menu, Users, Star, Phone, MapPin } from "lucide-react";
+import { Menu, Users, Star, MapPin } from "lucide-react";
+import { useEstablishment } from "@/hooks/useEstablishment";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DriverInfo {
+  driver_id: string;
+  name: string;
+  deliveries: number;
+  isActive: boolean;
+}
 
 const EstablishmentDrivers = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { establishment, loading } = useEstablishment();
+  const [drivers, setDrivers] = useState<DriverInfo[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
-  const drivers = [
-    { id: 1, name: "João Silva", phone: "(79) 99999-1111", rating: 4.9, deliveries: 156, status: "online" },
-    { id: 2, name: "Maria Santos", phone: "(79) 99999-2222", rating: 4.8, deliveries: 98, status: "online" },
-    { id: 3, name: "Pedro Lima", phone: "(79) 99999-3333", rating: 4.7, deliveries: 234, status: "offline" },
-    { id: 4, name: "Ana Costa", phone: "(79) 99999-4444", rating: 4.9, deliveries: 187, status: "delivering" },
-  ];
+  useEffect(() => {
+    if (establishment) fetchDrivers();
+  }, [establishment]);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "online":
-        return <Badge className="bg-green-500">Online</Badge>;
-      case "offline":
-        return <Badge variant="secondary">Offline</Badge>;
-      case "delivering":
-        return <Badge className="bg-blue-500">Em Entrega</Badge>;
-      default:
-        return null;
+  const fetchDrivers = async () => {
+    // Get unique drivers from delivered orders for this establishment
+    const { data: orders } = await supabase
+      .from("orders")
+      .select("driver_id, customer_name, status")
+      .eq("establishment_id", establishment!.id)
+      .not("driver_id", "is", null);
+
+    if (!orders || orders.length === 0) {
+      setDrivers([]);
+      setLoadingData(false);
+      return;
     }
+
+    // Group by driver_id
+    const driverMap = new Map<string, { count: number; hasActive: boolean }>();
+    orders.forEach((o) => {
+      if (!o.driver_id) return;
+      const existing = driverMap.get(o.driver_id) || { count: 0, hasActive: false };
+      existing.count++;
+      if (o.status === "out_for_delivery") existing.hasActive = true;
+      driverMap.set(o.driver_id, existing);
+    });
+
+    // Get driver profiles
+    const driverIds = Array.from(driverMap.keys());
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name")
+      .in("user_id", driverIds);
+
+    const driverList: DriverInfo[] = driverIds.map((id) => {
+      const profile = profiles?.find((p) => p.user_id === id);
+      const info = driverMap.get(id)!;
+      return {
+        driver_id: id,
+        name: profile?.full_name || "Entregador",
+        deliveries: info.count,
+        isActive: info.hasActive,
+      };
+    });
+
+    driverList.sort((a, b) => b.deliveries - a.deliveries);
+    setDrivers(driverList);
+    setLoadingData(false);
   };
+
+  const onlineCount = drivers.filter((d) => d.isActive).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
       <EstablishmentSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       <main className="flex-1 overflow-auto">
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
           <div className="flex items-center gap-3">
-            <button
-              className="lg:hidden p-2 hover:bg-muted rounded-lg"
-              onClick={() => setSidebarOpen(true)}
-            >
+            <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={() => setSidebarOpen(true)}>
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="font-bold text-lg">Entregadores</h1>
@@ -55,8 +103,8 @@ const EstablishmentDrivers = () => {
                     <Users className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">2</p>
-                    <p className="text-sm text-muted-foreground">Online Agora</p>
+                    <p className="text-2xl font-bold">{drivers.length}</p>
+                    <p className="text-sm text-muted-foreground">Total Entregadores</p>
                   </div>
                 </div>
               </CardContent>
@@ -68,7 +116,7 @@ const EstablishmentDrivers = () => {
                     <MapPin className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">1</p>
+                    <p className="text-2xl font-bold">{onlineCount}</p>
                     <p className="text-sm text-muted-foreground">Em Entrega</p>
                   </div>
                 </div>
@@ -81,8 +129,8 @@ const EstablishmentDrivers = () => {
                     <Star className="w-6 h-6 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">4.8</p>
-                    <p className="text-sm text-muted-foreground">Avaliação Média</p>
+                    <p className="text-2xl font-bold">{drivers.reduce((s, d) => s + d.deliveries, 0)}</p>
+                    <p className="text-sm text-muted-foreground">Total Entregas</p>
                   </div>
                 </div>
               </CardContent>
@@ -94,38 +142,35 @@ const EstablishmentDrivers = () => {
               <CardTitle>Lista de Entregadores</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {drivers.map((driver) => (
-                  <div
-                    key={driver.id}
-                    className="flex items-center justify-between p-4 bg-muted/50 rounded-xl"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src="" />
-                        <AvatarFallback>{driver.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{driver.name}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="w-3 h-3" />
-                          {driver.phone}
+              {loadingData ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
+                </div>
+              ) : drivers.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhum entregador registrado</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {drivers.map((driver) => (
+                    <div key={driver.driver_id} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarFallback>{driver.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{driver.name}</p>
+                          <p className="text-sm text-muted-foreground">{driver.deliveries} entregas</p>
                         </div>
                       </div>
+                      <Badge className={driver.isActive ? "bg-blue-500" : "bg-muted text-muted-foreground"}>
+                        {driver.isActive ? "Em Entrega" : "Disponível"}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          <span className="font-medium">{driver.rating}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{driver.deliveries} entregas</p>
-                      </div>
-                      {getStatusBadge(driver.status)}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
