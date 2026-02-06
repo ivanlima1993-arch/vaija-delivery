@@ -167,6 +167,226 @@ export type Database = {
           },
         ]
       }
+      establishment_bank_accounts: {
+        Row: {
+          account_number: string | null
+          account_type: string | null
+          agency: string | null
+          bank_code: string | null
+          bank_name: string | null
+          created_at: string
+          establishment_id: string
+          holder_document: string | null
+          holder_name: string | null
+          id: string
+          pix_key: string | null
+          pix_key_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          account_type?: string | null
+          agency?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          created_at?: string
+          establishment_id: string
+          holder_document?: string | null
+          holder_name?: string | null
+          id?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          account_type?: string | null
+          agency?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          created_at?: string
+          establishment_id?: string
+          holder_document?: string | null
+          holder_name?: string | null
+          id?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_bank_accounts_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: true
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      establishment_invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          establishment_id: string
+          id: string
+          paid_at: string | null
+          period: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          establishment_id: string
+          id?: string
+          paid_at?: string | null
+          period: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          establishment_id?: string
+          id?: string
+          paid_at?: string | null
+          period?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_invoices_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      establishment_payment_methods: {
+        Row: {
+          created_at: string
+          description: string | null
+          establishment_id: string
+          id: string
+          is_enabled: boolean
+          method_key: string
+          method_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          establishment_id: string
+          id?: string
+          is_enabled?: boolean
+          method_key: string
+          method_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          establishment_id?: string
+          id?: string
+          is_enabled?: boolean
+          method_key?: string
+          method_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_payment_methods_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      establishment_settings: {
+        Row: {
+          cashback_enabled: boolean
+          cashback_percent: number
+          created_at: string
+          establishment_id: string
+          id: string
+          loyalty_enabled: boolean
+          loyalty_reward_description: string | null
+          loyalty_stamps_required: number
+          updated_at: string
+        }
+        Insert: {
+          cashback_enabled?: boolean
+          cashback_percent?: number
+          created_at?: string
+          establishment_id: string
+          id?: string
+          loyalty_enabled?: boolean
+          loyalty_reward_description?: string | null
+          loyalty_stamps_required?: number
+          updated_at?: string
+        }
+        Update: {
+          cashback_enabled?: boolean
+          cashback_percent?: number
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          loyalty_enabled?: boolean
+          loyalty_reward_description?: string | null
+          loyalty_stamps_required?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_settings_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: true
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      establishment_withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          establishment_id: string
+          id: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          establishment_id: string
+          id?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_withdrawals_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       establishments: {
         Row: {
           address: string | null
