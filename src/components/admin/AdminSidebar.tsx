@@ -14,6 +14,8 @@ import {
   MapPin,
   Ticket,
   Megaphone,
+  FileText,
+  Banknote,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -58,6 +60,16 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       icon: Megaphone,
       label: "Promoções",
       path: "/admin/promocoes",
+    },
+    {
+      icon: FileText,
+      label: "Faturas",
+      path: "/admin/faturas",
+    },
+    {
+      icon: Banknote,
+      label: "Saques",
+      path: "/admin/saques",
     },
     {
       icon: Users,
