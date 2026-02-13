@@ -14,21 +14,20 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY");
-  if (!ASAAS_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "ASAAS_API_KEY is not configured" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
   try {
+    const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!ASAAS_API_KEY) throw new Error("ASAAS_API_KEY não configurada");
+    if (!SUPABASE_URL) throw new Error("SUPABASE_URL não configurada");
+    if (!SUPABASE_SERVICE_ROLE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY não configurada");
+    if (!SUPABASE_ANON_KEY) throw new Error("SUPABASE_ANON_KEY não configurada");
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Token de autorização ausente" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -38,10 +37,11 @@ serve(async (req) => {
 
     // Verify user
     const token = authHeader.replace("Bearer ", "");
-    const anonClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
+      return new Response(JSON.stringify({ error: "Sessão inválida ou expirada" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -50,6 +50,7 @@ serve(async (req) => {
     const { action, ...params } = await req.json();
 
     const asaasFetch = async (path: string, options: RequestInit = {}) => {
+      console.log(`Asaas Fetch: ${path}`, options.body);
       const res = await fetch(`${ASAAS_BASE_URL}${path}`, {
         ...options,
         headers: {
@@ -60,6 +61,7 @@ serve(async (req) => {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.error(`Asaas API error [${res.status}]:`, data);
         throw new Error(`Asaas API error [${res.status}]: ${JSON.stringify(data)}`);
       }
       return data;
@@ -67,37 +69,69 @@ serve(async (req) => {
 
     // Find or create Asaas customer
     const findOrCreateCustomer = async (userId: string) => {
+      console.log(`Finding or creating customer for user: ${userId}`);
+
       // Check if we have a stored customer ID
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("full_name, phone")
+        .select("full_name, phone, cpf_cnpj")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+      }
 
       // Search by externalReference
-      const searchRes = await asaasFetch(`/customers?externalReference=${userId}`);
-      if (searchRes.data && searchRes.data.length > 0) {
-        return searchRes.data[0].id;
+      try {
+        const searchRes = await asaasFetch(`/customers?externalReference=${userId}`);
+        if (searchRes.data && searchRes.data.length > 0) {
+          console.log(`Found existing Asaas customer: ${searchRes.data[0].id}`);
+          // Update customer if cpfCnpj is missing in Asaas but present in profile
+          if (!searchRes.data[0].cpfCnpj && profile?.cpf_cnpj) {
+            console.log("Updating existing customer with missing CPF/CNPJ...");
+            await asaasFetch(`/customers/${searchRes.data[0].id}`, {
+              method: "POST",
+              body: JSON.stringify({ cpfCnpj: profile.cpf_cnpj })
+            });
+          }
+          return searchRes.data[0].id;
+        }
+      } catch (err) {
+        console.error("Error searching customer on Asaas:", err);
       }
 
       // Create new customer
+      console.log("Creating new Asaas customer...");
       const customer = await asaasFetch("/customers", {
         method: "POST",
         body: JSON.stringify({
           name: profile?.full_name || "Cliente",
           phone: profile?.phone || undefined,
+          cpfCnpj: profile?.cpf_cnpj || undefined,
           externalReference: userId,
           notificationDisabled: true,
         }),
       });
 
+      console.log(`Created Asaas customer: ${customer.id}`);
       return customer.id;
     };
 
     if (action === "create_pix") {
-      const { orderId, amount, customerName, customerCpfCnpj } = params;
+      const { orderId, amount, customerName, customerCpfCnpj, cpfCnpj } = params;
 
       const customerId = await findOrCreateCustomer(user.id);
+
+      // Explicitly update customer CPF if provided and missing
+      const providedCpf = cpfCnpj || customerCpfCnpj;
+      if (providedCpf) {
+        console.log("Ensuring customer has CPF/CNPJ in Asaas for PIX order...");
+        await asaasFetch(`/customers/${customerId}`, {
+          method: "POST",
+          body: JSON.stringify({ cpfCnpj: providedCpf })
+        }).catch(err => console.error("Error updating customer CPF in Asaas:", err));
+      }
 
       // Create PIX payment
       const payment = await asaasFetch("/payments", {
@@ -139,9 +173,20 @@ serve(async (req) => {
         expiryYear,
         ccv,
         holderInfo,
+        cpfCnpj,
       } = params;
 
       const customerId = await findOrCreateCustomer(user.id);
+
+      // Explicitly update customer CPF if provided and missing
+      const providedCpf = cpfCnpj || customerCpfCnpj || holderInfo?.cpfCnpj;
+      if (providedCpf) {
+        console.log("Ensuring customer has CPF/CNPJ in Asaas for Credit Card order...");
+        await asaasFetch(`/customers/${customerId}`, {
+          method: "POST",
+          body: JSON.stringify({ cpfCnpj: providedCpf })
+        }).catch(err => console.error("Error updating customer CPF in Asaas:", err));
+      }
 
       const payment = await asaasFetch("/payments", {
         method: "POST",
@@ -180,9 +225,18 @@ serve(async (req) => {
     }
 
     if (action === "create_recharge") {
-      const { amount, billingType, cardInfo, holderInfo } = params;
+      const { amount, billingType, cardInfo, holderInfo, cpfCnpj } = params;
 
       const customerId = await findOrCreateCustomer(user.id);
+
+      // Explicitly update customer CPF if provided and missing
+      if (cpfCnpj) {
+        console.log("Ensuring customer has CPF/CNPJ in Asaas...");
+        await asaasFetch(`/customers/${customerId}`, {
+          method: "POST",
+          body: JSON.stringify({ cpfCnpj })
+        }).catch(err => console.error("Error updating customer CPF in Asaas:", err));
+      }
 
       const body: any = {
         customer: customerId,
@@ -288,7 +342,7 @@ serve(async (req) => {
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

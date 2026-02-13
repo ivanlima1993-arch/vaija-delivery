@@ -9,6 +9,10 @@ interface AuthState {
   isEstablishment: boolean;
   isAdmin: boolean;
   isDriver: boolean;
+  isDriverApproved: boolean;
+  driverRejectionReason: string | null;
+  driverRegistrationSubmittedAt: string | null;
+  driverIdPhotoUrl: string | null;
 }
 
 export const useAuth = () => {
@@ -19,6 +23,10 @@ export const useAuth = () => {
     isEstablishment: false,
     isAdmin: false,
     isDriver: false,
+    isDriverApproved: false,
+    driverRejectionReason: null,
+    driverRegistrationSubmittedAt: null,
+    driverIdPhotoUrl: null,
   });
 
   useEffect(() => {
@@ -28,10 +36,20 @@ export const useAuth = () => {
         .select("role")
         .eq("user_id", userId);
 
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_driver_approved, driver_rejection_reason, driver_registration_submitted_at, driver_id_photo_url")
+        .eq("user_id", userId)
+        .maybeSingle();
+
       return {
         isEstablishment: roles?.some((r) => r.role === "establishment") ?? false,
         isAdmin: roles?.some((r) => r.role === "admin") ?? false,
         isDriver: roles?.some((r) => r.role === "driver") ?? false,
+        isDriverApproved: profile?.is_driver_approved ?? false,
+        driverRejectionReason: profile?.driver_rejection_reason ?? null,
+        driverRegistrationSubmittedAt: profile?.driver_registration_submitted_at ?? null,
+        driverIdPhotoUrl: profile?.driver_id_photo_url ?? null,
       };
     };
 
@@ -56,6 +74,10 @@ export const useAuth = () => {
           isEstablishment: false,
           isAdmin: false,
           isDriver: false,
+          isDriverApproved: false,
+          driverRejectionReason: null,
+          driverRegistrationSubmittedAt: null,
+          driverIdPhotoUrl: null,
         });
       }
     };
@@ -86,6 +108,10 @@ export const useAuth = () => {
             isEstablishment: false,
             isAdmin: false,
             isDriver: false,
+            isDriverApproved: false,
+            driverRejectionReason: null,
+            driverRegistrationSubmittedAt: null,
+            driverIdPhotoUrl: null,
           });
         }
       }

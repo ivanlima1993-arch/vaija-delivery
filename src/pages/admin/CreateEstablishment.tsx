@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import OpeningHoursEditor, { 
-  OpeningHours, 
-  defaultOpeningHours 
+import OpeningHoursEditor, {
+  OpeningHours,
+  defaultOpeningHours
 } from "@/components/admin/OpeningHoursEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { toast } from "sonner";
@@ -118,62 +118,29 @@ const CreateEstablishment = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (!establishmentData.cityId) {
+      toast.error("Por favor, selecione uma cidade cadastrada");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // 1. Create user account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: ownerData.email,
-        password: ownerData.password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            full_name: ownerData.fullName,
+      const { data, error } = await supabase.functions.invoke("create-establishment", {
+        body: {
+          ownerData,
+          establishmentData: {
+            ...establishmentData,
+            is_approved: autoApprove,
+            opening_hours: JSON.parse(JSON.stringify(openingHours)),
+            logo_url: logoUrl,
+            cover_url: coverUrl,
           },
         },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Erro ao criar usuário");
-
-      // 2. Add establishment role
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id,
-        role: "establishment",
-      });
-
-      if (roleError) throw roleError;
-
-      // 3. Update profile with phone
-      if (ownerData.phone) {
-        await supabase
-          .from("profiles")
-          .update({ phone: ownerData.phone })
-          .eq("user_id", authData.user.id);
+      if (error || data?.error) {
+        throw new Error(error?.message || data?.error || "Erro ao cadastrar estabelecimento");
       }
-
-      // 4. Create establishment
-      const { error: establishmentError } = await supabase.from("establishments").insert({
-        owner_id: authData.user.id,
-        name: establishmentData.name,
-        description: establishmentData.description || null,
-        category: establishmentData.category,
-        phone: establishmentData.phone || null,
-        address: establishmentData.address || null,
-        neighborhood: establishmentData.neighborhood || null,
-        city: establishmentData.city || null,
-        city_id: establishmentData.cityId || null,
-        delivery_fee: establishmentData.deliveryFee ? Number(establishmentData.deliveryFee) : 0,
-        min_order_value: establishmentData.minOrderValue
-          ? Number(establishmentData.minOrderValue)
-          : 0,
-        min_delivery_time: Number(establishmentData.minDeliveryTime) || 30,
-        max_delivery_time: Number(establishmentData.maxDeliveryTime) || 60,
-        is_approved: autoApprove,
-        opening_hours: JSON.parse(JSON.stringify(openingHours)) as Json,
-        logo_url: logoUrl,
-        cover_url: coverUrl,
-      });
-
-      if (establishmentError) throw establishmentError;
 
       toast.success("Estabelecimento cadastrado com sucesso!");
       navigate("/admin/estabelecimentos");
@@ -452,8 +419,8 @@ const CreateEstablishment = () => {
                       value={establishmentData.cityId}
                       onValueChange={(value) => {
                         const selectedCity = cities.find(c => c.id === value);
-                        setEstablishmentData({ 
-                          ...establishmentData, 
+                        setEstablishmentData({
+                          ...establishmentData,
                           cityId: value,
                           city: selectedCity ? `${selectedCity.name} - ${selectedCity.state}` : ""
                         });

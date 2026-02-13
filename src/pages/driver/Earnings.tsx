@@ -51,7 +51,7 @@ interface DailyEarning {
 
 const Earnings = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, isDriver } = useAuth();
+  const { user, loading: authLoading, isDriver, isDriverApproved } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
@@ -72,6 +72,11 @@ const Earnings = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isDriver)) {
       navigate("/auth");
+      return;
+    }
+
+    if (!authLoading && user && isDriver && !isDriverApproved) {
+      navigate("/entregador");
       return;
     }
 
@@ -150,8 +155,8 @@ const Earnings = () => {
         lastWeekEarnings > 0
           ? ((thisWeekEarnings - lastWeekEarnings) / lastWeekEarnings) * 100
           : thisWeekEarnings > 0
-          ? 100
-          : 0;
+            ? 100
+            : 0;
 
       // Fetch average rating
       const { data: reviews } = await supabase
@@ -473,10 +478,10 @@ const Earnings = () => {
                     const deliveryTime =
                       order.out_for_delivery_at && order.delivered_at
                         ? Math.round(
-                            (new Date(order.delivered_at).getTime() -
-                              new Date(order.out_for_delivery_at).getTime()) /
-                              60000
-                          )
+                          (new Date(order.delivered_at).getTime() -
+                            new Date(order.out_for_delivery_at).getTime()) /
+                          60000
+                        )
                         : null;
 
                     return (

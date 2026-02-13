@@ -34,7 +34,7 @@ type FilterType = "week" | "month" | "all";
 
 const DriverHistory = () => {
   const navigate = useNavigate();
-  const { user, isDriver, loading: authLoading } = useAuth();
+  const { user, isDriver, isDriverApproved, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -43,6 +43,11 @@ const DriverHistory = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isDriver)) {
       navigate("/entregador/auth");
+      return;
+    }
+
+    if (!authLoading && user && isDriver && !isDriverApproved) {
+      navigate("/entregador");
       return;
     }
 
@@ -82,17 +87,17 @@ const DriverHistory = () => {
   };
 
   const totalEarnings = orders.reduce((acc, o) => acc + Number(o.delivery_fee), 0);
-  
+
   const avgDeliveryTime = () => {
     const validOrders = orders.filter(o => o.out_for_delivery_at && o.delivered_at);
     if (validOrders.length === 0) return 0;
-    
+
     const totalTime = validOrders.reduce((acc, o) => {
       const start = new Date(o.out_for_delivery_at!).getTime();
       const end = new Date(o.delivered_at).getTime();
       return acc + (end - start) / 60000;
     }, 0);
-    
+
     return Math.round(totalTime / validOrders.length);
   };
 

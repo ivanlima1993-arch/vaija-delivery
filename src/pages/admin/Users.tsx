@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -13,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +44,13 @@ import {
   User,
   Plus,
   Trash2,
+  CheckCircle,
+  XCircle,
+  Calendar,
+  MapPin,
+  FileText,
+  Camera,
+  Clock,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -63,6 +73,11 @@ const AdminUsers = () => {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRoles | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [pendingEstablishments, setPendingEstablishments] = useState(0);
 
   useEffect(() => {
@@ -109,6 +124,31 @@ const AdminUsers = () => {
     setPendingEstablishments(count || 0);
   };
 
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { targetUserId: userToDelete.user_id },
+      });
+
+      if (error || data?.error) {
+        throw new Error(error?.message || data?.error || "Erro ao excluir usuário");
+      }
+
+      setUsers((prev) => prev.filter((u) => u.user_id !== userToDelete.user_id));
+      toast.success("Usuário excluído com sucesso");
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error: any) {
+      console.error("Delete user error:", error);
+      toast.error(error.message || "Erro ao excluir usuário");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
       // Fetch profiles
@@ -136,6 +176,7 @@ const AdminUsers = () => {
 
       setUsers(usersWithRoles);
     } catch (error) {
+      console.error("Error fetching users:", error);
       toast.error("Erro ao carregar usuários");
     } finally {
       setLoading(false);
@@ -195,6 +236,48 @@ const AdminUsers = () => {
       toast.success(`Role ${role} removida com sucesso`);
     } catch (error) {
       toast.error("Erro ao remover role");
+    }
+  };
+
+  const toggleDriverApproval = async (userId: string, currentStatus: boolean, reason?: string) => {
+    try {
+      const updateData: any = { is_driver_approved: !currentStatus };
+      if (currentStatus === true) { // If currently approved and we're disapproving
+        updateData.driver_rejection_reason = reason || null;
+      } else {
+        updateData.driver_rejection_reason = null; // Clear reason on approval
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updateData)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.user_id === userId ? {
+            ...u,
+            is_driver_approved: !currentStatus,
+            driver_rejection_reason: updateData.driver_rejection_reason
+          } : u
+        )
+      );
+      if (selectedUser?.user_id === userId) {
+        setSelectedUser({
+          ...selectedUser,
+          is_driver_approved: !currentStatus,
+          driver_rejection_reason: updateData.driver_rejection_reason
+        });
+      }
+      toast.success(
+        `Motorista ${!currentStatus ? "aprovado" : "desaprovado"} com sucesso`
+      );
+      setIsRejecting(false);
+      setRejectionReason("");
+    } catch (error) {
+      toast.error("Erro ao atualizar status de aprovação");
     }
   };
 
@@ -373,6 +456,38 @@ const AdminUsers = () => {
                               >
                                 Gerenciar Roles
                               </Button>
+                              {userItem.roles.includes("driver") && (
+                                <Button
+                                  variant={userItem.is_driver_approved ? "outline" : "default"}
+                                  size="sm"
+                                  className={!userItem.is_driver_approved ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
+                                  onClick={() => toggleDriverApproval(userItem.user_id!, userItem.is_driver_approved || false)}
+                                >
+                                  {userItem.is_driver_approved ? (
+                                    <>
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      Desaprovar
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      Aprovar
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => {
+                                  setUserToDelete(userItem);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                disabled={userItem.user_id === user?.id}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -449,12 +564,193 @@ const AdminUsers = () => {
                   )}
                 </div>
               </div>
+
+              {selectedUser.roles.includes("driver") && (
+                <div className="border-t pt-4 mt-4 space-y-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-emerald-500" />
+                    Dados do Entregador
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedUser.face_photo_url && (
+                      <div className="col-span-1 flex flex-col items-center gap-2">
+                        <Label className="text-xs text-muted-foreground uppercase self-start">Foto do Rosto</Label>
+                        <img
+                          src={selectedUser.face_photo_url}
+                          alt="Face"
+                          className="w-32 h-32 rounded-lg object-cover border-2 border-emerald-100 shadow-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => window.open(selectedUser.face_photo_url, '_blank')}
+                        >
+                          <Camera className="w-3 h-3 mr-1" />
+                          Baixar Foto
+                        </Button>
+                      </div>
+                    )}
+                    {selectedUser.driver_id_photo_url && (
+                      <div className="col-span-1 flex flex-col items-center gap-2">
+                        <Label className="text-xs text-muted-foreground uppercase self-start">Foto do RG</Label>
+                        <img
+                          src={selectedUser.driver_id_photo_url}
+                          alt="ID Document"
+                          className="w-32 h-32 rounded-lg object-cover border-2 border-blue-100 shadow-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => window.open(selectedUser.driver_id_photo_url, '_blank')}
+                        >
+                          <FileText className="w-3 h-3 mr-1" />
+                          Baixar RG
+                        </Button>
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        CPF/CNPJ
+                      </Label>
+                      <p className="text-sm font-medium bg-muted/50 p-2 rounded truncate">
+                        {selectedUser.cpf_cnpj || "NÃO INFORMADO"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Placa
+                      </Label>
+                      <p className="text-sm font-medium bg-muted/50 p-2 rounded truncate">
+                        {selectedUser.driver_vehicle_plate || "NÃO INFORMADA"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Nascimento
+                      </Label>
+                      <p className="text-sm font-medium bg-muted/50 p-2 rounded">
+                        {selectedUser.driver_birth_date ? new Date(selectedUser.driver_birth_date).toLocaleDateString("pt-BR") : "NÃO INFORMADA"}
+                      </p>
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Endereço
+                      </Label>
+                      <p className="text-sm font-medium bg-muted/50 p-2 rounded">
+                        {selectedUser.driver_address || "NÃO INFORMADO"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-100 dark:border-emerald-800/30">
+                    <div className="flex items-center gap-2">
+                      <Shield className={`w-5 h-5 ${selectedUser.is_driver_approved ? "text-emerald-500" : "text-amber-500"}`} />
+                      <div>
+                        <p className="text-sm font-bold">Status de Aprovação</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedUser.is_driver_approved ? "Motorista aprovado para entregas" : "Aguardando análise de documentos"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={selectedUser.is_driver_approved || false}
+                      onCheckedChange={(checked) => {
+                        if (!checked) {
+                          setIsRejecting(true);
+                        } else {
+                          toggleDriverApproval(selectedUser.user_id, selectedUser.is_driver_approved || false);
+                        }
+                      }}
+                      className="data-[state=checked]:bg-emerald-500"
+                    />
+                  </div>
+
+                  {isRejecting && (
+                    <div className="space-y-3 bg-red-50 dark:bg-red-900/10 p-4 rounded-lg border border-red-100 dark:border-red-800/20">
+                      <Label className="text-xs font-bold text-red-600 uppercase">Motivo da Recusa</Label>
+                      <Textarea
+                        placeholder="Informe o motivo para o entregador..."
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        className="min-h-[80px] bg-background border-red-200 focus-visible:ring-red-500"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1"
+                          onClick={() => toggleDriverApproval(selectedUser.user_id, selectedUser.is_driver_approved || false, rejectionReason)}
+                          disabled={!rejectionReason.trim()}
+                        >
+                          Confirmar Recusa
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="flex-1"
+                          onClick={() => {
+                            setIsRejecting(false);
+                            setRejectionReason("");
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedUser.driver_rejection_reason && !isRejecting && !selectedUser.is_driver_approved && (
+                    <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-800/20">
+                      <p className="text-xs font-bold text-red-600 uppercase mb-1">Motivo Atual da Recusa</p>
+                      <p className="text-sm italic text-muted-foreground">"{selectedUser.driver_rejection_reason}"</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setRoleDialogOpen(false)}>
               Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Usuário</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o usuário{" "}
+              <span className="font-bold text-foreground">
+                {userToDelete?.full_name}
+              </span>
+              ? Esta ação é irreversível e removerá todos os dados vinculados a
+              este usuário.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUser}
+              disabled={deleting}
+            >
+              {deleting ? "Excluindo..." : "Confirmar Exclusão"}
             </Button>
           </DialogFooter>
         </DialogContent>

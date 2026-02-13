@@ -41,7 +41,7 @@ type Establishment = Database["public"]["Tables"]["establishments"]["Row"];
 
 const InRoute = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, isDriver } = useAuth();
+  const { user, loading: authLoading, isDriver, isDriverApproved } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
@@ -82,6 +82,11 @@ const InRoute = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isDriver)) {
       navigate("/auth");
+      return;
+    }
+
+    if (!authLoading && user && isDriver && !isDriverApproved) {
+      navigate("/entregador");
       return;
     }
 

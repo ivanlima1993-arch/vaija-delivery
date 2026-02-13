@@ -19,6 +19,7 @@ import {
   Menu,
   ChevronRight,
   Bell,
+  XCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import DriverSidebar from "@/components/driver/DriverSidebar";
@@ -44,11 +45,39 @@ interface Order {
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
-  const { user, isDriver, loading: authLoading } = useAuth();
+  const { user, isDriver, isDriverApproved, driverRejectionReason, driverRegistrationSubmittedAt, loading: authLoading } = useAuth();
   const { requestNotificationPermission } = useDriverOrderNotifications();
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    if (!driverRegistrationSubmittedAt || isDriverApproved) return;
+
+    const calculateTimeLeft = () => {
+      const submissionDate = new Date(driverRegistrationSubmittedAt);
+      const targetDate = new Date(submissionDate.getTime() + 24 * 60 * 60 * 1000);
+      const now = new Date();
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference <= 0) {
+        setTimeLeft("Em breve");
+        return;
+      }
+
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [driverRegistrationSubmittedAt, isDriverApproved]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [stats, setStats] = useState<Stats>({
     todayDeliveries: 0,
@@ -214,6 +243,72 @@ const DriverDashboard = () => {
     );
   }
 
+  if (!isDriverApproved) {
+    return (
+      <div className="min-h-screen bg-background flex w-full">
+        <DriverSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md w-full text-center space-y-6"
+          >
+            <div className="bg-emerald-100 dark:bg-emerald-900/30 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
+              <Clock className="w-12 h-12 text-emerald-600" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold">
+                {driverRejectionReason ? "Cadastro Reprovado" : "Cadastro em Análise"}
+              </h1>
+              <p className="text-muted-foreground">
+                {driverRejectionReason
+                  ? "Seu cadastro não foi aprovado pelos seguintes motivos:"
+                  : "Seu cadastro foi recebido e está sendo analisado pela nossa equipe."}
+              </p>
+              {driverRejectionReason && (
+                <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-100 dark:border-red-800/20 mt-4">
+                  <p className="text-sm font-bold text-red-600 uppercase mb-1 flex items-center justify-center gap-2">
+                    <XCircle className="w-4 h-4" />
+                    Motivo da Recusa
+                  </p>
+                  <p className="text-foreground italic">"{driverRejectionReason}"</p>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Por favor, entre em contato com o suporte ou refaça seu cadastro corrigindo as informações acima.
+                  </p>
+                </div>
+              )}
+              {!driverRejectionReason && (
+                <p className="text-sm text-emerald-600 font-medium">
+                  Tempo estimado de análise: {timeLeft}
+                </p>
+              )}
+            </div>
+            <Card className="bg-muted/50 border-none">
+              <CardContent className="pt-6">
+                <p className="text-sm font-medium">O que acontece agora?</p>
+                <ul className="text-sm text-muted-foreground mt-2 space-y-2">
+                  <li>• Verificação dos seus documentos</li>
+                  <li>• Validação do seu veículo</li>
+                  <li>• Ativação da sua conta</li>
+                  <li className="text-xs italic text-emerald-500 font-medium font-brand mt-2">
+                    * Prazo de aprovação em até 24 horas.
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="w-full h-12"
+            >
+              Verificar Novamente
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex w-full">
       <DriverSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -236,12 +331,12 @@ const DriverDashboard = () => {
                 <h1 className="font-bold text-lg">Dashboard</h1>
               </div>
             </div>
-            
+
             {/* Status Toggle & Notifications */}
             <div className="flex items-center gap-3">
               {!notificationsEnabled && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={handleEnableNotifications}
                   className="gap-1.5 text-xs"
@@ -286,7 +381,7 @@ const DriverDashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <Button 
+                      <Button
                         onClick={() => navigate("/entregador/em-rota")}
                         className="bg-green-500 hover:bg-green-600"
                       >
@@ -440,7 +535,7 @@ const DriverDashboard = () => {
                               <span className="truncate">{order.delivery_address}</span>
                             </div>
                           </div>
-                          <Button 
+                          <Button
                             onClick={() => acceptOrder(order.id)}
                             size="sm"
                             className="bg-green-500 hover:bg-green-600 ml-3"
@@ -449,9 +544,9 @@ const DriverDashboard = () => {
                           </Button>
                         </motion.div>
                       ))}
-                      
-                      <Button 
-                        variant="outline" 
+
+                      <Button
+                        variant="outline"
                         className="w-full mt-2"
                         onClick={() => navigate("/entregador/disponiveis")}
                       >

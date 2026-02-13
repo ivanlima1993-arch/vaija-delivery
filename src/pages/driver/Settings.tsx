@@ -29,7 +29,7 @@ interface Profile {
 
 const DriverSettings = () => {
   const navigate = useNavigate();
-  const { user, isDriver, loading: authLoading, signOut } = useAuth();
+  const { user, isDriver, loading: authLoading, signOut, isDriverApproved } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -45,6 +45,11 @@ const DriverSettings = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isDriver)) {
       navigate("/entregador/auth");
+      return;
+    }
+
+    if (!authLoading && user && isDriver && !isDriverApproved) {
+      navigate("/entregador");
       return;
     }
 
@@ -198,8 +203,8 @@ const DriverSettings = () => {
                       </div>
                     </div>
 
-                    <Button 
-                      onClick={saveProfile} 
+                    <Button
+                      onClick={saveProfile}
                       disabled={saving}
                       className="w-full bg-green-500 hover:bg-green-600"
                     >

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Bike, Mail, Lock, User, Phone, ArrowLeft, FileText } from "lucide-react";
+import { Bike, Mail, Lock, User, Phone, ArrowLeft, FileText, MapPin, Calendar, Camera } from "lucide-react";
 
 type AuthMode = "login" | "register";
 
@@ -21,7 +21,27 @@ const DriverAuth = () => {
     phone: "",
     cpf: "",
     vehicleType: "moto",
+    vehiclePlate: "",
+    birthDate: "",
+    address: "",
   });
+  const [facePhoto, setFacePhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [idPhoto, setIdPhoto] = useState<File | null>(null);
+  const [idPhotoPreview, setIdPhotoPreview] = useState<string | null>(null);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>, type: "face" | "id") => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (type === "face") {
+        setFacePhoto(file);
+        setPhotoPreview(URL.createObjectURL(file));
+      } else {
+        setIdPhoto(file);
+        setIdPhotoPreview(URL.createObjectURL(file));
+      }
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -86,16 +106,70 @@ const DriverAuth = () => {
           role: "driver",
         });
 
-        // Update profile with phone
-        await supabase
+        let facePhotoUrl = "";
+        if (facePhoto) {
+          const fileExt = facePhoto.name.split(".").pop();
+          const fileName = `${data.user.id}/face_${Math.random()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage
+            .from("driver-documents")
+            .upload(fileName, facePhoto);
+
+          if (uploadError) {
+            console.error("Face photo upload error:", uploadError);
+            toast.error("Erro ao enviar foto do rosto: " + uploadError.message);
+          } else {
+            const { data: publicUrl } = supabase.storage
+              .from("driver-documents")
+              .getPublicUrl(fileName);
+            facePhotoUrl = publicUrl.publicUrl;
+          }
+        }
+
+        let idPhotoUrl = "";
+        if (idPhoto) {
+          const fileExt = idPhoto.name.split(".").pop();
+          const fileName = `${data.user.id}/id_${Math.random()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage
+            .from("driver-documents")
+            .upload(fileName, idPhoto);
+
+          if (uploadError) {
+            console.error("ID photo upload error:", uploadError);
+            toast.error("Erro ao enviar foto do RG: " + uploadError.message);
+          } else {
+            const { data: publicUrl } = supabase.storage
+              .from("driver-documents")
+              .getPublicUrl(fileName);
+            idPhotoUrl = publicUrl.publicUrl;
+          }
+        }
+
+        // Update profile with all info
+        const { error: updateError } = await supabase
           .from("profiles")
-          .update({ phone: formData.phone })
+          .update({
+            phone: formData.phone,
+            cpf_cnpj: formData.cpf,
+            driver_vehicle_plate: formData.vehiclePlate,
+            driver_birth_date: formData.birthDate,
+            driver_address: formData.address,
+            face_photo_url: facePhotoUrl,
+            driver_id_photo_url: idPhotoUrl,
+            is_driver_approved: false,
+            driver_registration_submitted_at: new Date().toISOString()
+          })
           .eq("user_id", data.user.id);
 
-        toast.success("Cadastro realizado! Você já pode começar a fazer entregas.");
+        if (updateError) {
+          console.error("Profile update error:", updateError);
+          throw new Error("Erro ao salvar dados do perfil: " + updateError.message);
+        }
+
+        toast.success("Cadastro realizado! Sua conta está em análise para aprovação.");
         navigate("/entregador");
       }
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast.error(error.message || "Erro ao fazer cadastro");
     } finally {
       setLoading(false);
@@ -177,6 +251,152 @@ const DriverAuth = () => {
                       required
                       className="h-12 focus-visible:ring-emerald-500"
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="vehiclePlate" className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-emerald-500" />
+                      Placa do Veículo
+                    </Label>
+                    <Input
+                      id="vehiclePlate"
+                      name="vehiclePlate"
+                      type="text"
+                      placeholder="ABC-1234"
+                      value={formData.vehiclePlate}
+                      onChange={handleChange}
+                      required={formData.vehicleType !== "bicicleta" && formData.vehicleType !== "a_pe"}
+                      className="h-12 focus-visible:ring-emerald-500 uppercase"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="birthDate" className="flex items-center gap-2 mb-2">
+                      <Calendar className="w-4 h-4 text-emerald-500" />
+                      Data de Nascimento
+                    </Label>
+                    <Input
+                      id="birthDate"
+                      name="birthDate"
+                      type="date"
+                      value={formData.birthDate}
+                      onChange={handleChange}
+                      required
+                      className="h-12 focus-visible:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address" className="flex items-center gap-2 mb-2">
+                      <MapPin className="w-4 h-4 text-emerald-500" />
+                      Endereço Completo
+                    </Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      type="text"
+                      placeholder="Rua, número, bairro, cidade"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                      className="h-12 focus-visible:ring-emerald-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 mb-2">
+                      <Camera className="w-4 h-4 text-emerald-500" />
+                      Foto do Rosto (Selfie)
+                    </Label>
+                    <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed border-emerald-200 rounded-xl bg-emerald-50/30">
+                      {photoPreview ? (
+                        <div className="relative w-32 h-32">
+                          <img
+                            src={photoPreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-full border-2 border-emerald-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFacePhoto(null);
+                              setPhotoPreview(null);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg"
+                          >
+                            <ArrowLeft className="w-4 h-4 rotate-45" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Tire uma foto nítida do seu rosto
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById("photo-upload")?.click()}
+                            className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                          >
+                            Selecionar Foto
+                          </Button>
+                        </div>
+                      )}
+                      <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        capture="user"
+                        onChange={(e) => handlePhotoChange(e, "face")}
+                        className="hidden"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 mb-2">
+                      <Camera className="w-4 h-4 text-emerald-500" />
+                      Foto do RG (Frente)
+                    </Label>
+                    <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed border-emerald-200 rounded-xl bg-emerald-50/30">
+                      {idPhotoPreview ? (
+                        <div className="relative w-full aspect-video">
+                          <img
+                            src={idPhotoPreview}
+                            alt="RG Preview"
+                            className="w-full h-full object-cover rounded-lg border-2 border-emerald-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIdPhoto(null);
+                              setIdPhotoPreview(null);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg"
+                          >
+                            <ArrowLeft className="w-4 h-4 rotate-45" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Tire uma foto nítida da frente do seu RG
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById("id-photo-upload")?.click()}
+                            className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                          >
+                            Selecionar RG
+                          </Button>
+                        </div>
+                      )}
+                      <input
+                        id="id-photo-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handlePhotoChange(e, "id")}
+                        className="hidden"
+                        required
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="vehicleType" className="flex items-center gap-2 mb-2">

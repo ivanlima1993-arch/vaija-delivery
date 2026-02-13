@@ -35,7 +35,7 @@ interface Order {
 
 const AvailableOrders = () => {
   const navigate = useNavigate();
-  const { user, isDriver, loading: authLoading } = useAuth();
+  const { user, isDriver, isDriverApproved, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -44,6 +44,11 @@ const AvailableOrders = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isDriver)) {
       navigate("/entregador/auth");
+      return;
+    }
+
+    if (!authLoading && user && isDriver && !isDriverApproved) {
+      navigate("/entregador");
       return;
     }
 
@@ -194,8 +199,8 @@ const AvailableOrders = () => {
                           Você tem uma entrega em andamento
                         </p>
                       </div>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => navigate("/entregador/em-rota")}
                         className="bg-yellow-500 hover:bg-yellow-600"
                       >
@@ -266,7 +271,7 @@ const AvailableOrders = () => {
                           </div>
                         </div>
 
-                        <Button 
+                        <Button
                           onClick={() => acceptOrder(order.id)}
                           disabled={hasCurrentOrder}
                           className="w-full bg-green-500 hover:bg-green-600"

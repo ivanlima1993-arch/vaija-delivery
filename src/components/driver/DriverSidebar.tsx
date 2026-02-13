@@ -30,7 +30,7 @@ const menuItems = [
 const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, isDriverApproved } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -63,9 +63,9 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img 
-                src={logo} 
-                alt="Vai Já Delivery" 
+              <img
+                src={logo}
+                alt="Vai Já Delivery"
                 className="h-14 w-auto object-contain animate-logo-pulse"
               />
               <div>
@@ -83,15 +83,22 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
         <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
+            const isDashboard = item.path === "/entregador";
+
+            // Disable if not approved and not the dashboard link
+            const isDisabled = !isDriverApproved && !isDashboard;
+
             return (
               <button
                 key={item.path}
-                onClick={() => handleNavigate(item.path)}
+                onClick={() => !isDisabled && handleNavigate(item.path)}
+                disabled={isDisabled}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
                     ? "bg-green-500 text-white"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground"
                 )}
               >
                 <item.icon className="w-5 h-5" />

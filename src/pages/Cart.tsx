@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, Trash2, Clock, Bike, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2, Clock, Bike, Loader2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
@@ -45,6 +45,8 @@ const Cart = () => {
   const [creditCardModalOpen, setCreditCardModalOpen] = useState(false);
   const [processingCard, setProcessingCard] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [cpf, setCpf] = useState("");
+  const [userProfileLoading, setUserProfileLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -120,12 +122,17 @@ const Cart = () => {
   }, [user]);
 
   const fetchBalance = async () => {
+    setUserProfileLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("wallet_balance")
+      .select("wallet_balance, cpf_cnpj")
       .eq("user_id", user!.id)
       .single();
-    if (data) setUserBalance(Number(data.wallet_balance));
+    if (data) {
+      setUserBalance(Number(data.wallet_balance));
+      setCpf(data.cpf_cnpj || "");
+    }
+    setUserProfileLoading(false);
   };
 
   const handleCheckout = async () => {
@@ -148,6 +155,11 @@ const Cart = () => {
       return;
     }
 
+    if (isOnlinePayment && (!cpf || cpf.length < 11)) {
+      toast.error("CPF/CNPJ é obrigatório para pagamentos online");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -162,6 +174,7 @@ const Cart = () => {
             action: "create_pix",
             orderId: order.id,
             amount: finalTotal,
+            cpfCnpj: cpf,
           },
         });
 
@@ -337,8 +350,21 @@ const Cart = () => {
           </div>
         </motion.div>
 
-        <RegionalPromotions cityId={deliveryAddress?.cityId} neighborhoodId={deliveryAddress?.neighborhoodId} subtotal={total} onPromotionApply={setAppliedPromotion} />
-        <CouponInput subtotal={total} cityId={deliveryAddress?.cityId} neighborhoodId={deliveryAddress?.neighborhoodId} appliedCoupon={appliedCoupon} onApplyCoupon={setAppliedCoupon} />
+        <RegionalPromotions
+          cityId={deliveryAddress?.cityId}
+          neighborhoodId={deliveryAddress?.neighborhoodId}
+          establishmentId={establishmentId}
+          subtotal={total}
+          onPromotionApply={setAppliedPromotion}
+        />
+        <CouponInput
+          subtotal={total}
+          cityId={deliveryAddress?.cityId}
+          neighborhoodId={deliveryAddress?.neighborhoodId}
+          establishmentId={establishmentId}
+          appliedCoupon={appliedCoupon}
+          onApplyCoupon={setAppliedCoupon}
+        />
 
         {/* Payment Method - Dynamic from establishment */}
         <PaymentMethodSelector
@@ -347,6 +373,34 @@ const Cart = () => {
           onSelect={setSelectedPayment}
           userBalance={userBalance}
         />
+
+        {/* CPF/CNPJ for Online Payment */}
+        {isOnlinePayment && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-xl shadow-soft p-4 space-y-4"
+          >
+            <div className="flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-primary" />
+              <h2 className="font-display font-bold">Dados para pagamento</h2>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">CPF ou CNPJ (apenas números)</label>
+              <input
+                type="text"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value.replace(/\D/g, ""))}
+                placeholder="000.000.000-00"
+                maxLength={14}
+                className="w-full h-12 px-4 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <p className="text-[10px] text-muted-foreground italic">
+                Necessário para emissão do comprovante de pagamento via Asaas.
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Order Summary */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-xl shadow-soft p-4 space-y-3">

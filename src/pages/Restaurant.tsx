@@ -103,6 +103,17 @@ const Restaurant = () => {
   };
 
   const handleAddItem = (product: Product) => {
+    // Check if there are items from a different establishment
+    const differentEstablishment = items.length > 0 && items.some(item => item.establishmentId !== id);
+
+    if (differentEstablishment) {
+      toast.error("Você já possui itens de outro restaurante no carrinho. Limpe o carrinho para adicionar itens deste restaurante.", {
+        position: "bottom-center",
+        duration: 4000,
+      });
+      return;
+    }
+
     addItem({
       id: product.id,
       name: product.name,
@@ -324,11 +335,10 @@ const Restaurant = () => {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                    selectedCategory === category.id
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === category.id
                       ? "gradient-primary text-primary-foreground shadow-glow"
                       : "bg-muted text-muted-foreground hover:bg-accent"
-                  }`}
+                    }`}
                 >
                   {category.name}
                 </button>
