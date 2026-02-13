@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, Lock, Save, Upload, Camera, Package, Clock, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, User, Lock, Save, Upload, Camera, Package, Clock, ChevronRight, Loader2, Wallet as WalletIcon } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -29,7 +29,7 @@ const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -37,13 +37,14 @@ const Profile = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [profileData, setProfileData] = useState({
     full_name: "",
     phone: "",
     avatar_url: "",
+    wallet_balance: 0,
   });
-  
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -77,6 +78,7 @@ const Profile = () => {
           full_name: data.full_name || "",
           phone: data.phone || "",
           avatar_url: data.avatar_url || "",
+          wallet_balance: Number(data.wallet_balance) || 0,
         });
       }
     } catch (error: any) {
@@ -226,7 +228,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <Button
@@ -304,7 +306,7 @@ const Profile = () => {
                       </Link>
                     );
                   })}
-                  
+
                   {orders.length > 5 && (
                     <p className="text-center text-sm text-muted-foreground pt-2">
                       Mostrando 5 de {orders.length} pedidos
@@ -312,6 +314,27 @@ const Profile = () => {
                   )}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Wallet Card */}
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <WalletIcon className="h-5 w-5 text-primary" />
+                  Saldo Digital
+                </CardTitle>
+                <CardDescription>Use seu saldo para pagar pedidos</CardDescription>
+              </div>
+              <Link to="/carteira">
+                <Button size="sm">Ver Carteira</Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                R$ {loading ? "..." : (profileData as any).wallet_balance?.toFixed(2).replace(".", ",") || "0,00"}
+              </div>
             </CardContent>
           </Card>
 

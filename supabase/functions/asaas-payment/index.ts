@@ -179,9 +179,96 @@ serve(async (req) => {
       );
     }
 
+    if (action === "create_recharge") {
+      const { amount, billingType, cardInfo, holderInfo } = params;
+
+      const customerId = await findOrCreateCustomer(user.id);
+
+      const body: any = {
+        customer: customerId,
+        billingType: billingType, // "PIX" or "CREDIT_CARD"
+        value: amount,
+        dueDate: new Date().toISOString().split("T")[0],
+        description: `Recarga de Saldo Digital`,
+        externalReference: `recharge:${user.id}:${Date.now()}`,
+      };
+
+      if (billingType === "CREDIT_CARD" && cardInfo) {
+        body.creditCard = {
+          holderName: cardInfo.cardHolder,
+          number: cardInfo.cardNumber,
+          expiryMonth: cardInfo.expiryMonth,
+          expiryYear: cardInfo.expiryYear,
+          ccv: cardInfo.ccv,
+        };
+        body.creditCardHolderInfo = {
+          name: cardInfo.cardHolder,
+          cpfCnpj: holderInfo?.cpfCnpj,
+          email: holderInfo?.email || user.email,
+          phone: holderInfo?.phone,
+          postalCode: holderInfo?.postalCode,
+          addressNumber: holderInfo?.addressNumber,
+        };
+      }
+
+      const payment = await asaasFetch("/payments", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+
+      let responseData: any = {
+        paymentId: payment.id,
+        status: payment.status,
+      };
+
+      if (billingType === "PIX") {
+        const pixQr = await asaasFetch(`/payments/${payment.id}/pixQrCode`);
+        responseData = {
+          ...responseData,
+          pixQrCode: pixQr.encodedImage,
+          pixCopyPaste: pixQr.payload,
+          expirationDate: pixQr.expirationDate,
+        };
+      }
+
+      return new Response(
+        JSON.stringify(responseData),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (action === "check_status") {
       const { paymentId } = params;
       const payment = await asaasFetch(`/payments/${paymentId}`);
+
+      // Auto-credit recharge if paid
+      if (
+        (payment.status === "RECEIVED" || payment.status === "CONFIRMED") &&
+        payment.externalReference?.startsWith("recharge:")
+      ) {
+        const [_, userId, timestamp] = payment.externalReference.split(":");
+
+        // Check if transaction already exists to avoid double credit
+        const { data: existing } = await supabase
+          .from("wallet_transactions")
+          .select("id")
+          .eq("description", `Recarga Asaas ${payment.id}`)
+          .single();
+
+        if (!existing) {
+          // Double verification: find the user and credit
+          const { error: creditError } = await supabase
+            .from("wallet_transactions")
+            .insert({
+              user_id: userId,
+              amount: payment.value,
+              type: "credit",
+              description: `Recarga Asaas ${payment.id}`
+            });
+
+          if (creditError) console.error("Error crediting recharge:", creditError);
+        }
+      }
 
       return new Response(
         JSON.stringify({

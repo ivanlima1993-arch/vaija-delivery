@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, User, Menu, X, Search, LogOut } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Search, LogOut, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
@@ -81,9 +81,9 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img 
-              src={logo} 
-              alt="Vai Já Delivery" 
+            <img
+              src={logo}
+              alt="Vai Já Delivery"
               className="h-16 w-auto object-contain animate-logo-pulse"
             />
           </Link>
@@ -123,7 +123,7 @@ const Header = () => {
                 )}
               </Button>
             </Link>
-            
+
             <Link to="/perfil">
               <Button variant="ghost" size="icon" className="hidden sm:flex">
                 <User className="w-5 h-5" />
@@ -159,6 +159,12 @@ const Header = () => {
                     <Link to="/perfil" className="cursor-pointer">
                       <User className="w-4 h-4 mr-2" />
                       Meu Perfil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/carteira" className="cursor-pointer">
+                      <Wallet className="w-4 h-4 mr-2" />
+                      Minha Carteira
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -198,7 +204,7 @@ const Header = () => {
                     className="w-full h-11 pl-10 pr-4 rounded-xl bg-muted border-0 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </form>
-                
+
                 <div className="w-full">
                   <CitySelector />
                 </div>
@@ -223,8 +229,8 @@ const Header = () => {
                         Meu Perfil
                       </Button>
                     </Link>
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       className="w-full"
                       onClick={() => {
                         handleSignOut();

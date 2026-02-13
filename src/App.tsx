@@ -58,6 +58,7 @@ import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications"
 
 import Restaurant from "./pages/Restaurant";
 import Cart from "./pages/Cart";
+import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,7 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/restaurant/:id" element={<Restaurant />} />
                 <Route path="/cart" element={<Cart />} />
+                <Route path="/carteira" element={<Wallet />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/estabelecimento/auth" element={<EstablishmentAuth />} />
                 <Route path="/entregador/auth" element={<DriverAuth />} />

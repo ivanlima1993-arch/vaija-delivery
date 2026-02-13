@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Plus, Minus, Trash2, Clock, Bike, Loader2 } from "lucide-react";
@@ -47,17 +47,17 @@ const Cart = () => {
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const deliveryFee = deliveryAddress?.deliveryFee ?? 0;
   const couponDiscount = calculateCouponDiscount(appliedCoupon, total);
-  
+
   const getPromotionDiscount = () => {
     if (!appliedPromotion) return { discount: 0, freeDelivery: false };
     if (appliedPromotion.discount_type === "free_delivery") return { discount: 0, freeDelivery: true };
     if (appliedPromotion.discount_type === "percentage") return { discount: (total * appliedPromotion.discount_value) / 100, freeDelivery: false };
     return { discount: appliedPromotion.discount_value, freeDelivery: false };
   };
-  
+
   const { discount: promotionDiscount, freeDelivery } = getPromotionDiscount();
   const totalDiscount = couponDiscount + promotionDiscount;
   const finalDeliveryFee = freeDelivery ? 0 : deliveryFee;
@@ -88,7 +88,7 @@ const Cart = () => {
         delivery_fee: finalDeliveryFee,
         discount: totalDiscount,
         total: finalTotal,
-        payment_method: selectedPayment as "pix" | "credit_card" | "debit_card" | "cash",
+        payment_method: selectedPayment as "pix" | "credit_card" | "debit_card" | "cash" | "wallet",
         status: "pending",
         payment_status: paymentStatus,
       })
@@ -113,6 +113,21 @@ const Cart = () => {
     return order;
   };
 
+  const [userBalance, setUserBalance] = useState(0);
+
+  useEffect(() => {
+    if (user) fetchBalance();
+  }, [user]);
+
+  const fetchBalance = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("wallet_balance")
+      .eq("user_id", user!.id)
+      .single();
+    if (data) setUserBalance(Number(data.wallet_balance));
+  };
+
   const handleCheckout = async () => {
     if (!deliveryAddress) {
       toast.error("Selecione um endereço de entrega");
@@ -125,6 +140,11 @@ const Cart = () => {
     }
     if (!establishmentId) {
       toast.error("Erro ao identificar o estabelecimento");
+      return;
+    }
+
+    if (selectedPayment === "wallet" && finalTotal > userBalance) {
+      toast.error("Saldo insuficiente na carteira digital");
       return;
     }
 
@@ -158,6 +178,26 @@ const Cart = () => {
         const order = await createOrder("awaiting_payment");
         setCurrentOrderId(order.id);
         setCreditCardModalOpen(true);
+      } else if (selectedPayment === "wallet") {
+        // Debit from wallet
+        const order = await createOrder("paid");
+
+        // Create wallet transaction
+        const { error: txError } = await supabase
+          .from("wallet_transactions")
+          .insert({
+            user_id: user.id,
+            amount: finalTotal,
+            type: "debit",
+            description: `Pagamento do Pedido #${order.order_number}`,
+            order_id: order.id
+          });
+
+        if (txError) throw txError;
+
+        toast.success("Pedido pago com saldo digital! 🎉");
+        clearCart();
+        navigate(`/pedido/${order.id}`);
       } else {
         // Cash/debit - offline payment
         const order = await createOrder("pending");
@@ -301,7 +341,12 @@ const Cart = () => {
         <CouponInput subtotal={total} cityId={deliveryAddress?.cityId} neighborhoodId={deliveryAddress?.neighborhoodId} appliedCoupon={appliedCoupon} onApplyCoupon={setAppliedCoupon} />
 
         {/* Payment Method - Dynamic from establishment */}
-        <PaymentMethodSelector establishmentId={establishmentId} selectedPayment={selectedPayment} onSelect={setSelectedPayment} />
+        <PaymentMethodSelector
+          establishmentId={establishmentId}
+          selectedPayment={selectedPayment}
+          onSelect={setSelectedPayment}
+          userBalance={userBalance}
+        />
 
         {/* Order Summary */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-xl shadow-soft p-4 space-y-3">

@@ -15,12 +15,14 @@ interface PaymentMethodSelectorProps {
   establishmentId: string | null;
   selectedPayment: string;
   onSelect: (method: string) => void;
+  userBalance?: number;
 }
 
 const PaymentMethodSelector = ({
   establishmentId,
   selectedPayment,
   onSelect,
+  userBalance,
 }: PaymentMethodSelectorProps) => {
   const { methods, loading } = useEstablishmentPaymentMethods(establishmentId);
 
@@ -86,22 +88,20 @@ const PaymentMethodSelector = ({
             <button
               key={method.method_key}
               onClick={() => onSelect(method.method_key)}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                selectedPayment === method.method_key
-                  ? "border-primary bg-accent"
-                  : "border-transparent bg-muted hover:bg-accent/50"
-              }`}
+              className={`p-4 rounded-xl border-2 transition-all ${selectedPayment === method.method_key
+                ? "border-primary bg-accent"
+                : "border-transparent bg-muted hover:bg-accent/50"
+                }`}
             >
               <Icon
-                className={`w-6 h-6 mx-auto mb-2 ${
-                  selectedPayment === method.method_key
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                }`}
+                className={`w-6 h-6 mx-auto mb-2 ${selectedPayment === method.method_key
+                  ? "text-primary"
+                  : "text-muted-foreground"
+                  }`}
               />
               <p className="text-sm font-medium">{method.method_name}</p>
               <p className="text-[10px] text-muted-foreground">
-                {isOnline ? "Pague online" : method.description || ""}
+                {isOnline ? "Pague online" : method.method_key === "wallet" ? `Saldo: R$ ${userBalance?.toFixed(2) || "0,00"}` : method.description || ""}
               </p>
             </button>
           );
