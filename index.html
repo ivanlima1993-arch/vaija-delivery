@@ -50,7 +50,21 @@
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div
+      style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #666;">
+      <div style="margin-bottom: 20px;">Carregando Vai Já Delivery...</div>
+      <div style="font-size: 12px;">Se demorar muito, recarregue a página.</div>
+    </div>
+  </div>
+  <script>
+      window.addEventListener('error', function(event) {
+        var errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:white; color:red; padding:20px; z-index:9999; overflow:auto; font-family:monospace;';
+        errorDiv.innerHTML = '<h3>Erro na aplicação:</h3><p>' + event.message + '</p><p>' + event.filename + ':' + event.lineno + '</p>';
+        document.body.appendChild(errorDiv);
+      });
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
