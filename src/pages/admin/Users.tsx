@@ -104,9 +104,9 @@ const AdminUsers = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (u) =>
-          u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+          (u.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (u.phone || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 

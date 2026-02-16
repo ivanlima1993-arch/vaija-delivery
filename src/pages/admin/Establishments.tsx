@@ -97,9 +97,9 @@ const AdminEstablishments = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (e) =>
-          e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.neighborhood?.toLowerCase().includes(searchTerm.toLowerCase())
+          (e.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (e.city || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (e.neighborhood || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 

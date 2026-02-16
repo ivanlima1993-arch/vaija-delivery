@@ -31,46 +31,34 @@ export const useAuth = () => {
 
   useEffect(() => {
     const fetchRoles = async (userId: string) => {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
+      try {
+        const { data: roles, error: rolesError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_driver_approved, driver_rejection_reason, driver_registration_submitted_at, driver_id_photo_url")
-        .eq("user_id", userId)
-        .maybeSingle();
+        if (rolesError) throw rolesError;
 
-      return {
-        isEstablishment: roles?.some((r) => r.role === "establishment") ?? false,
-        isAdmin: roles?.some((r) => r.role === "admin") ?? false,
-        isDriver: roles?.some((r) => r.role === "driver") ?? false,
-        isDriverApproved: profile?.is_driver_approved ?? false,
-        driverRejectionReason: profile?.driver_rejection_reason ?? null,
-        driverRegistrationSubmittedAt: profile?.driver_registration_submitted_at ?? null,
-        driverIdPhotoUrl: profile?.driver_id_photo_url ?? null,
-      };
-    };
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("is_driver_approved, driver_rejection_reason, driver_registration_submitted_at, driver_id_photo_url")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-    // Get initial session first
-    const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user ?? null;
+        if (profileError) throw profileError;
 
-      if (user) {
-        const roles = await fetchRoles(user.id);
-        setAuthState({
-          user,
-          session,
-          loading: false,
-          ...roles,
-        });
-      } else {
-        setAuthState({
-          user: null,
-          session: null,
-          loading: false,
+        return {
+          isEstablishment: roles?.some((r) => r.role === "establishment") ?? false,
+          isAdmin: roles?.some((r) => r.role === "admin") ?? false,
+          isDriver: roles?.some((r) => r.role === "driver") ?? false,
+          isDriverApproved: profile?.is_driver_approved ?? false,
+          driverRejectionReason: profile?.driver_rejection_reason ?? null,
+          driverRegistrationSubmittedAt: profile?.driver_registration_submitted_at ?? null,
+          driverIdPhotoUrl: profile?.driver_id_photo_url ?? null,
+        };
+      } catch (error) {
+        console.error("Error in fetchRoles:", error);
+        return {
           isEstablishment: false,
           isAdmin: false,
           isDriver: false,
@@ -78,7 +66,43 @@ export const useAuth = () => {
           driverRejectionReason: null,
           driverRegistrationSubmittedAt: null,
           driverIdPhotoUrl: null,
-        });
+        };
+      }
+    };
+
+    // Get initial session first
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        const user = session?.user ?? null;
+
+        if (user) {
+          const roles = await fetchRoles(user.id);
+          setAuthState({
+            user,
+            session,
+            loading: false,
+            ...roles,
+          });
+        } else {
+          setAuthState({
+            user: null,
+            session: null,
+            loading: false,
+            isEstablishment: false,
+            isAdmin: false,
+            isDriver: false,
+            isDriverApproved: false,
+            driverRejectionReason: null,
+            driverRegistrationSubmittedAt: null,
+            driverIdPhotoUrl: null,
+          });
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        setAuthState(prev => ({ ...prev, loading: false }));
       }
     };
 
@@ -92,13 +116,17 @@ export const useAuth = () => {
         if (user) {
           // Use setTimeout to avoid Supabase deadlock
           setTimeout(async () => {
-            const roles = await fetchRoles(user.id);
-            setAuthState({
-              user,
-              session,
-              loading: false,
-              ...roles,
-            });
+            try {
+              const roles = await fetchRoles(user.id);
+              setAuthState({
+                user,
+                session,
+                loading: false,
+                ...roles,
+              });
+            } catch (error) {
+              console.error("Error updating auth state:", error);
+            }
           }, 0);
         } else {
           setAuthState({
