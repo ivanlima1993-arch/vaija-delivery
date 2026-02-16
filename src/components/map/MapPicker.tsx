@@ -40,9 +40,14 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
         const address = await reverseGeocode({ latitude: lat, longitude: lng });
         if (address) {
           onLocationSelect(address);
+        } else {
+          console.warn("Nenhum endereço encontrado para estas coordenadas.");
+          toast.error("Não conseguimos encontrar o endereço exato para este local.");
         }
       } catch (err) {
         console.error("Error reverse geocoding:", err);
+        const errorMessage = err instanceof Error ? err.message : "Erro na busca de endereço";
+        toast.error(`Falha ao buscar endereço: ${errorMessage}`);
       }
     },
     [reverseGeocode, onLocationSelect]
@@ -79,6 +84,11 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
     let cancelled = false;
 
     const init = async () => {
+      // Small delay to ensure container is rendered
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (cancelled || !mapContainer.current) return;
+
       // Check WebGL support first
       if (!checkWebGLSupport()) {
         setMapError("Seu navegador não suporta WebGL. Tente abrir em uma nova aba ou use outro navegador.");
@@ -88,6 +98,10 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
       try {
         const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || (await fetchMapboxToken());
         if (cancelled) return;
+
+        if (!token || token.trim().length < 10) {
+          throw new Error("Token do Mapbox inválido ou muito curto.");
+        }
 
         mapboxgl.accessToken = token;
 
@@ -100,6 +114,7 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
 
         // Ensure map is resized correctly
         map.current.on("load", () => {
+          if (cancelled) return;
           setMapLoaded(true);
           map.current?.resize();
         });
@@ -130,15 +145,17 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
 
         map.current.on("error", (e) => {
           console.error("Mapbox GL Error:", e);
-          setMapError("Erro ao carregar o mapa. Verifique se a chave de API (Mapbox Token) está configurada corretamente.");
+          if (!mapLoaded) {
+            setMapError("Erro ao carregar o mapa. Verifique se a sua chave de API (Mapbox Token) está ativa e configurada corretamente.");
+          }
         });
       } catch (err) {
         console.error("Error initializing map:", err);
         const errorMessage = err instanceof Error ? err.message : "Erro desconhecido";
         if (errorMessage.includes("MAPBOX_ACCESS_TOKEN not configured")) {
-          setMapError("Configuração pendente: A chave de API do Mapbox não foi configurada no Supabase.");
+          setMapError("Configuração pendente: A variável MAPBOX_ACCESS_TOKEN não foi configurada nas Secrets do Supabase.");
         } else {
-          setMapError(`Erro ao carregar o mapa: ${errorMessage}`);
+          setMapError(`Falha ao inicializar o mapa: ${errorMessage}`);
         }
       }
     };
@@ -159,18 +176,26 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
       const position = await getCurrentPosition();
       const coords: [number, number] = [position.longitude, position.latitude];
 
-      map.current?.flyTo({
-        center: coords,
-        zoom: 17,
-      });
+      if (map.current) {
+        map.current.flyTo({
+          center: coords,
+          zoom: 17,
+        });
+      }
 
       marker.current?.setLngLat(coords);
-      updateMarkerPosition(position.longitude, position.latitude);
 
-      toast.success("Localização encontrada!");
+      // Await the address lookup
+      toast.info("Buscando seu endereço...");
+      await updateMarkerPosition(position.longitude, position.latitude);
+
+      toast.success("Localização e endereço encontrados!");
     } catch (err) {
+      console.error("Erro ao obter localização:", err);
       if (err instanceof Error) {
-        toast.error(err.message);
+        toast.error(`Erro: ${err.message}`);
+      } else {
+        toast.error("Erro ao obter localização atual.");
       }
     }
   };

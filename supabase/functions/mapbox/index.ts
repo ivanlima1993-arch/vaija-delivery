@@ -45,14 +45,19 @@ serve(async (req) => {
         // Convert coordinates to address
         const { longitude, latitude } = params;
         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_ACCESS_TOKEN}&language=pt-BR&types=address,place,neighborhood`;
-        
+
         const response = await fetch(url);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(`Mapbox API Error (Reverse Geocoding): ${response.status} ${errData.message || response.statusText}`);
+        }
+
         const data = await response.json();
-        
+
         if (data.features && data.features.length > 0) {
           const feature = data.features[0];
           const context = feature.context || [];
-          
+
           result = {
             address: feature.place_name,
             street: feature.text || "",
@@ -74,10 +79,15 @@ serve(async (req) => {
         // Convert address to coordinates
         const { address } = params;
         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${MAPBOX_ACCESS_TOKEN}&language=pt-BR&country=BR&types=address,place`;
-        
+
         const response = await fetch(url);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(`Mapbox API Error (Geocoding): ${response.status} ${errData.message || response.statusText}`);
+        }
+
         const data = await response.json();
-        
+
         if (data.features && data.features.length > 0) {
           result = data.features.map((f: GeocodingResult) => ({
             address: f.place_name,
@@ -96,10 +106,15 @@ serve(async (req) => {
         // Calculate route between two points
         const { origin, destination } = params;
         const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?access_token=${MAPBOX_ACCESS_TOKEN}&geometries=geojson&overview=full`;
-        
+
         const response = await fetch(url);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(`Mapbox API Error (Directions): ${response.status} ${errData.message || response.statusText}`);
+        }
+
         const data = await response.json();
-        
+
         if (data.routes && data.routes.length > 0) {
           const route = data.routes[0];
           result = {
@@ -118,22 +133,27 @@ serve(async (req) => {
       case "calculate_delivery_fee": {
         // Calculate delivery fee based on distance
         const { origin, destination, baseFee = 5, feePerKm = 2, freeUpToKm = 2 } = params;
-        
+
         // First get the route
         const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?access_token=${MAPBOX_ACCESS_TOKEN}`;
-        
+
         const response = await fetch(url);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(`Mapbox API Error (Directions): ${response.status} ${errData.message || response.statusText}`);
+        }
+
         const data = await response.json();
-        
+
         if (data.routes && data.routes.length > 0) {
           const distanceKm = data.routes[0].distance / 1000;
           const durationMinutes = Math.ceil(data.routes[0].duration / 60);
-          
+
           let fee = baseFee;
           if (distanceKm > freeUpToKm) {
             fee += (distanceKm - freeUpToKm) * feePerKm;
           }
-          
+
           result = {
             distanceKm: Number(distanceKm.toFixed(2)),
             durationMinutes,
