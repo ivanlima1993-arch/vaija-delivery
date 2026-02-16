@@ -28,8 +28,9 @@ const DriverTrackingMap = ({
   const driverMarker = useRef<mapboxgl.Marker | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
 
-  const { location, isConnected, error } = useDriverLocationSubscription({
+  const { location, isConnected, error: subscriptionError } = useDriverLocationSubscription({
     orderId,
     enabled: !!mapboxToken,
   });
@@ -45,9 +46,17 @@ const DriverTrackingMap = ({
         if (error) throw error;
         if (data?.success && data?.data?.token) {
           setMapboxToken(data.data.token);
+        } else {
+          throw new Error(data?.error || "Token não retornado");
         }
       } catch (err) {
         console.error("Error fetching Mapbox token:", err);
+        const message = err instanceof Error ? err.message : "Erro desconhecido";
+        if (message.includes("MAPBOX_ACCESS_TOKEN not configured")) {
+          setMapError("Configuração pendente: MAPBOX_ACCESS_TOKEN não configurado no Supabase.");
+        } else {
+          setMapError(`Falha ao obter token do mapa: ${message}`);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -60,55 +69,69 @@ const DriverTrackingMap = ({
   useEffect(() => {
     if (!mapboxToken || !mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = mapboxToken;
+    try {
+      mapboxgl.accessToken = mapboxToken;
 
-    // Default center (use delivery location if available)
-    const center: [number, number] = [
-      deliveryLongitude || -46.6333,
-      deliveryLatitude || -23.5505,
-    ];
+      // Default center (use delivery location if available)
+      const center: [number, number] = [
+        deliveryLongitude || -46.6333,
+        deliveryLatitude || -23.5505,
+      ];
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center,
-      zoom: 14,
-    });
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/streets-v12",
+        center,
+        zoom: 14,
+      });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      map.current.on("load", () => {
+        map.current?.resize();
+      });
 
-    // Add delivery marker if coordinates available
-    if (deliveryLatitude && deliveryLongitude) {
-      const deliveryEl = document.createElement("div");
-      deliveryEl.innerHTML = `
-        <div class="flex items-center justify-center w-10 h-10 bg-primary rounded-full shadow-lg border-2 border-white">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </div>
-      `;
-      
-      new mapboxgl.Marker({ element: deliveryEl })
-        .setLngLat([deliveryLongitude, deliveryLatitude])
-        .addTo(map.current);
-    }
+      map.current.on("error", (e) => {
+        console.error("Mapbox GL Error:", e);
+        setMapError("Erro ao carregar o mapa. Verifique sua chave de acesso.");
+      });
 
-    // Add establishment marker if coordinates available
-    if (establishmentLatitude && establishmentLongitude) {
-      const storeEl = document.createElement("div");
-      storeEl.innerHTML = `
-        <div class="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-full shadow-lg border-2 border-white">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-            <path d="M9 22V12h6v10"/>
-          </svg>
-        </div>
-      `;
-      
-      new mapboxgl.Marker({ element: storeEl })
-        .setLngLat([establishmentLongitude, establishmentLatitude])
-        .addTo(map.current);
+      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+      // Add delivery marker if coordinates available
+      if (deliveryLatitude && deliveryLongitude) {
+        const deliveryEl = document.createElement("div");
+        deliveryEl.innerHTML = `
+          <div class="flex items-center justify-center w-10 h-10 bg-primary rounded-full shadow-lg border-2 border-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+        `;
+
+        new mapboxgl.Marker({ element: deliveryEl })
+          .setLngLat([deliveryLongitude, deliveryLatitude])
+          .addTo(map.current);
+      }
+
+      // Add establishment marker if coordinates available
+      if (establishmentLatitude && establishmentLongitude) {
+        const storeEl = document.createElement("div");
+        storeEl.innerHTML = `
+          <div class="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-full shadow-lg border-2 border-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path d="M9 22V12h6v10"/>
+            </svg>
+          </div>
+        `;
+
+        new mapboxgl.Marker({ element: storeEl })
+          .setLngLat([establishmentLongitude, establishmentLatitude])
+          .addTo(map.current);
+      }
+    } catch (err) {
+      console.error("Error initializing DriverTrackingMap:", err);
+      setMapError("Erro ao inicializar o mapa.");
     }
 
     return () => {
@@ -166,10 +189,11 @@ const DriverTrackingMap = ({
     );
   }
 
-  if (!mapboxToken) {
+  if (mapError || !mapboxToken) {
     return (
-      <div className={`flex items-center justify-center bg-muted rounded-xl ${className}`}>
-        <p className="text-muted-foreground">Mapa não disponível</p>
+      <div className={`flex flex-col items-center justify-center bg-muted rounded-xl p-4 text-center ${className}`}>
+        <p className="text-sm font-medium text-destructive mb-1">Mapa não carregou</p>
+        <p className="text-xs text-muted-foreground max-w-[200px]">{mapError || "Token do mapa não disponível"}</p>
       </div>
     );
   }
@@ -177,7 +201,7 @@ const DriverTrackingMap = ({
   return (
     <div className={`relative rounded-xl overflow-hidden ${className}`}>
       <div ref={mapContainer} className="w-full h-full" />
-      
+
       {/* Status badge */}
       <div className="absolute top-3 left-3 z-10">
         <Badge

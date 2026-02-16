@@ -98,6 +98,12 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
           zoom: 15,
         });
 
+        // Ensure map is resized correctly
+        map.current.on("load", () => {
+          setMapLoaded(true);
+          map.current?.resize();
+        });
+
         // Add navigation controls
         map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
 
@@ -122,17 +128,18 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
           updateMarkerPosition(lng, lat);
         });
 
-        map.current.on("load", () => {
-          setMapLoaded(true);
-        });
-
         map.current.on("error", (e) => {
-          console.error("Map error:", e);
-          setMapError("Erro ao carregar o mapa. Verifique sua conexão e tente novamente.");
+          console.error("Mapbox GL Error:", e);
+          setMapError("Erro ao carregar o mapa. Verifique se a chave de API (Mapbox Token) está configurada corretamente.");
         });
       } catch (err) {
         console.error("Error initializing map:", err);
-        setMapError("Erro ao carregar o mapa. Tente novamente em instantes.");
+        const errorMessage = err instanceof Error ? err.message : "Erro desconhecido";
+        if (errorMessage.includes("MAPBOX_ACCESS_TOKEN not configured")) {
+          setMapError("Configuração pendente: A chave de API do Mapbox não foi configurada no Supabase.");
+        } else {
+          setMapError(`Erro ao carregar o mapa: ${errorMessage}`);
+        }
       }
     };
 
@@ -140,8 +147,10 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
 
     return () => {
       cancelled = true;
-      map.current?.remove();
-      map.current = null;
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, [checkWebGLSupport, defaultCenter, fetchMapboxToken, updateMarkerPosition]);
 

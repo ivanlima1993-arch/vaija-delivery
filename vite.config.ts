@@ -51,6 +51,9 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  build: {
+    outDir: "docs",
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
