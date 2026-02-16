@@ -105,7 +105,8 @@ const AdminUsers = () => {
       filtered = filtered.filter(
         (u) =>
           u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+          u.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -418,6 +419,7 @@ const AdminUsers = () => {
                               )}
                               <div>
                                 <p className="font-medium">{userItem.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{userItem.email || "Sem email"}</p>
                               </div>
                             </div>
                           </TableCell>

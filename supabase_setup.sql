@@ -7,6 +7,7 @@ CREATE TABLE public.profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   full_name TEXT NOT NULL,
+  email TEXT,
   phone TEXT,
   cpf_cnpj TEXT,
   avatar_url TEXT,
@@ -332,8 +333,8 @@ CREATE TRIGGER update_orders_updated_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, full_name)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', 'UsuÃ¡rio'));
+  INSERT INTO public.profiles (user_id, full_name, email)
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', 'Usuário'), NEW.email);
   
   -- Default role is customer
   INSERT INTO public.user_roles (user_id, role)
@@ -356,6 +357,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 CREATE POLICY "Admins can view all profiles"
 ON public.profiles
 FOR SELECT
+USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+CREATE POLICY "Admins can update all profiles"
+ON public.profiles
+FOR UPDATE
 USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 -- ORDERS: admins can view and update all orders

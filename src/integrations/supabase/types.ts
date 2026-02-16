@@ -786,6 +786,7 @@ export type Database = {
           driver_registration_submitted_at: string | null
           driver_rejection_reason: string | null
           driver_vehicle_plate: string | null
+          email: string | null
           face_photo_url: string | null
           full_name: string
           id: string
@@ -804,6 +805,7 @@ export type Database = {
           driver_registration_submitted_at?: string | null
           driver_rejection_reason?: string | null
           driver_vehicle_plate?: string | null
+          email?: string | null
           face_photo_url?: string | null
           full_name: string
           id?: string
@@ -822,6 +824,7 @@ export type Database = {
           driver_registration_submitted_at?: string | null
           driver_rejection_reason?: string | null
           driver_vehicle_plate?: string | null
+          email?: string | null
           face_photo_url?: string | null
           full_name?: string
           id?: string
