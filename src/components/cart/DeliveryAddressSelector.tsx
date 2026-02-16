@@ -93,7 +93,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
   useEffect(() => {
     const fetchNeighborhoods = async () => {
       if (!selectedCityId) return;
-      
+
       setLoadingNeighborhoods(true);
       const { data, error } = await supabase
         .from("neighborhoods")
@@ -143,7 +143,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
         return;
       }
     }
-    
+
     onAddressChange(address);
     setOpen(false);
   }, [establishmentId, calculateFee, onAddressChange]);
@@ -156,21 +156,29 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
       ...prev,
       street: geocoded.street || geocoded.address.split(",")[0] || "",
       neighborhoodName: geocoded.neighborhood || prev.neighborhoodName,
+      number: geocoded.number || prev.number,
     }));
 
     // Auto-select neighborhood if detected and matches
     if (geocoded.neighborhood) {
-      const matchingNeighborhood = neighborhoods.find(
-        (n) =>
-          n.name.toLowerCase().includes(geocoded.neighborhood?.toLowerCase() || "") ||
-          geocoded.neighborhood?.toLowerCase().includes(n.name.toLowerCase())
-      );
+      const detectedNeighborhood = geocoded.neighborhood.toLowerCase().trim();
+      const matchingNeighborhood = neighborhoods.find((n) => {
+        const nName = n.name.toLowerCase().trim();
+        return nName.includes(detectedNeighborhood) || detectedNeighborhood.includes(nName);
+      });
+
       if (matchingNeighborhood) {
         setNewAddress((prev) => ({
           ...prev,
-          street: geocoded.street || geocoded.address.split(",")[0] || "",
           neighborhoodId: matchingNeighborhood.id,
           neighborhoodName: matchingNeighborhood.name,
+        }));
+      } else {
+        // If no match in database, still keep the name for the manual input fallback
+        setNewAddress((prev) => ({
+          ...prev,
+          neighborhoodId: "", // Reset ID so user must select one or we use the name
+          neighborhoodName: geocoded.neighborhood,
         }));
       }
     }
@@ -389,6 +397,17 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                     )}
 
                     <div className="space-y-2">
+                      <Label htmlFor="street-map">Rua *</Label>
+                      <Input
+                        id="street-map"
+                        placeholder="Nome da rua"
+                        value={newAddress.street}
+                        onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
+                        className="bg-background"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="neighborhood-map">Bairro *</Label>
 
                       {loadingNeighborhoods ? (
@@ -396,9 +415,14 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                       ) : neighborhoods.length > 0 ? (
                         <Select
                           value={newAddress.neighborhoodId}
-                          onValueChange={(value) =>
-                            setNewAddress({ ...newAddress, neighborhoodId: value, neighborhoodName: "" })
-                          }
+                          onValueChange={(value) => {
+                            const n = neighborhoods.find((neighborhood) => neighborhood.id === value);
+                            setNewAddress({
+                              ...newAddress,
+                              neighborhoodId: value,
+                              neighborhoodName: n?.name || ""
+                            });
+                          }}
                         >
                           <SelectTrigger className="bg-background">
                             <SelectValue placeholder="Selecione o bairro" />
@@ -598,15 +622,13 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                         key={type.value}
                         type="button"
                         onClick={() => setNewAddress({ ...newAddress, type: type.value })}
-                        className={`flex-1 p-2 rounded-lg border-2 transition-all ${
-                          newAddress.type === type.value
-                            ? "border-primary bg-primary/10"
-                            : "border-transparent bg-muted"
-                        }`}
+                        className={`flex-1 p-2 rounded-lg border-2 transition-all ${newAddress.type === type.value
+                          ? "border-primary bg-primary/10"
+                          : "border-transparent bg-muted"
+                          }`}
                       >
-                        <type.icon className={`w-4 h-4 mx-auto mb-1 ${
-                          newAddress.type === type.value ? "text-primary" : "text-muted-foreground"
-                        }`} />
+                        <type.icon className={`w-4 h-4 mx-auto mb-1 ${newAddress.type === type.value ? "text-primary" : "text-muted-foreground"
+                          }`} />
                         <p className="text-xs">{type.label}</p>
                       </button>
                     ))}
@@ -621,8 +643,8 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                   >
                     Cancelar
                   </Button>
-                  <Button 
-                    className="flex-1" 
+                  <Button
+                    className="flex-1"
                     onClick={addressMode === "map" ? handleAddAddressFromMap : handleAddAddressManual}
                     disabled={
                       addressMode === "map"
@@ -654,16 +676,14 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                         <button
                           key={address.id}
                           onClick={() => handleSelectAddress(address)}
-                          className={`w-full flex items-center gap-3 p-4 rounded-xl transition-colors text-left ${
-                            isSelected
-                              ? "bg-primary/10 ring-2 ring-primary"
-                              : "bg-muted hover:bg-accent"
-                          }`}
+                          className={`w-full flex items-center gap-3 p-4 rounded-xl transition-colors text-left ${isSelected
+                            ? "bg-primary/10 ring-2 ring-primary"
+                            : "bg-muted hover:bg-accent"
+                            }`}
                         >
                           <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                              isSelected ? "bg-primary text-primary-foreground" : "bg-card"
-                            }`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isSelected ? "bg-primary text-primary-foreground" : "bg-card"
+                              }`}
                           >
                             <Icon className="w-5 h-5" />
                           </div>

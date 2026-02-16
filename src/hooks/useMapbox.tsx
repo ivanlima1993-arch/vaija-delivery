@@ -10,6 +10,7 @@ export interface GeocodedAddress {
   address: string;
   street: string;
   neighborhood: string;
+  number?: string;
   city: string;
   state: string;
   coordinates: Coordinates;

@@ -61,6 +61,7 @@ serve(async (req) => {
           result = {
             address: feature.place_name,
             street: feature.text || "",
+            number: feature.address || "",
             neighborhood: context.find((c: any) => c.id.includes("neighborhood"))?.text || "",
             city: context.find((c: any) => c.id.includes("place"))?.text || "",
             state: context.find((c: any) => c.id.includes("region"))?.text || "",
