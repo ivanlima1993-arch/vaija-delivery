@@ -43,7 +43,14 @@ const DriverTrackingMap = ({
           body: { action: "get_token" },
         });
 
-        if (error) throw error;
+        if (error) {
+          const errorMsg = error?.message || "";
+          if (errorMsg.includes("non-2xx status code")) {
+            throw new Error("A função do servidor retornou um erro. Isso geralmente significa que a chave MAPBOX_ACCESS_TOKEN não foi configurada corretamente nas Secrets do Supabase.");
+          }
+          throw error;
+        }
+
         if (data?.success && data?.data?.token) {
           setMapboxToken(data.data.token);
         } else {

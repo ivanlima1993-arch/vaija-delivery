@@ -2,3 +2,6 @@ project_id = "iartslbielcqmuhygzku"
 
 [functions.asaas-payment]
 verify_jwt = false
+
+[functions.mapbox]
+verify_jwt = false

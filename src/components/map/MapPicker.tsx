@@ -65,17 +65,32 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
   }, []);
 
   const fetchMapboxToken = useCallback(async () => {
-    const { data, error } = await supabase.functions.invoke("mapbox", {
-      body: { action: "get_token" },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke("mapbox", {
+        body: { action: "get_token" },
+      });
 
-    if (error) throw error;
-    if (!data?.success) throw new Error(data?.error || "Falha ao obter token do mapa");
+      if (error) {
+        // Handle Supabase function errors
+        const errorMsg = error?.message || "";
+        if (errorMsg.includes("non-2xx status code")) {
+          throw new Error("A função do servidor retornou um erro. Isso geralmente significa que a chave MAPBOX_ACCESS_TOKEN não foi configurada corretamente nas Secrets do Supabase.");
+        }
+        throw error;
+      }
 
-    const token = data.data?.token;
-    if (!token) throw new Error("Token do mapa não retornado");
+      if (!data?.success) {
+        throw new Error(data?.error || "Falha ao obter token do mapa");
+      }
 
-    return token as string;
+      const token = data.data?.token;
+      if (!token) throw new Error("Token do mapa não retornado pela função");
+
+      return token as string;
+    } catch (err) {
+      console.error("fetchMapboxToken error:", err);
+      throw err;
+    }
   }, []);
 
   useEffect(() => {
