@@ -57,9 +57,11 @@ const Header = () => {
     navigate("/");
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
     return name
       .split(" ")
+      .filter(n => n.length > 0)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
@@ -150,7 +152,7 @@ const Header = () => {
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium max-w-[100px] truncate">
-                      {profile.full_name.split(" ")[0]}
+                      {profile.full_name ? profile.full_name.split(" ")[0] : "Usuário"}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -219,7 +221,7 @@ const Header = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{profile.full_name}</p>
+                        <p className="font-medium">{profile.full_name || "Usuário"}</p>
                         <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>

@@ -95,11 +95,12 @@ const AdminInvoices = () => {
     let filtered = invoices;
 
     if (searchTerm) {
-      filtered = filtered.filter(
-        (inv) =>
-          inv.establishments?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          inv.period.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter((inv) => {
+        const estMatch = (inv.establishments?.name || "").toLowerCase().includes(search);
+        const periodMatch = (inv.period || "").toLowerCase().includes(search);
+        return estMatch || periodMatch;
+      });
     }
 
     if (statusFilter !== "all") {

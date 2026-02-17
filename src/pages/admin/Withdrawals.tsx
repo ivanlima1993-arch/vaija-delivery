@@ -98,8 +98,9 @@ const AdminWithdrawals = () => {
     let filtered = withdrawals;
 
     if (searchTerm) {
+      const search = searchTerm.toLowerCase();
       filtered = filtered.filter((w) =>
-        w.establishments?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (w.establishments?.name || "").toLowerCase().includes(search)
       );
     }
 
@@ -378,10 +379,10 @@ const AdminWithdrawals = () => {
                           <TableCell>
                             {withdrawal.processed_at
                               ? new Date(withdrawal.processed_at).toLocaleDateString("pt-BR", {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                })
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              })
                               : "—"}
                           </TableCell>
                           <TableCell>

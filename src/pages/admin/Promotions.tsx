@@ -334,11 +334,12 @@ const AdminPromotions = () => {
     }
   };
 
-  const filteredPromotions = promotions.filter(
-    (promotion) =>
-      promotion.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promotion.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPromotions = promotions.filter((promotion) => {
+    const search = searchTerm.toLowerCase();
+    const titleMatch = (promotion.title || "").toLowerCase().includes(search);
+    const descMatch = (promotion.description || "").toLowerCase().includes(search);
+    return titleMatch || descMatch;
+  });
 
   const formatDiscount = (promotion: Promotion) => {
     if (!promotion.discount_value) return "—";

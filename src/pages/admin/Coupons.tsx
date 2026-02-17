@@ -99,13 +99,13 @@ const AdminCoupons = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [saving, setSaving] = useState(false);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     code: "",
@@ -302,11 +302,12 @@ const AdminCoupons = () => {
     }
   };
 
-  const filteredCoupons = coupons.filter(
-    (coupon) =>
-      coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coupon.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCoupons = coupons.filter((coupon) => {
+    const search = searchTerm.toLowerCase();
+    const codeMatch = (coupon.code || "").toLowerCase().includes(search);
+    const descMatch = (coupon.description || "").toLowerCase().includes(search);
+    return codeMatch || descMatch;
+  });
 
   const formatDiscount = (coupon: Coupon) => {
     if (coupon.discount_type === "percentage") {

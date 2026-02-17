@@ -236,9 +236,9 @@ const DriverTrackingMap = ({
         </div>
       </div>
 
-      {error && (
+      {subscriptionError && (
         <div className="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs px-2 py-1 rounded">
-          {error}
+          {subscriptionError}
         </div>
       )}
     </div>
