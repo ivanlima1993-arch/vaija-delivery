@@ -20,7 +20,20 @@
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-TileColor" content="#f97316" />
   <meta name="msapplication-tap-highlight" content="no" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" id="pwa-manifest" href="manifest.json" />
+  <script>
+    // Dinamicamente troca o manifest se estiver na área de entregador
+    (function() {
+      const isDriver = window.location.hash.includes('entregador');
+      const manifest = document.getElementById('pwa-manifest');
+      if (isDriver && manifest) {
+        manifest.href = 'manifest-driver.json';
+        // Atualiza também os ícones de iOS se necessário
+        const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+        if (appleIcon) appleIcon.href = '/pwa-driver-192x192.png';
+      }
+    })();
+  </script>
 
   <!-- Apple Touch Icons -->
   <link rel="apple-touch-icon" href="/pwa-192x192.png" />
