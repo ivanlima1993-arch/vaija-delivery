@@ -22,15 +22,18 @@
   <meta name="msapplication-tap-highlight" content="no" />
   <link rel="manifest" id="pwa-manifest" href="manifest.json" />
   <script>
-    // Dinamicamente troca o manifest se estiver na área de entregador
-    (function() {
-      const isDriver = window.location.hash.includes('entregador');
+    // Dinamicamente troca o manifest se estiver na área de entregador ou estabelecimento
+    (function () {
+      const hash = window.location.hash;
       const manifest = document.getElementById('pwa-manifest');
-      if (isDriver && manifest) {
-        manifest.href = 'manifest-driver.json';
-        // Atualiza também os ícones de iOS se necessário
-        const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+      const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+
+      if (hash.includes('entregador')) {
+        if (manifest) manifest.href = 'manifest-driver.json';
         if (appleIcon) appleIcon.href = '/pwa-driver-192x192.png';
+      } else if (hash.includes('estabelecimento')) {
+        if (manifest) manifest.href = 'manifest-establishment.json';
+        if (appleIcon) appleIcon.href = '/pwa-establishment-192x192.png';
       }
     })();
   </script>
@@ -71,12 +74,12 @@
     </div>
   </div>
   <script>
-      window.addEventListener('error', function(event) {
-        var errorDiv = document.createElement('div');
-        errorDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:white; color:red; padding:20px; z-index:9999; overflow:auto; font-family:monospace;';
-        errorDiv.innerHTML = '<h3>Erro na aplicação:</h3><p>' + event.message + '</p><p>' + event.filename + ':' + event.lineno + '</p>';
-        document.body.appendChild(errorDiv);
-      });
+    window.addEventListener('error', function (event) {
+      var errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:white; color:red; padding:20px; z-index:9999; overflow:auto; font-family:monospace;';
+      errorDiv.innerHTML = '<h3>Erro na aplicação:</h3><p>' + event.message + '</p><p>' + event.filename + ':' + event.lineno + '</p>';
+      document.body.appendChild(errorDiv);
+    });
   </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
