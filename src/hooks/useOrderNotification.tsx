@@ -26,7 +26,7 @@ export const useOrderNotification = ({
   // Initialize audio context
   useEffect(() => {
     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
+
     return () => {
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -41,65 +41,65 @@ export const useOrderNotification = ({
 
   const playBeepSequence = useCallback(() => {
     if (!audioContextRef.current || isPlayingRef.current) return;
-    
+
     isPlayingRef.current = true;
-    
+
     try {
       const audioContext = audioContextRef.current;
-      
+
       // Ensure audio context is running
       if (audioContext.state === 'suspended') {
         audioContext.resume();
       }
-      
+
       // First beep - higher pitch
       const oscillator1 = audioContext.createOscillator();
       const gainNode1 = audioContext.createGain();
-      
+
       oscillator1.connect(gainNode1);
       gainNode1.connect(audioContext.destination);
-      
+
       oscillator1.frequency.value = 880;
       oscillator1.type = "sine";
-      
+
       gainNode1.gain.setValueAtTime(0.6, audioContext.currentTime);
       gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
+
       oscillator1.start(audioContext.currentTime);
       oscillator1.stop(audioContext.currentTime + 0.3);
-      
+
       // Second beep - even higher
       const oscillator2 = audioContext.createOscillator();
       const gainNode2 = audioContext.createGain();
-      
+
       oscillator2.connect(gainNode2);
       gainNode2.connect(audioContext.destination);
-      
+
       oscillator2.frequency.value = 1100;
       oscillator2.type = "sine";
-      
+
       gainNode2.gain.setValueAtTime(0.6, audioContext.currentTime + 0.15);
       gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.45);
-      
+
       oscillator2.start(audioContext.currentTime + 0.15);
       oscillator2.stop(audioContext.currentTime + 0.45);
-      
+
       // Third beep - highest
       const oscillator3 = audioContext.createOscillator();
       const gainNode3 = audioContext.createGain();
-      
+
       oscillator3.connect(gainNode3);
       gainNode3.connect(audioContext.destination);
-      
+
       oscillator3.frequency.value = 1320;
       oscillator3.type = "sine";
-      
+
       gainNode3.gain.setValueAtTime(0.6, audioContext.currentTime + 0.3);
       gainNode3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-      
+
       oscillator3.start(audioContext.currentTime + 0.3);
       oscillator3.stop(audioContext.currentTime + 0.6);
-      
+
       setTimeout(() => {
         isPlayingRef.current = false;
       }, 700);
@@ -114,7 +114,7 @@ export const useOrderNotification = ({
     if (pendingOrdersWithSound.size > 0 && soundEnabled) {
       // Play immediately
       playBeepSequence();
-      
+
       // Start interval to repeat every 3 seconds
       if (!intervalRef.current) {
         intervalRef.current = setInterval(() => {
@@ -130,7 +130,7 @@ export const useOrderNotification = ({
         intervalRef.current = null;
       }
     }
-    
+
     return () => {
       if (intervalRef.current && pendingOrdersWithSound.size === 0) {
         clearInterval(intervalRef.current);
@@ -171,7 +171,7 @@ export const useOrderNotification = ({
     if (order.status === "pending") {
       addOrderToSoundList(order.id);
     }
-    
+
     // Show toast with custom styling
     toast.success(
       <div className="flex items-center gap-3">
@@ -191,7 +191,7 @@ export const useOrderNotification = ({
         className: "border-2 border-primary bg-card shadow-lg",
         action: {
           label: "Ver",
-          onClick: () => {},
+          onClick: () => { },
         },
       }
     );
@@ -223,7 +223,7 @@ export const useOrderNotification = ({
         .select("id")
         .eq("establishment_id", establishmentId)
         .eq("status", "pending");
-      
+
       if (data && data.length > 0) {
         setPendingOrdersWithSound(new Set(data.map(o => o.id)));
       }
@@ -264,12 +264,12 @@ export const useOrderNotification = ({
         },
         (payload) => {
           const updatedOrder = payload.new as Order;
-          
+
           // Stop sound when order is no longer pending
           if (updatedOrder.status !== "pending") {
             stopSoundForOrder(updatedOrder.id);
           }
-          
+
           onOrderUpdate?.(updatedOrder);
         }
       )
@@ -280,8 +280,8 @@ export const useOrderNotification = ({
     };
   }, [establishmentId, showNotification, onNewOrder, onOrderUpdate, requestNotificationPermission, stopSoundForOrder]);
 
-  return { 
-    playNotificationSound: playBeepSequence, 
+  return {
+    playNotificationSound: playBeepSequence,
     requestNotificationPermission,
     stopSoundForOrder,
     stopAllSounds,

@@ -22,7 +22,7 @@ export const useDriverOrderNotifications = () => {
   // Initialize audio context
   useEffect(() => {
     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
+
     return () => {
       if (audioContextRef.current) {
         audioContextRef.current.close();

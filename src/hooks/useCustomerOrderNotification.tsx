@@ -65,37 +65,37 @@ export const useCustomerOrderNotification = ({
   const playNotificationSound = useCallback(() => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
+
       // Pleasant notification sound
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       oscillator.frequency.value = 587.33; // D5
       oscillator.type = "sine";
-      
+
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
+
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.3);
-      
+
       // Second note (higher)
       setTimeout(() => {
         const osc2 = audioContext.createOscillator();
         const gain2 = audioContext.createGain();
-        
+
         osc2.connect(gain2);
         gain2.connect(audioContext.destination);
-        
+
         osc2.frequency.value = 880; // A5
         osc2.type = "sine";
-        
+
         gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
         gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-        
+
         osc2.start(audioContext.currentTime);
         osc2.stop(audioContext.currentTime + 0.4);
       }, 150);
@@ -116,10 +116,10 @@ export const useCustomerOrderNotification = ({
 
     // Play sound
     playNotificationSound();
-    
+
     // Show toast with custom styling based on status
     const toastVariant = order.status === "cancelled" ? toast.error : toast.success;
-    
+
     toastVariant(
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center">
@@ -178,7 +178,7 @@ export const useCustomerOrderNotification = ({
         (payload) => {
           const updatedOrder = payload.new as Order;
           const oldOrder = payload.old as Partial<Order>;
-          
+
           // Only notify if status actually changed
           if (oldOrder.status !== updatedOrder.status) {
             showNotification(updatedOrder, false);
@@ -202,8 +202,8 @@ export const useCustomerOrderNotification = ({
     }
   }, []);
 
-  return { 
-    requestNotificationPermission, 
+  return {
+    requestNotificationPermission,
     playNotificationSound,
     initializeStatus,
   };

@@ -86,7 +86,7 @@ const App = () => {
         <CartProvider>
           <TooltipProvider>
             {showSplash && !sessionStorage.getItem("splashShown") && (
-              <SplashScreen onComplete={handleSplashComplete} duration={3000} />
+              <SplashScreen onComplete={handleSplashComplete} duration={10000} />
             )}
             <Toaster />
             <Sonner />

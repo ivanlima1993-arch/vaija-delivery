@@ -11,6 +11,19 @@ const SplashScreen = ({ onComplete, duration = 3000 }: SplashScreenProps) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    // Play opening sound
+    const playSound = async () => {
+      try {
+        const audio = new Audio("/sounds/opening.mp3");
+        audio.volume = 0.5;
+        await audio.play();
+      } catch (error) {
+        console.log("Autoplay blocked or sound file missing:", error);
+      }
+    };
+
+    playSound();
+
     const timer = setTimeout(() => {
       setIsVisible(false);
       onComplete?.();
@@ -36,15 +49,15 @@ const SplashScreen = ({ onComplete, duration = 3000 }: SplashScreenProps) => {
 
           {/* Logo with pulse animation */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.5, opacity: 0 }}
             animate={{ 
-              scale: [0.8, 1, 1.05, 1, 1.05, 1, 1.05, 1],
-              opacity: [0, 1, 0.9, 1, 0.9, 1, 0.9, 1]
+              scale: [0.5, 1, 1.08, 1],
+              opacity: [0, 1, 0.8, 1]
             }}
             transition={{
-              duration: 2.5,
-              ease: "easeInOut",
-              times: [0, 0.15, 0.3, 0.4, 0.55, 0.65, 0.8, 0.9]
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
             }}
             className="relative z-10"
           >

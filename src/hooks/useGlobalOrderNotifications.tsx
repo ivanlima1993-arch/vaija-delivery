@@ -61,35 +61,35 @@ export const useGlobalOrderNotifications = () => {
   const playNotificationSound = useCallback(() => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
+
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       oscillator.frequency.value = 587.33;
       oscillator.type = "sine";
-      
+
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
+
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.3);
-      
+
       setTimeout(() => {
         const osc2 = audioContext.createOscillator();
         const gain2 = audioContext.createGain();
-        
+
         osc2.connect(gain2);
         gain2.connect(audioContext.destination);
-        
+
         osc2.frequency.value = 880;
         osc2.type = "sine";
-        
+
         gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
         gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-        
+
         osc2.start(audioContext.currentTime);
         osc2.stop(audioContext.currentTime + 0.4);
       }, 150);
@@ -103,12 +103,12 @@ export const useGlobalOrderNotifications = () => {
     if (!message) return;
 
     playNotificationSound();
-    
+
     const toastVariant = order.status === "cancelled" ? toast.error : toast.success;
-    
+
     toastVariant(
-      <div 
-        className="flex items-center gap-3 cursor-pointer" 
+      <div
+        className="flex items-center gap-3 cursor-pointer"
         onClick={() => navigate(`/pedido/${order.id}`)}
       >
         <div className="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center">
@@ -180,12 +180,12 @@ export const useGlobalOrderNotifications = () => {
         (payload) => {
           const updatedOrder = payload.new as Order;
           const previousStatus = activeOrdersRef.current.get(updatedOrder.id);
-          
+
           // Only notify if status changed and we're initialized
           if (isInitializedRef.current && previousStatus && previousStatus !== updatedOrder.status) {
             showNotification(updatedOrder);
           }
-          
+
           // Update tracking
           if (updatedOrder.status === "delivered" || updatedOrder.status === "cancelled") {
             activeOrdersRef.current.delete(updatedOrder.id);
