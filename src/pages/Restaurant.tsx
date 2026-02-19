@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Star, Clock, Bike, Info, Plus, Store, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
+import { CartItem, useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -40,7 +40,7 @@ const Restaurant = () => {
   const [loading, setLoading] = useState(true);
   const [showHours, setShowHours] = useState(false);
 
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemCount = items.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
 
   useEffect(() => {
     if (id) {
@@ -51,6 +51,7 @@ const Restaurant = () => {
   }, [id]);
 
   const fetchEstablishment = async () => {
+    if (!id) return;
     try {
       const { data, error } = await supabase
         .from("establishments")
@@ -68,6 +69,7 @@ const Restaurant = () => {
   };
 
   const fetchProducts = async () => {
+    if (!id) return;
     try {
       const { data, error } = await supabase
         .from("products")
@@ -84,6 +86,7 @@ const Restaurant = () => {
   };
 
   const fetchCategories = async () => {
+    if (!id) return;
     try {
       const { data, error } = await supabase
         .from("product_categories")
@@ -103,6 +106,8 @@ const Restaurant = () => {
   };
 
   const handleAddItem = (product: Product) => {
+    if (!id) return;
+
     // Check if there are items from a different establishment
     const differentEstablishment = items.length > 0 && items.some(item => item.establishmentId !== id);
 
@@ -150,7 +155,7 @@ const Restaurant = () => {
   };
 
   const filteredProducts = selectedCategory
-    ? products.filter((p) => p.category_id === selectedCategory)
+    ? products.filter((p: Product) => p.category_id === selectedCategory)
     : products;
 
   if (loading) {
@@ -355,7 +360,7 @@ const Restaurant = () => {
               <p>Nenhum produto disponível no momento</p>
             </div>
           ) : (
-            filteredProducts.map((product, index) => (
+            filteredProducts.map((product: Product, index: number) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 10 }}

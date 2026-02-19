@@ -23,7 +23,6 @@ import {
   Phone,
   Navigation,
   CheckCircle,
-  ArrowLeft,
   Store,
   Package,
   Clock,
@@ -68,7 +67,7 @@ const InRoute = () => {
     if (order && user && isGeoSupported && !isTracking) {
       startTracking();
     }
-  }, [order, user, isGeoSupported]);
+  }, [order, user, isGeoSupported, isTracking, startTracking]);
 
   // Stop tracking when leaving page or order is delivered
   useEffect(() => {
@@ -93,14 +92,15 @@ const InRoute = () => {
     if (user) {
       fetchCurrentOrder();
     }
-  }, [user, authLoading, isDriver, navigate]);
+  }, [user, authLoading, isDriver, isDriverApproved, navigate]);
 
   const fetchCurrentOrder = async () => {
+    if (!user) return;
     try {
       const { data: orderData } = await supabase
         .from("orders")
         .select("*")
-        .eq("driver_id", user!.id)
+        .eq("driver_id", user.id)
         .eq("status", "out_for_delivery")
         .maybeSingle();
 
@@ -240,8 +240,8 @@ const InRoute = () => {
               <CardContent className="pt-0">
                 <DriverTrackingMap
                   orderId={order.id}
-                  deliveryLatitude={order.delivery_latitude}
-                  deliveryLongitude={order.delivery_longitude}
+                  deliveryLatitude={order.delivery_latitude || 0}
+                  deliveryLongitude={order.delivery_longitude || 0}
                   establishmentLatitude={establishment?.latitude ? Number(establishment.latitude) : undefined}
                   establishmentLongitude={establishment?.longitude ? Number(establishment.longitude) : undefined}
                   className="h-48 rounded-lg"
@@ -362,14 +362,14 @@ const InRoute = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
-                    onClick={() => callCustomer(order.customer_phone)}
+                    onClick={() => callCustomer(order.customer_phone || "")}
                   >
                     <Phone className="w-4 h-4 mr-2" />
                     Ligar
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => openInMaps(order.delivery_address)}
+                    onClick={() => openInMaps(order.delivery_address || "")}
                   >
                     <Navigation className="w-4 h-4 mr-2" />
                     GPS
