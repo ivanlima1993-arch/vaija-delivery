@@ -1,0 +1,29 @@
+{
+    "name": "Vai Já Estabelecimento",
+    "short_name": "Vai Já Loja",
+    "description": "Painel de Gestão para Estabelecimentos do Vai Já Delivery",
+    "theme_color": "#f97316",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "scope": ".",
+    "start_url": "./#/estabelecimento",
+    "icons": [
+        {
+            "src": "pwa-establishment-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "pwa-establishment-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "pwa-establishment-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
