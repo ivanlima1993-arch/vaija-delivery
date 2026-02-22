@@ -19,7 +19,9 @@ import {
   Menu,
   Bell,
   Volume2,
+  UserPlus,
 } from "lucide-react";
+import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Establishment = Database["public"]["Tables"]["establishments"]["Row"];
@@ -33,6 +35,7 @@ const EstablishmentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   // Real-time order notifications with persistent sound
   const { 
@@ -249,6 +252,22 @@ const EstablishmentDashboard = () => {
                   </span>
                 )}
               </button>
+              <Button 
+                onClick={() => setLinkDialogOpen(true)}
+                className="hidden md:flex gap-2"
+                size="sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Vincular Entregador
+              </Button>
+              <Button 
+                onClick={() => setLinkDialogOpen(true)}
+                className="md:hidden"
+                size="icon"
+                variant="outline"
+              >
+                <UserPlus className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </header>
@@ -340,6 +359,49 @@ const EstablishmentDashboard = () => {
             </motion.div>
           </div>
 
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setLinkDialogOpen(true)}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                    <UserPlus className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Vincular Entregador</p>
+                    <p className="text-xs text-muted-foreground text-pretty">Vincule um entregador ao seu estabelecimento via CPF</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/estabelecimento/configuracoes")}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                    <Package className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Configurar Entregas</p>
+                    <p className="text-xs text-muted-foreground">Gerencie taxas e tempos de entrega</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate("/estabelecimento/cardapio")}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                    <Menu className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Gerenciar Cardápio</p>
+                    <p className="text-xs text-muted-foreground text-pretty">Atualize seus produtos e preços</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Recent Orders */}
           <Card>
             <CardHeader>
@@ -403,6 +465,16 @@ const EstablishmentDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        <LinkDriverDialog
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
+          establishmentId={establishment?.id || ""}
+          onSuccess={() => {
+            fetchOrders(establishment.id);
+            toast.success("Entregador vinculado com sucesso!");
+          }}
+        />
       </main>
     </div>
   );

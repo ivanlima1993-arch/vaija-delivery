@@ -206,9 +206,9 @@ const EstablishmentDrivers = () => {
               </button>
               <h1 className="font-bold text-lg">Entregadores</h1>
             </div>
-            <Button onClick={() => setLinkDialogOpen(true)}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Vincular Entregador
+            <Button onClick={() => setLinkDialogOpen(true)} className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Vincular Entregador</span>
             </Button>
           </div>
         </header>
