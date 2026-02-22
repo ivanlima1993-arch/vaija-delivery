@@ -31,11 +31,20 @@ const AdminSettings = () => {
   const [settings, setSettings] = useState({
     platformName: "VAIJÁ",
     supportEmail: "suporte@vaija.com.br",
-    supportPhone: "(11) 99999-9999",
+    supportPhone: "(11) 99912-3456",
     autoApproveEstablishments: false,
     emailNotifications: true,
     pushNotifications: true,
     maintenanceMode: false,
+  });
+
+  const [supportSettings, setSupportSettings] = useState({
+    whatsapp: "5579988320546",
+    email: "suporte@vaijadelivery.com",
+    chatUrl: "",
+    days: ["1", "2", "3", "4", "5"], // 1-5 (Seg-Sex)
+    startTime: "08:00",
+    endTime: "22:00",
   });
 
   useEffect(() => {
@@ -51,9 +60,33 @@ const AdminSettings = () => {
     }
 
     if (user && isAdmin) {
+      fetchSettings();
       fetchPendingEstablishments();
     }
   }, [user, authLoading, isAdmin, navigate]);
+
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("*");
+
+      if (error) {
+        console.error("Error fetching settings:", error);
+        return;
+      }
+
+      if (data) {
+        const platform = data.find(s => s.key === "general");
+        const support = data.find(s => s.key === "support");
+
+        if (platform) setSettings(prev => ({ ...prev, ...platform.value }));
+        if (support) setSupportSettings(prev => ({ ...prev, ...support.value }));
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    }
+  };
 
   const fetchPendingEstablishments = async () => {
     const { count } = await supabase
@@ -65,10 +98,36 @@ const AdminSettings = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    // Simulate saving
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success("Configurações salvas com sucesso!");
-    setSaving(false);
+    try {
+      // Save General Settings
+      const { error: genError } = await supabase
+        .from("site_settings")
+        .upsert({
+          key: "general",
+          value: settings,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" });
+
+      // Save Support Settings
+      const { error: supError } = await supabase
+        .from("site_settings")
+        .upsert({
+          key: "support",
+          value: supportSettings,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" });
+
+      if (genError || supError) {
+        throw genError || supError;
+      }
+
+      toast.success("Configurações salvas com sucesso!");
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast.error("Erro ao salvar. Verifique se a tabela 'site_settings' existe.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (authLoading) {
@@ -112,49 +171,114 @@ const AdminSettings = () => {
         </header>
 
         <div className="p-4 lg:p-6 space-y-6 max-w-4xl">
-          {/* General Settings */}
+          {/* Support Settings */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
-                Configurações Gerais
+                <Settings className="w-5 h-5" />
+                Configurações de Suporte
               </CardTitle>
               <CardDescription>
-                Informações básicas da plataforma
+                Defina como e quando os usuários podem entrar em contato
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="platformName">Nome da Plataforma</Label>
+                  <Label htmlFor="whatsapp">WhatsApp de Suporte</Label>
                   <Input
-                    id="platformName"
-                    value={settings.platformName}
+                    id="whatsapp"
+                    placeholder="Ex: 5579988320546"
+                    value={supportSettings.whatsapp}
                     onChange={(e) =>
-                      setSettings({ ...settings, platformName: e.target.value })
+                      setSupportSettings({ ...supportSettings, whatsapp: e.target.value })
                     }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="supportEmail">Email de Suporte</Label>
+                  <Label htmlFor="supportEmail">Email de Atendimento</Label>
                   <Input
                     id="supportEmail"
                     type="email"
-                    value={settings.supportEmail}
+                    placeholder="suporte@exemplo.com"
+                    value={supportSettings.email}
                     onChange={(e) =>
-                      setSettings({ ...settings, supportEmail: e.target.value })
+                      setSupportSettings({ ...supportSettings, email: e.target.value })
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="supportPhone">Telefone de Suporte</Label>
+                <div className="sm:col-span-2 space-y-2">
+                  <Label htmlFor="chatUrl">Link do Chat Online (Ex: Tawk.to)</Label>
                   <Input
-                    id="supportPhone"
-                    value={settings.supportPhone}
+                    id="chatUrl"
+                    placeholder="https://tawk.to/chat/..."
+                    value={supportSettings.chatUrl}
                     onChange={(e) =>
-                      setSettings({ ...settings, supportPhone: e.target.value })
+                      setSupportSettings({ ...supportSettings, chatUrl: e.target.value })
                     }
                   />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="font-medium text-sm">Horário de Atendimento</h3>
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Dias de Atendimento</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: "Dom", value: "0" },
+                        { label: "Seg", value: "1" },
+                        { label: "Ter", value: "2" },
+                        { label: "Qua", value: "3" },
+                        { label: "Qui", value: "4" },
+                        { label: "Sex", value: "5" },
+                        { label: "Sáb", value: "6" },
+                      ].map((day) => (
+                        <Button
+                          key={day.value}
+                          type="button"
+                          variant={supportSettings.days.includes(day.value) ? "default" : "outline"}
+                          size="sm"
+                          className="h-8 w-10 p-0"
+                          onClick={() => {
+                            const newDays = supportSettings.days.includes(day.value)
+                              ? supportSettings.days.filter((d) => d !== day.value)
+                              : [...supportSettings.days, day.value];
+                            setSupportSettings({ ...supportSettings, days: newDays });
+                          }}
+                        >
+                          {day.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="space-y-2 flex-1">
+                      <Label htmlFor="start">Abertura</Label>
+                      <Input
+                        id="start"
+                        type="time"
+                        value={supportSettings.startTime}
+                        onChange={(e) =>
+                          setSupportSettings({ ...supportSettings, startTime: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2 flex-1">
+                      <Label htmlFor="end">Fechamento</Label>
+                      <Input
+                        id="end"
+                        type="time"
+                        value={supportSettings.endTime}
+                        onChange={(e) =>
+                          setSupportSettings({ ...supportSettings, endTime: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
