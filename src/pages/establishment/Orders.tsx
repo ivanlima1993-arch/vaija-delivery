@@ -22,6 +22,7 @@ import {
   Volume2,
   Menu,
   UserPlus,
+  Printer,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -167,6 +168,121 @@ const EstablishmentOrders = () => {
     return flow[currentStatus];
   };
 
+  const handlePrint = (order: Order) => {
+    const items = orderItems[order.id] || [];
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const content = `
+      <html>
+        <head>
+          <title>Pedido #${order.order_number}</title>
+          <style>
+            body { font-family: 'Courier New', Courier, monospace; width: 300px; padding: 10px; font-size: 12px; }
+            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .section { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+            .items { width: 100%; border-collapse: collapse; }
+            .items th, .items td { text-align: left; padding: 2px 0; }
+            .total-row { display: flex; justify-content: space-between; margin-top: 2px; }
+            .total-final { border-top: 1px solid #000; margin-top: 5px; padding-top: 5px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
+            .notes { margin-top: 10px; background: #f9f9f9; padding: 5px; border: 1px solid #ddd; word-wrap: break-word; }
+            @media print {
+              body { margin: 0; padding: 5mm; }
+              @page { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2 style="margin: 0;">Vai Já Delivery</h2>
+            <p style="margin: 5px 0;">Pedido #${order.order_number}</p>
+            <p style="margin: 0;">${new Date(order.created_at).toLocaleString("pt-BR")}</p>
+          </div>
+          
+          <div class="section">
+            <p><strong>Cliente:</strong> ${order.customer_name}</p>
+            <p><strong>Telefone:</strong> ${order.customer_phone}</p>
+            <p><strong>Endereço:</strong> ${order.delivery_address}</p>
+          </div>
+
+          <div class="section">
+            <table class="items">
+              <thead>
+                <tr>
+                  <th>Qtd</th>
+                  <th>Item</th>
+                  <th style="text-align: right;">v.Un</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items
+        .map(
+          (item) => `
+                  <tr>
+                    <td style="vertical-align: top; width: 30px;">${item.quantity}x</td>
+                    <td style="vertical-align: top;">
+                      ${item.product_name}
+                      ${item.notes ? `<br/><small><i>- ${item.notes}</i></small>` : ""}
+                    </td>
+                    <td style="vertical-align: top; text-align: right;">R$ ${(Number(item.subtotal) / item.quantity).toFixed(2)}</td>
+                  </tr>
+                `
+        )
+        .join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>R$ ${Number(order.subtotal).toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span>Taxa Entrega:</span>
+              <span>R$ ${Number(order.delivery_fee).toFixed(2)}</span>
+            </div>
+            ${Number(order.discount) > 0
+        ? `<div class="total-row" style="color: green;">
+                <span>Desconto:</span>
+                <span>- R$ ${Number(order.discount).toFixed(2)}</span>
+              </div>`
+        : ""
+      }
+            <div class="total-final">
+              <span>TOTAL:</span>
+              <span>R$ ${Number(order.total).toFixed(2)}</span>
+            </div>
+          </div>
+
+          ${order.notes
+        ? `
+            <div class="notes">
+              <strong>Observação do Pedido:</strong><br/>
+              ${order.notes}
+            </div>
+          `
+        : ""
+      }
+
+          <div style="text-align: center; margin-top: 20px; font-style: italic;">
+            Obrigado pela preferência!
+          </div>
+          
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(content);
+    printWindow.document.close();
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -284,10 +400,23 @@ const EstablishmentOrders = () => {
                           <CardTitle className="text-lg">
                             Pedido #{order.order_number}
                           </CardTitle>
-                          <Badge className={`${statusConfig[order.status].color} text-white`}>
-                            <StatusIcon className="w-3 h-3 mr-1" />
-                            {statusConfig[order.status].label}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`${statusConfig[order.status].color} text-white`}>
+                              <StatusIcon className="w-3 h-3 mr-1" />
+                              {statusConfig[order.status].label}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePrint(order);
+                              }}
+                            >
+                              <Printer className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -373,11 +502,22 @@ const EstablishmentOrders = () => {
                   <h2 className="text-xl font-bold">
                     Pedido #{selectedOrder.order_number}
                   </h2>
-                  <Badge
-                    className={`${statusConfig[selectedOrder.status].color} text-white`}
-                  >
-                    {statusConfig[selectedOrder.status].label}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handlePrint(selectedOrder)}
+                      title="Imprimir Pedido"
+                    >
+                      <Printer className="w-4 h-4" />
+                    </Button>
+                    <Badge
+                      className={`${statusConfig[selectedOrder.status].color} text-white`}
+                    >
+                      {statusConfig[selectedOrder.status].label}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Customer Info */}
