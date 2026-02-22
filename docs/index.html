@@ -30,10 +30,10 @@
 
       if (hash.includes('entregador')) {
         if (manifest) manifest.href = 'manifest-driver.json';
-        if (appleIcon) appleIcon.href = './pwa-driver-192x192.png';
+        if (appleIcon) appleIcon.href = '/pwa-driver-192x192.png';
       } else if (hash.includes('estabelecimento')) {
         if (manifest) manifest.href = 'manifest-establishment.json';
-        if (appleIcon) appleIcon.href = './pwa-establishment-192x192.png';
+        if (appleIcon) appleIcon.href = '/pwa-establishment-192x192.png';
       }
     })();
   </script>
@@ -63,8 +63,8 @@
 
   <!-- Splash Screens for iOS -->
   <link rel="apple-touch-startup-image" href="./pwa-512x512.png" />
-  <script type="module" crossorigin src="./assets/index-BkJAuEs6.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DLCvWqbx.css">
+  <script type="module" crossorigin src="./assets/index-h_hytEQ5.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-C7cXrmMj.css">
 <script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 
 <body>
@@ -76,14 +76,13 @@
     </div>
   </div>
   <script>
-      window.addEventListener('error', function(event) {
-        var errorDiv = document.createElement('div');
-        errorDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:white; color:red; padding:20px; z-index:9999; overflow:auto; font-family:monospace;';
-        errorDiv.innerHTML = '<h3>Erro na aplicação:</h3><p>' + event.message + '</p><p>' + event.filename + ':' + event.lineno + '</p>';
-        document.body.appendChild(errorDiv);
-      });
-  </script>
-
+    window.addEventListener('error', function (event) {
+      var errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:white; color:red; padding:20px; z-index:9999; overflow:auto; font-family:monospace;';
+      errorDiv.innerHTML = '<h3>Erro na aplicação:</h3><p>' + event.message + '</p><p>' + event.filename + ':' + event.lineno + '</p>';
+      document.body.appendChild(errorDiv);
+    });
+  </script>
 </body>
 
 </html>

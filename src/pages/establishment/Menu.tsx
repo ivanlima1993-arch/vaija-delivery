@@ -22,7 +22,9 @@ import {
   Image,
   Menu,
   DollarSign,
+  UserPlus,
 } from "lucide-react";
+import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Category = Database["public"]["Tables"]["product_categories"]["Row"];
@@ -36,6 +38,7 @@ const EstablishmentMenu = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   
   // Modal states
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -259,6 +262,25 @@ const EstablishmentMenu = () => {
               </button>
               <h1 className="font-bold text-lg">Cardápio</h1>
             </div>
+
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setLinkDialogOpen(true)}
+                className="hidden sm:flex gap-2"
+                size="sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Vincular Entregador
+              </Button>
+              <Button 
+                onClick={() => setLinkDialogOpen(true)}
+                className="sm:hidden"
+                size="icon"
+                variant="outline"
+              >
+                <UserPlus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -459,6 +481,16 @@ const EstablishmentMenu = () => {
         </Card>
         </div>
       </main>
+
+      <LinkDriverDialog
+        open={linkDialogOpen}
+        onOpenChange={setLinkDialogOpen}
+        establishmentId={establishmentId || ""}
+        onSuccess={() => {
+          toast.success("Entregador vinculado com sucesso!");
+        }}
+      />
+
 
       {/* Category Modal */}
       <AnimatePresence>
