@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
-import { Menu, MapPin, Clock, Package, Eye, UserPlus } from "lucide-react";
+import { Menu, MapPin, Clock, Package, Eye, UserPlus, Printer } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import { useEstablishment } from "@/hooks/useEstablishment";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,131 @@ const EstablishmentDeliveries = () => {
 
   const inTransit = orders.filter((o) => o.status === "out_for_delivery").length;
   const waiting = orders.filter((o) => o.status === "ready").length;
+
+  const handlePrint = async (order: any) => {
+    // Fetch order items first
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("*")
+      .eq("order_id", order.id);
+
+    if (!items) {
+      toast.error("Erro ao carregar itens para impressão");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const content = `
+      <html>
+        <head>
+          <title>Pedido #${order.order_number}</title>
+          <style>
+            body { font-family: 'Courier New', Courier, monospace; width: 300px; padding: 10px; font-size: 12px; }
+            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .section { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+            .items { width: 100%; border-collapse: collapse; }
+            .items th, .items td { text-align: left; padding: 2px 0; }
+            .total-row { display: flex; justify-content: space-between; margin-top: 2px; }
+            .total-final { border-top: 1px solid #000; margin-top: 5px; padding-top: 5px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
+            .notes { margin-top: 10px; background: #f9f9f9; padding: 5px; border: 1px solid #ddd; word-wrap: break-word; }
+            @media print {
+              body { margin: 0; padding: 5mm; }
+              @page { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2 style="margin: 0;">Vai Já Delivery</h2>
+            <p style="margin: 5px 0;">Pedido #${order.order_number}</p>
+            <p style="margin: 0;">${new Date(order.created_at).toLocaleString("pt-BR")}</p>
+          </div>
+          
+          <div class="section">
+            <p><strong>Cliente:</strong> ${order.customer_name}</p>
+            <p><strong>Telefone:</strong> ${order.customer_phone}</p>
+            <p><strong>Endereço:</strong> ${order.delivery_address}</p>
+          </div>
+
+          <div class="section">
+            <table class="items">
+              <thead>
+                <tr>
+                  <th>Qtd</th>
+                  <th>Item</th>
+                  <th style="text-align: right;">v.Un</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items
+        .map(
+          (item: any) => `
+                  <tr>
+                    <td style="vertical-align: top; width: 30px;">${item.quantity}x</td>
+                    <td style="vertical-align: top;">
+                      ${item.product_name}
+                      ${item.notes ? `<br/><small><i>- ${item.notes}</i></small>` : ""}
+                    </td>
+                    <td style="vertical-align: top; text-align: right;">R$ ${(Number(item.subtotal) / item.quantity).toFixed(2)}</td>
+                  </tr>
+                `
+        )
+        .join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>R$ ${Number(order.subtotal).toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span>Taxa Entrega:</span>
+              <span>R$ ${Number(order.delivery_fee).toFixed(2)}</span>
+            </div>
+            ${Number(order.discount) > 0
+        ? `<div class="total-row" style="color: green;">
+                <span>Desconto:</span>
+                <span>- R$ ${Number(order.discount).toFixed(2)}</span>
+              </div>`
+        : ""
+      }
+            <div class="total-final">
+              <span>TOTAL:</span>
+              <span>R$ ${Number(order.total).toFixed(2)}</span>
+            </div>
+          </div>
+
+          ${order.notes
+        ? `
+            <div class="notes">
+              <strong>Observação do Pedido:</strong><br/>
+              ${order.notes}
+            </div>
+          `
+        : ""
+      }
+
+          <div style="text-align: center; margin-top: 20px; font-style: italic;">
+            Obrigado pela preferência!
+          </div>
+          
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(content);
+    printWindow.document.close();
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -162,8 +287,21 @@ const EstablishmentDeliveries = () => {
                           {order.delivery_address}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold">R$ {Number(order.total).toFixed(2)}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="font-bold">R$ {Number(order.total).toFixed(2)}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePrint(order);
+                          }}
+                        >
+                          <Printer className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}

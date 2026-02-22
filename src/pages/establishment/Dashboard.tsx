@@ -20,6 +20,7 @@ import {
   Bell,
   Volume2,
   UserPlus,
+  Printer,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -38,10 +39,10 @@ const EstablishmentDashboard = () => {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   // Real-time order notifications with persistent sound
-  const { 
-    playNotificationSound, 
-    stopAllSounds, 
-    hasPendingSounds 
+  const {
+    playNotificationSound,
+    stopAllSounds,
+    hasPendingSounds
   } = useOrderNotification({
     establishmentId: establishment?.id || null,
     soundEnabled,
@@ -129,6 +130,131 @@ const EstablishmentDashboard = () => {
   );
   const todayRevenue = todayOrders.reduce((sum, o) => sum + Number(o.total), 0);
 
+  const handlePrint = async (order: Order) => {
+    // Fetch order items first
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("*")
+      .eq("order_id", order.id);
+
+    if (!items) {
+      toast.error("Erro ao carregar itens para impressão");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const content = `
+      <html>
+        <head>
+          <title>Pedido #${order.order_number}</title>
+          <style>
+            body { font-family: 'Courier New', Courier, monospace; width: 300px; padding: 10px; font-size: 12px; }
+            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .section { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+            .items { width: 100%; border-collapse: collapse; }
+            .items th, .items td { text-align: left; padding: 2px 0; }
+            .total-row { display: flex; justify-content: space-between; margin-top: 2px; }
+            .total-final { border-top: 1px solid #000; margin-top: 5px; padding-top: 5px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
+            .notes { margin-top: 10px; background: #f9f9f9; padding: 5px; border: 1px solid #ddd; word-wrap: break-word; }
+            @media print {
+              body { margin: 0; padding: 5mm; }
+              @page { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2 style="margin: 0;">Vai Já Delivery</h2>
+            <p style="margin: 5px 0;">Pedido #${order.order_number}</p>
+            <p style="margin: 0;">${new Date(order.created_at).toLocaleString("pt-BR")}</p>
+          </div>
+          
+          <div class="section">
+            <p><strong>Cliente:</strong> ${order.customer_name}</p>
+            <p><strong>Telefone:</strong> ${order.customer_phone}</p>
+            <p><strong>Endereço:</strong> ${order.delivery_address}</p>
+          </div>
+
+          <div class="section">
+            <table class="items">
+              <thead>
+                <tr>
+                  <th>Qtd</th>
+                  <th>Item</th>
+                  <th style="text-align: right;">v.Un</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items
+        .map(
+          (item) => `
+                  <tr>
+                    <td style="vertical-align: top; width: 30px;">${item.quantity}x</td>
+                    <td style="vertical-align: top;">
+                      ${item.product_name}
+                      ${item.notes ? `<br/><small><i>- ${item.notes}</i></small>` : ""}
+                    </td>
+                    <td style="vertical-align: top; text-align: right;">R$ ${(Number(item.subtotal) / item.quantity).toFixed(2)}</td>
+                  </tr>
+                `
+        )
+        .join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>R$ ${Number(order.subtotal).toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span>Taxa Entrega:</span>
+              <span>R$ ${Number(order.delivery_fee).toFixed(2)}</span>
+            </div>
+            ${Number(order.discount) > 0
+        ? `<div class="total-row" style="color: green;">
+                <span>Desconto:</span>
+                <span>- R$ ${Number(order.discount).toFixed(2)}</span>
+              </div>`
+        : ""
+      }
+            <div class="total-final">
+              <span>TOTAL:</span>
+              <span>R$ ${Number(order.total).toFixed(2)}</span>
+            </div>
+          </div>
+
+          ${order.notes
+        ? `
+            <div class="notes">
+              <strong>Observação do Pedido:</strong><br/>
+              ${order.notes}
+            </div>
+          `
+        : ""
+      }
+
+          <div style="text-align: center; margin-top: 20px; font-style: italic;">
+            Obrigado pela preferência!
+          </div>
+          
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(content);
+    printWindow.document.close();
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -158,8 +284,8 @@ const EstablishmentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <EstablishmentSidebar 
-        open={sidebarOpen} 
+      <EstablishmentSidebar
+        open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         pendingOrdersCount={pendingOrders.length}
       />
@@ -214,29 +340,27 @@ const EstablishmentDashboard = () => {
                     }
                   }
                 }}
-                className={`relative p-2 rounded-lg transition-colors ${
-                  hasPendingSounds 
-                    ? "bg-destructive/10 hover:bg-destructive/20" 
-                    : soundEnabled 
-                      ? "hover:bg-muted" 
+                className={`relative p-2 rounded-lg transition-colors ${hasPendingSounds
+                    ? "bg-destructive/10 hover:bg-destructive/20"
+                    : soundEnabled
+                      ? "hover:bg-muted"
                       : "bg-muted/50 text-muted-foreground"
-                }`}
+                  }`}
                 title={
-                  hasPendingSounds 
-                    ? "Clique para silenciar alarme" 
-                    : soundEnabled 
-                      ? "Som ativado" 
+                  hasPendingSounds
+                    ? "Clique para silenciar alarme"
+                    : soundEnabled
+                      ? "Som ativado"
                       : "Som desativado"
                 }
               >
-                <Volume2 
-                  className={`w-5 h-5 ${
-                    hasPendingSounds 
-                      ? "text-destructive animate-pulse" 
-                      : !soundEnabled 
-                        ? "opacity-50" 
+                <Volume2
+                  className={`w-5 h-5 ${hasPendingSounds
+                      ? "text-destructive animate-pulse"
+                      : !soundEnabled
+                        ? "opacity-50"
                         : ""
-                  }`} 
+                    }`}
                 />
                 {hasPendingSounds && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-xs rounded-full flex items-center justify-center">
@@ -252,7 +376,7 @@ const EstablishmentDashboard = () => {
                   </span>
                 )}
               </button>
-              <Button 
+              <Button
                 onClick={() => setLinkDialogOpen(true)}
                 className="hidden md:flex gap-2"
                 size="sm"
@@ -260,7 +384,7 @@ const EstablishmentDashboard = () => {
                 <UserPlus className="w-4 h-4" />
                 Vincular Entregador
               </Button>
-              <Button 
+              <Button
                 onClick={() => setLinkDialogOpen(true)}
                 className="md:hidden"
                 size="icon"
@@ -436,27 +560,40 @@ const EstablishmentDashboard = () => {
                           {order.customer_name}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-primary">
-                          R$ {Number(order.total).toFixed(2)}
-                        </p>
-                        <Badge
-                          variant={
-                            order.status === "pending"
-                              ? "destructive"
-                              : order.status === "preparing"
-                              ? "default"
-                              : "outline"
-                          }
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="font-bold text-primary">
+                            R$ {Number(order.total).toFixed(2)}
+                          </p>
+                          <Badge
+                            variant={
+                              order.status === "pending"
+                                ? "destructive"
+                                : order.status === "preparing"
+                                  ? "default"
+                                  : "outline"
+                            }
+                          >
+                            {order.status === "pending" && "Pendente"}
+                            {order.status === "confirmed" && "Confirmado"}
+                            {order.status === "preparing" && "Preparando"}
+                            {order.status === "ready" && "Pronto"}
+                            {order.status === "out_for_delivery" && "Em entrega"}
+                            {order.status === "delivered" && "Entregue"}
+                            {order.status === "cancelled" && "Cancelado"}
+                          </Badge>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePrint(order);
+                          }}
                         >
-                          {order.status === "pending" && "Pendente"}
-                          {order.status === "confirmed" && "Confirmado"}
-                          {order.status === "preparing" && "Preparando"}
-                          {order.status === "ready" && "Pronto"}
-                          {order.status === "out_for_delivery" && "Em entrega"}
-                          {order.status === "delivered" && "Entregue"}
-                          {order.status === "cancelled" && "Cancelado"}
-                        </Badge>
+                          <Printer className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
