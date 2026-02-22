@@ -55,6 +55,7 @@ import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AboutUs from "./pages/AboutUs";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
+import { ConditionalSupportButton } from "./components/ConditionalSupportButton";
 
 import Restaurant from "./pages/Restaurant";
 import Cart from "./pages/Cart";
@@ -92,6 +93,7 @@ const App = () => {
             <Sonner />
             <HashRouter>
               <GlobalOrderNotifications />
+              <ConditionalSupportButton />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/restaurant/:id" element={<Restaurant />} />
