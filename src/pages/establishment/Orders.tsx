@@ -21,7 +21,9 @@ import {
   Package,
   Volume2,
   Menu,
+  UserPlus,
 } from "lucide-react";
+import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
@@ -49,6 +51,7 @@ const EstablishmentOrders = () => {
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   // Real-time order notifications
   const { playNotificationSound } = useOrderNotification({
@@ -176,8 +179,8 @@ const EstablishmentOrders = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <EstablishmentSidebar 
-        open={sidebarOpen} 
+      <EstablishmentSidebar
+        open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         pendingOrdersCount={pendingOrdersCount}
       />
@@ -202,134 +205,150 @@ const EstablishmentOrders = () => {
                   playNotificationSound();
                 }
               }}
-              className={`p-2 rounded-lg transition-colors ${
-                soundEnabled ? "hover:bg-muted" : "bg-muted/50 text-muted-foreground"
-              }`}
+              className={`p-2 rounded-lg transition-colors ${soundEnabled ? "hover:bg-muted" : "bg-muted/50 text-muted-foreground"
+                }`}
               title={soundEnabled ? "Som ativado" : "Som desativado"}
             >
               <Volume2 className={`w-5 h-5 ${!soundEnabled ? "opacity-50" : ""}`} />
             </button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setLinkDialogOpen(true)}
+                className="hidden sm:flex gap-2"
+                size="sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Vincular Entregador
+              </Button>
+              <Button
+                onClick={() => setLinkDialogOpen(true)}
+                className="sm:hidden"
+                size="icon"
+                variant="outline"
+              >
+                <UserPlus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </header>
 
         <div className="p-4 lg:p-6">
-        {/* Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("all")}
-          >
-            Todos ({orders.length})
-          </Button>
-          {(Object.keys(statusConfig) as OrderStatus[]).map((status) => {
-            const count = orders.filter((o) => o.status === status).length;
-            return (
-              <Button
-                key={status}
-                variant={filter === status ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilter(status)}
-                className="whitespace-nowrap"
-              >
-                {statusConfig[status].label} ({count})
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Orders Grid */}
-        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          <AnimatePresence>
-            {filteredOrders.map((order) => {
-              const StatusIcon = statusConfig[order.status].icon;
-              const items = orderItems[order.id] || [];
-              const nextStatus = getNextStatus(order.status);
-
+          {/* Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+            <Button
+              variant={filter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("all")}
+            >
+              Todos ({orders.length})
+            </Button>
+            {(Object.keys(statusConfig) as OrderStatus[]).map((status) => {
+              const count = orders.filter((o) => o.status === status).length;
               return (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  layout
+                <Button
+                  key={status}
+                  variant={filter === status ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter(status)}
+                  className="whitespace-nowrap"
                 >
-                  <Card
-                    className={`cursor-pointer transition-shadow hover:shadow-lg ${
-                      order.status === "pending" ? "border-yellow-500 border-2" : ""
-                    }`}
-                    onClick={() => setSelectedOrder(order)}
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">
-                          Pedido #{order.order_number}
-                        </CardTitle>
-                        <Badge className={`${statusConfig[order.status].color} text-white`}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {statusConfig[order.status].label}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="w-4 h-4" />
-                        {order.customer_name}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        {new Date(order.created_at).toLocaleString("pt-BR")}
-                      </div>
-
-                      {/* Items Preview */}
-                      <div className="bg-muted/50 rounded-lg p-3">
-                        {items.slice(0, 2).map((item) => (
-                          <div key={item.id} className="flex justify-between text-sm">
-                            <span>
-                              {item.quantity}x {item.product_name}
-                            </span>
-                            <span className="text-muted-foreground">
-                              R$ {Number(item.subtotal).toFixed(2)}
-                            </span>
-                          </div>
-                        ))}
-                        {items.length > 2 && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            +{items.length - 2} itens
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="font-bold text-lg text-primary">
-                          R$ {Number(order.total).toFixed(2)}
-                        </span>
-                        {nextStatus && (
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateOrderStatus(order.id, nextStatus);
-                            }}
-                          >
-                            {statusConfig[nextStatus].label}
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  {statusConfig[status].label} ({count})
+                </Button>
               );
             })}
-          </AnimatePresence>
-        </div>
-
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-            <p className="text-lg">Nenhum pedido encontrado</p>
           </div>
-        )}
+
+          {/* Orders Grid */}
+          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            <AnimatePresence>
+              {filteredOrders.map((order) => {
+                const StatusIcon = statusConfig[order.status].icon;
+                const items = orderItems[order.id] || [];
+                const nextStatus = getNextStatus(order.status);
+
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    layout
+                  >
+                    <Card
+                      className={`cursor-pointer transition-shadow hover:shadow-lg ${order.status === "pending" ? "border-yellow-500 border-2" : ""
+                        }`}
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">
+                            Pedido #{order.order_number}
+                          </CardTitle>
+                          <Badge className={`${statusConfig[order.status].color} text-white`}>
+                            <StatusIcon className="w-3 h-3 mr-1" />
+                            {statusConfig[order.status].label}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <User className="w-4 h-4" />
+                          {order.customer_name}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          {new Date(order.created_at).toLocaleString("pt-BR")}
+                        </div>
+
+                        {/* Items Preview */}
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          {items.slice(0, 2).map((item) => (
+                            <div key={item.id} className="flex justify-between text-sm">
+                              <span>
+                                {item.quantity}x {item.product_name}
+                              </span>
+                              <span className="text-muted-foreground">
+                                R$ {Number(item.subtotal).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                          {items.length > 2 && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              +{items.length - 2} itens
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <span className="font-bold text-lg text-primary">
+                            R$ {Number(order.total).toFixed(2)}
+                          </span>
+                          {nextStatus && (
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateOrderStatus(order.id, nextStatus);
+                              }}
+                            >
+                              {statusConfig[nextStatus].label}
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+
+          {filteredOrders.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg">Nenhum pedido encontrado</p>
+            </div>
+          )}
         </div>
       </main>
       {/* Order Detail Modal */}
@@ -472,7 +491,15 @@ const EstablishmentOrders = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      <LinkDriverDialog
+        open={linkDialogOpen}
+        onOpenChange={setLinkDialogOpen}
+        establishmentId={establishmentId || ""}
+        onSuccess={() => {
+          toast.success("Entregador vinculado com sucesso!");
+        }}
+      />
+    </div >
   );
 };
 

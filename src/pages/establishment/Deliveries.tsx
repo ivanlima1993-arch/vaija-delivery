@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
-import { Menu, MapPin, Clock, Package, Eye } from "lucide-react";
+import { Menu, MapPin, Clock, Package, Eye, UserPlus } from "lucide-react";
+import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import { useEstablishment } from "@/hooks/useEstablishment";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,6 +13,7 @@ const EstablishmentDeliveries = () => {
   const { establishment, loading } = useEstablishment();
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   useEffect(() => {
     if (establishment) fetchDeliveryOrders();
@@ -60,11 +62,31 @@ const EstablishmentDeliveries = () => {
       <EstablishmentSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="flex-1 overflow-auto">
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={() => setSidebarOpen(true)}>
-              <Menu className="w-5 h-5" />
-            </button>
-            <h1 className="font-bold text-lg">Entregas</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={() => setSidebarOpen(true)}>
+                <Menu className="w-5 h-5" />
+              </button>
+              <h1 className="font-bold text-lg">Entregas</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setLinkDialogOpen(true)}
+                className="hidden sm:flex gap-2"
+                size="sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Vincular Entregador
+              </Button>
+              <Button
+                onClick={() => setLinkDialogOpen(true)}
+                className="sm:hidden"
+                size="icon"
+                variant="outline"
+              >
+                <UserPlus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -150,8 +172,15 @@ const EstablishmentDeliveries = () => {
             </CardContent>
           </Card>
         </div>
+
+        <LinkDriverDialog
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
+          establishmentId={establishment?.id || ""}
+          onSuccess={() => { }}
+        />
       </main>
-    </div>
+    </div >
   );
 };
 
