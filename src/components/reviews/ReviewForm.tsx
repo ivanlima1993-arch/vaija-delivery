@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,12 +21,14 @@ interface ReviewFormProps {
   onSuccess?: () => void;
 }
 
-type ReviewFormData = {
-  establishmentRating: number;
-  establishmentComment?: string;
-  driverRating?: number;
-  driverComment?: string;
-};
+type ReviewFormData = z.infer<typeof baseReviewSchema>;
+
+const baseReviewSchema = z.object({
+  establishmentRating: z.number().min(1, "Avalie o estabelecimento").max(5),
+  establishmentComment: z.string().optional().or(z.literal("")),
+  driverRating: z.number().min(0).max(5).optional(),
+  driverComment: z.string().optional().or(z.literal("")),
+});
 
 export const ReviewForm = ({
   orderId,
@@ -39,14 +41,16 @@ export const ReviewForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const reviewSchema = z.object({
-    establishmentRating: z.number().min(1, "Avalie o estabelecimento").max(5),
-    establishmentComment: z.string().optional(),
-    driverRating: driverId
-      ? z.number().min(1, "Avalie o entregador").max(5)
-      : z.number().optional(),
-    driverComment: z.string().optional(),
-  });
+  const reviewSchema = useMemo(() => {
+    return z.object({
+      establishmentRating: z.number().min(1, "Avalie o estabelecimento").max(5),
+      establishmentComment: z.string().optional().or(z.literal("")),
+      driverRating: driverId
+        ? z.number().min(1, "Avalie o entregador").max(5)
+        : z.number().optional(),
+      driverComment: z.string().optional().or(z.literal("")),
+    });
+  }, [driverId]);
 
   const form = useForm<ReviewFormData>({
     resolver: zodResolver(reviewSchema),
@@ -102,6 +106,17 @@ export const ReviewForm = ({
       toast.error("Erro ao enviar avaliação");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onError = (errors: any) => {
+    console.log("Form validation errors:", errors);
+    if (errors.establishmentRating) {
+      toast.error(errors.establishmentRating.message || "Avalie o estabelecimento");
+    } else if (errors.driverRating && driverId) {
+      toast.error(errors.driverRating.message || "Avalie o entregador");
+    } else {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
     }
   };
 
@@ -168,7 +183,7 @@ export const ReviewForm = ({
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
                   {/* Establishment Rating */}
                   <div className="space-y-4 p-4 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-2">
