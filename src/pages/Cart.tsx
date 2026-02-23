@@ -220,9 +220,10 @@ const Cart = () => {
         clearCart();
         navigate(`/pedido/${order.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar pedido:", error);
-      toast.error("Erro ao finalizar pedido. Tente novamente.");
+      const message = error?.message || "Erro ao finalizar pedido. Tente novamente.";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

@@ -59,16 +59,24 @@ serve(async (req) => {
           ...(options.headers || {}),
         },
       });
+
       const data = await res.json();
+
       if (!res.ok) {
         console.error(`Asaas API error [${res.status}]:`, data);
-        throw new Error(`Asaas API error [${res.status}]: ${JSON.stringify(data)}`);
+        let errorMsg = `Asaas API error [${res.status}]`;
+        if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+          errorMsg = data.errors.map((e: any) => e.description).join(", ");
+        } else if (data.description) {
+          errorMsg = data.description;
+        }
+        throw new Error(errorMsg);
       }
       return data;
     };
 
     // Find or create Asaas customer
-    const findOrCreateCustomer = async (userId: string) => {
+    const findOrCreateCustomer = async (userId: string, requestedCpf?: string) => {
       console.log(`Finding or creating customer for user: ${userId}`);
 
       // Check if we have a stored customer ID
@@ -82,20 +90,29 @@ serve(async (req) => {
         console.error("Profile fetch error:", profileError);
       }
 
+      const cleanCpf = (cpf?: string) => cpf?.replace(/\D/g, "");
+      const cpfToUse = cleanCpf(requestedCpf || profile?.cpf_cnpj);
+
       // Search by externalReference
       try {
         const searchRes = await asaasFetch(`/customers?externalReference=${userId}`);
         if (searchRes.data && searchRes.data.length > 0) {
-          console.log(`Found existing Asaas customer: ${searchRes.data[0].id}`);
-          // Update customer if cpfCnpj is missing in Asaas but present in profile
-          if (!searchRes.data[0].cpfCnpj && profile?.cpf_cnpj) {
-            console.log("Updating existing customer with missing CPF/CNPJ...");
-            await asaasFetch(`/customers/${searchRes.data[0].id}`, {
+          const customer = searchRes.data[0];
+          console.log(`Found existing Asaas customer: ${customer.id}`);
+
+          // Update customer if CPF is provided and different or missing
+          if (cpfToUse && cleanCpf(customer.cpfCnpj) !== cpfToUse) {
+            console.log(`Updating customer CPF from ${customer.cpfCnpj} to ${cpfToUse}`);
+            await asaasFetch(`/customers/${customer.id}`, {
               method: "POST",
-              body: JSON.stringify({ cpfCnpj: profile.cpf_cnpj })
-            });
+              body: JSON.stringify({
+                cpfCnpj: cpfToUse,
+                name: profile?.full_name || customer.name,
+                phone: profile?.phone || customer.phone
+              })
+            }).catch(err => console.error("Error updating customer on Asaas:", err));
           }
-          return searchRes.data[0].id;
+          return customer.id;
         }
       } catch (err) {
         console.error("Error searching customer on Asaas:", err);
@@ -108,7 +125,7 @@ serve(async (req) => {
         body: JSON.stringify({
           name: profile?.full_name || "Cliente",
           phone: profile?.phone || undefined,
-          cpfCnpj: profile?.cpf_cnpj || undefined,
+          cpfCnpj: cpfToUse || undefined,
           externalReference: userId,
           notificationDisabled: true,
         }),
@@ -121,17 +138,10 @@ serve(async (req) => {
     if (action === "create_pix") {
       const { orderId, amount, customerName, customerCpfCnpj, cpfCnpj } = params;
 
-      const customerId = await findOrCreateCustomer(user.id);
+      if (!orderId) throw new Error("Order ID is required");
+      if (!amount || amount <= 0) throw new Error("Invalid amount");
 
-      // Explicitly update customer CPF if provided and missing
-      const providedCpf = cpfCnpj || customerCpfCnpj;
-      if (providedCpf) {
-        console.log("Ensuring customer has CPF/CNPJ in Asaas for PIX order...");
-        await asaasFetch(`/customers/${customerId}`, {
-          method: "POST",
-          body: JSON.stringify({ cpfCnpj: providedCpf })
-        }).catch(err => console.error("Error updating customer CPF in Asaas:", err));
-      }
+      const customerId = await findOrCreateCustomer(user.id, cpfCnpj || customerCpfCnpj);
 
       // Create PIX payment
       const payment = await asaasFetch("/payments", {
@@ -176,17 +186,11 @@ serve(async (req) => {
         cpfCnpj,
       } = params;
 
-      const customerId = await findOrCreateCustomer(user.id);
+      if (!orderId) throw new Error("Order ID is required");
+      if (!amount || amount <= 0) throw new Error("Invalid amount");
+      if (!cardNumber || !cardHolder) throw new Error("Card info missing");
 
-      // Explicitly update customer CPF if provided and missing
-      const providedCpf = cpfCnpj || customerCpfCnpj || holderInfo?.cpfCnpj;
-      if (providedCpf) {
-        console.log("Ensuring customer has CPF/CNPJ in Asaas for Credit Card order...");
-        await asaasFetch(`/customers/${customerId}`, {
-          method: "POST",
-          body: JSON.stringify({ cpfCnpj: providedCpf })
-        }).catch(err => console.error("Error updating customer CPF in Asaas:", err));
-      }
+      const customerId = await findOrCreateCustomer(user.id, cpfCnpj || customerCpfCnpj || holderInfo?.cpfCnpj);
 
       const payment = await asaasFetch("/payments", {
         method: "POST",
@@ -199,17 +203,17 @@ serve(async (req) => {
           externalReference: orderId,
           creditCard: {
             holderName: cardHolder,
-            number: cardNumber,
+            number: cardNumber.replace(/\D/g, ""),
             expiryMonth,
             expiryYear,
             ccv,
           },
           creditCardHolderInfo: {
             name: cardHolder,
-            cpfCnpj: customerCpfCnpj || holderInfo?.cpfCnpj,
+            cpfCnpj: (cpfCnpj || customerCpfCnpj || holderInfo?.cpfCnpj || "").replace(/\D/g, ""),
             email: holderInfo?.email || user.email,
             phone: holderInfo?.phone,
-            postalCode: holderInfo?.postalCode,
+            postalCode: holderInfo?.postalCode?.replace(/\D/g, ""),
             addressNumber: holderInfo?.addressNumber,
           },
         }),
