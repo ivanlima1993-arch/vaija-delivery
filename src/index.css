@@ -165,4 +165,33 @@
   .animate-logo-pulse {
     animation: logo-pulse 2s ease-in-out 3;
   }
+
+  .glass-card {
+    @apply bg-card/40 backdrop-blur-md border border-white/20;
+  }
+
+  .glass-card-dark {
+    @apply bg-black/40 backdrop-blur-md border border-white/5;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .card-hover-effect {
+    @apply transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 active:scale-[0.98];
+  }
 }

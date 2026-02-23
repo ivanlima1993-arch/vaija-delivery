@@ -78,34 +78,41 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border">
+    <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-border/50">
       <div className="container">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-18 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img
+          <Link to="/" className="flex items-center group">
+            <motion.img
+              whileHover={{ scale: 1.05 }}
               src={logo}
               alt="Vai Já Delivery"
-              className="h-16 w-auto object-contain animate-logo-pulse"
+              className="h-12 md:h-16 w-auto object-contain transition-transform"
             />
           </Link>
 
-          {/* City Selector - Desktop */}
-          <div className="hidden md:block">
+          {/* Location Picker */}
+          <div className="hidden md:flex flex-1 max-w-[240px] px-6">
             <CitySelector />
           </div>
 
-          {/* Search - Desktop */}
-          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-md mx-6">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          {/* Search - Desktop Refined */}
+          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-xl mx-4">
+            <div className="relative w-full group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <Search className="w-4 h-4 text-primary" />
+                <div className="w-[1px] h-4 bg-border" />
+              </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar restaurantes, pratos..."
-                className="w-full h-10 pl-10 pr-4 rounded-full bg-muted border-0 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="Busque por restaurantes ou pratos..."
+                className="w-full h-12 pl-12 pr-4 rounded-[18px] bg-muted/50 border-transparent text-sm font-medium focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all border border-transparent focus:border-primary/20"
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden group-focus-within:block">
+                <kbd className="px-2 py-1 text-[10px] bg-muted rounded border border-border text-muted-foreground font-sans">ESC</kbd>
+              </div>
             </div>
           </form>
 

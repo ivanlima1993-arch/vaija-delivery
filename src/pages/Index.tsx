@@ -7,13 +7,15 @@ import Footer from "@/components/layout/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#fafafa]">
       <Header />
-      <main>
+      <main className="pb-20">
         <HeroSection />
-        <CategorySection />
-        <PromoSection />
-        <RestaurantSection />
+        <div className="space-y-4 md:space-y-0">
+          <CategorySection />
+          <PromoSection />
+          <RestaurantSection />
+        </div>
       </main>
       <Footer />
     </div>

@@ -7,33 +7,43 @@ const categories = DISPLAY_CATEGORIES.slice(0, 8);
 
 const CategorySection = () => {
   return (
-    <section className="py-8">
+    <section className="py-12 bg-white">
       <div className="container">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-xl font-bold">Categorias</h2>
-          <Link to="/categorias" className="text-sm font-medium text-primary hover:underline">
-            Ver todas
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <h2 className="font-display text-3xl font-black tracking-tight">O que você busca?</h2>
+            <p className="text-muted-foreground mt-1">Navegue pelas melhores opções da sua região</p>
+          </div>
+          <Link
+            to="/categorias"
+            className="group flex items-center gap-1 text-sm font-bold text-primary hover:opacity-80 transition-opacity"
+          >
+            Ver tudo
+            <motion.span animate={{ x: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+              →
+            </motion.span>
           </Link>
         </div>
 
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 md:gap-6">
           {categories.map((category, index) => (
             <motion.div
               key={category.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
             >
               <Link to={`/categorias/${category.id}`}>
                 <motion.button
-                  whileHover={{ y: -4 }}
+                  whileHover={{ y: -8, scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full flex flex-col items-center gap-2 p-3 md:p-4 rounded-2xl bg-card shadow-soft hover:shadow-card transition-all"
+                  className="w-full h-full flex flex-col items-center gap-3 p-5 rounded-[32px] bg-card border-none shadow-soft hover:shadow-elevated transition-all group"
                 >
-                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl ${category.color} flex items-center justify-center`}>
-                    <category.icon className="w-6 h-6 md:w-7 md:h-7" />
+                  <div className={`w-16 h-16 rounded-3xl ${category.color} flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform group-hover:shadow-glow`}>
+                    <category.icon className="w-8 h-8 text-inherit" />
                   </div>
-                  <span className="text-xs md:text-sm font-medium text-center">{category.name}</span>
+                  <span className="text-sm font-black text-center">{category.name}</span>
                 </motion.button>
               </Link>
             </motion.div>
