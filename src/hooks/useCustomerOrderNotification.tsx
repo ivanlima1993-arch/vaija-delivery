@@ -176,8 +176,9 @@ export const useCustomerOrderNotification = ({
           filter: `id=eq.${orderId}`,
         },
         (payload) => {
+          if (!payload?.new) return;
           const updatedOrder = payload.new as Order;
-          const oldOrder = payload.old as Partial<Order>;
+          const oldOrder = (payload.old || {}) as any;
 
           // Only notify if status actually changed
           if (oldOrder.status !== updatedOrder.status) {

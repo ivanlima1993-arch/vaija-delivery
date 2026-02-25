@@ -178,8 +178,10 @@ export const useGlobalOrderNotifications = () => {
           filter: `customer_id=eq.${user.id}`,
         },
         (payload) => {
+          if (!payload?.new) return;
           const updatedOrder = payload.new as Order;
-          const previousStatus = activeOrdersRef.current.get(updatedOrder.id);
+          const oldOrder = (payload.old || {}) as any;
+          const previousStatus = activeOrdersRef.current.get(updatedOrder.id) || oldOrder.status;
 
           // Only notify if status changed and we're initialized
           if (isInitializedRef.current && previousStatus && previousStatus !== updatedOrder.status) {
@@ -203,6 +205,7 @@ export const useGlobalOrderNotifications = () => {
           filter: `customer_id=eq.${user.id}`,
         },
         (payload) => {
+          if (!payload?.new) return;
           const newOrder = payload.new as Order;
           activeOrdersRef.current.set(newOrder.id, newOrder.status);
         }

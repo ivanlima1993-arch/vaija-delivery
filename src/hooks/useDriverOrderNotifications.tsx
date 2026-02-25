@@ -190,8 +190,9 @@ export const useDriverOrderNotifications = () => {
           table: "orders",
         },
         async (payload) => {
+          if (!payload?.new) return;
           const order = payload.new as Order;
-          const oldOrder = payload.old as Partial<Order>;
+          const oldOrder = (payload.old || {}) as any;
 
           // Only notify when order becomes ready and has no driver
           if (

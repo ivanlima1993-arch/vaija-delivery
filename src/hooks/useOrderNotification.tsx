@@ -172,6 +172,9 @@ export const useOrderNotification = ({
       addOrderToSoundList(order.id);
     }
 
+    const orderNumber = order.order_number || '---';
+    const orderTotal = Number(order.total || 0).toFixed(2);
+
     // Show toast with custom styling
     toast.success(
       <div className="flex items-center gap-3">
@@ -181,7 +184,7 @@ export const useOrderNotification = ({
         <div>
           <p className="font-bold text-base">Novo Pedido!</p>
           <p className="text-sm text-muted-foreground">
-            Pedido #{order.order_number} - R$ {Number(order.total).toFixed(2)}
+            Pedido #{orderNumber} - R$ {orderTotal}
           </p>
         </div>
       </div>,
@@ -199,7 +202,7 @@ export const useOrderNotification = ({
     // Try to use browser notification if permission granted
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification("🔔 Novo Pedido!", {
-        body: `Pedido #${order.order_number} - R$ ${Number(order.total).toFixed(2)}`,
+        body: `Pedido #${orderNumber} - R$ ${orderTotal}`,
         icon: "/pwa-192x192.png",
         requireInteraction: true,
         tag: `order-${order.id}`,
