@@ -53,17 +53,25 @@ const Auth = () => {
       toast.success("Login realizado com sucesso!");
 
       // Redirect based on role
-      if (roles?.some((r) => r.role === "establishment")) {
+      const isEstablishment = roles?.some((r) => r.role === "establishment");
+      
+      if (isEstablishment) {
         const { data: est, error: estError } = await supabase
           .from("establishments")
           .select("is_approved, created_at")
           .eq("owner_id", data.user.id)
           .maybeSingle();
 
-        if (est && !est.is_approved) {
+        if (estError) {
+          console.error("Erro ao verificar estabelecimento:", estError);
+        }
+
+        // Se não existir registro de estabelecimento ou não estiver aprovado, bloqueia
+        if (!est || est.is_approved === false) {
           await supabase.auth.signOut();
-          setCreatedAt(est.created_at);
+          setCreatedAt(est?.created_at || new Date().toISOString());
           setPendingApproval(true);
+          toast.error("Acesso restrito: Seu estabelecimento ainda não foi aprovado.");
           return;
         }
         navigate("/estabelecimento");
@@ -86,6 +94,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const isEstablishment = mode === "register-establishment";
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -93,32 +102,37 @@ const Auth = () => {
           emailRedirectTo: window.location.origin,
           data: {
             full_name: formData.fullName,
+            role: isEstablishment ? "establishment" : "customer",
+            establishment_name: isEstablishment ? formData.establishmentName : null,
+            phone: formData.phone,
           },
         },
       });
 
       if (error) throw error;
 
-      // If registering as establishment, create the establishment
+      // If registering as establishment, the role and record will be created via DB Trigger
       if (mode === "register-establishment" && data.user) {
-        // Add establishment role
-        await supabase.from("user_roles").insert({
-          user_id: data.user.id,
-          role: "establishment",
-        });
+        // Tentamos criar o papel e o registro via frontend como fallback, 
+        // mas o gatilho SQL no backend é o que garante o sucesso.
+        try {
+          await supabase.from("user_roles").insert({
+            user_id: data.user.id,
+            role: "establishment",
+          });
 
-        // Create establishment
-        const { data: est, error: estError } = await supabase.from("establishments").insert({
-          owner_id: data.user.id,
-          name: formData.establishmentName,
-          phone: formData.phone,
-          is_approved: false, // Explicitly set to false
-        }).select("created_at").single();
-
-        if (estError) throw estError;
+          await supabase.from("establishments").insert({
+            owner_id: data.user.id,
+            name: formData.establishmentName,
+            phone: formData.phone,
+            is_approved: false,
+          });
+        } catch (e) {
+          console.log("Aguardando gatilho do banco de dados...");
+        }
 
         await supabase.auth.signOut();
-        setCreatedAt(est.created_at);
+        setCreatedAt(new Date().toISOString());
         setPendingApproval(true);
         toast.success("Cadastro realizado! Aguarde a aprovação administrativa.");
       } else {
