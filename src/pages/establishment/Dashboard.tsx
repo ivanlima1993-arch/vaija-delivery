@@ -51,7 +51,7 @@ const EstablishmentDashboard = () => {
     },
     onOrderUpdate: (order) => {
       setOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? order : o))
+        prev.map((o) => (o.id === order.id ? { ...o, ...order } : o))
       );
     },
   });
@@ -587,7 +587,7 @@ const EstablishmentDashboard = () => {
                       <div className="flex items-center gap-3">
                         <div className="text-right">
                           <p className="font-bold text-primary">
-                            R$ {Number(order.total).toFixed(2)}
+                            R$ {Number(order.total || 0).toFixed(2)}
                           </p>
                           <Badge
                             variant={

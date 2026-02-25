@@ -64,7 +64,7 @@ const EstablishmentOrders = () => {
     },
     onOrderUpdate: (order) => {
       setOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? order : o))
+        prev.map((o) => (o.id === order.id ? { ...o, ...order } : o))
       );
     },
   });
@@ -443,7 +443,7 @@ const EstablishmentOrders = () => {
                                 {item.quantity}x {item.product_name}
                               </span>
                               <span className="text-muted-foreground">
-                                R$ {Number(item.subtotal).toFixed(2)}
+                                R$ {Number(item.subtotal || 0).toFixed(2)}
                               </span>
                             </div>
                           ))}
@@ -596,7 +596,7 @@ const EstablishmentOrders = () => {
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
                     <span>Total</span>
                     <span className="text-primary">
-                      R$ {Number(selectedOrder.total).toFixed(2)}
+                      R$ {Number(selectedOrder?.total || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
