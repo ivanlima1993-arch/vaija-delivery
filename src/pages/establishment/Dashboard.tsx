@@ -68,10 +68,26 @@ const EstablishmentDashboard = () => {
       return;
     }
 
-    if (user) {
-      fetchEstablishment();
+    if (!authLoading && user && isEstablishment) {
+      checkApproval();
     }
   }, [user, authLoading, isEstablishment, navigate]);
+
+  const checkApproval = async () => {
+    const { data: est } = await supabase
+      .from("establishments")
+      .select("is_approved")
+      .eq("owner_id", user!.id)
+      .maybeSingle();
+
+    if (!est || est.is_approved !== true) {
+      toast.error("Seu acesso ainda não foi aprovado pelo administrador.");
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } else {
+      fetchEstablishment();
+    }
+  };
 
   const fetchEstablishment = async () => {
     try {
@@ -341,10 +357,10 @@ const EstablishmentDashboard = () => {
                   }
                 }}
                 className={`relative p-2 rounded-lg transition-colors ${hasPendingSounds
-                    ? "bg-destructive/10 hover:bg-destructive/20"
-                    : soundEnabled
-                      ? "hover:bg-muted"
-                      : "bg-muted/50 text-muted-foreground"
+                  ? "bg-destructive/10 hover:bg-destructive/20"
+                  : soundEnabled
+                    ? "hover:bg-muted"
+                    : "bg-muted/50 text-muted-foreground"
                   }`}
                 title={
                   hasPendingSounds
@@ -356,10 +372,10 @@ const EstablishmentDashboard = () => {
               >
                 <Volume2
                   className={`w-5 h-5 ${hasPendingSounds
-                      ? "text-destructive animate-pulse"
-                      : !soundEnabled
-                        ? "opacity-50"
-                        : ""
+                    ? "text-destructive animate-pulse"
+                    : !soundEnabled
+                      ? "opacity-50"
+                      : ""
                     }`}
                 />
                 {hasPendingSounds && (

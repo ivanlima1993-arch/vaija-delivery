@@ -66,8 +66,8 @@ const Auth = () => {
           console.error("Erro ao verificar estabelecimento:", estError);
         }
 
-        // Se não existir registro de estabelecimento ou não estiver aprovado, bloqueia
-        if (!est || est.is_approved === false) {
+        // Se não existir registro de estabelecimento ou não estiver aprovado (incluindo null), bloqueia
+        if (!est || est.is_approved !== true) {
           await supabase.auth.signOut();
           setCreatedAt(est?.created_at || new Date().toISOString());
           setPendingApproval(true);
