@@ -74,10 +74,12 @@ const EstablishmentDashboard = () => {
   }, [user, authLoading, isEstablishment, navigate]);
 
   const checkApproval = async () => {
+    if (!user?.id) return;
+
     const { data: est } = await supabase
       .from("establishments")
       .select("is_approved")
-      .eq("owner_id", user!.id)
+      .eq("owner_id", user.id)
       .maybeSingle();
 
     if (!est || est.is_approved !== true) {

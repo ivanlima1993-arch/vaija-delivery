@@ -258,6 +258,7 @@ export const useOrderNotification = ({
           filter: `establishment_id=eq.${establishmentId}`,
         },
         (payload) => {
+          if (!payload?.new) return;
           const newOrder = payload.new as Order;
           const isOnline = newOrder.payment_method === 'pix' || newOrder.payment_method === 'credit_card';
           const isPaid = newOrder.payment_status === 'paid';
@@ -277,11 +278,12 @@ export const useOrderNotification = ({
           filter: `establishment_id=eq.${establishmentId}`,
         },
         (payload) => {
+          if (!payload?.new) return;
           const updatedOrder = payload.new as Order;
-          const oldOrder = payload.old as Order;
+          const oldOrder = (payload.old || {}) as any;
 
           const isOnline = updatedOrder.payment_method === 'pix' || updatedOrder.payment_method === 'credit_card';
-          const wasPaid = oldOrder?.payment_status === 'paid';
+          const wasPaid = oldOrder.payment_status === 'paid';
           const isPaid = updatedOrder.payment_status === 'paid';
 
           // If it was online and just got paid, and is still pending, notify as new
