@@ -107,9 +107,15 @@ const EstablishmentOrders = () => {
       .order("created_at", { ascending: false });
 
     if (data) {
-      setOrders(data);
-      // Fetch items for all orders
-      data.forEach((order) => fetchOrderItems(order.id));
+      // Filter: offline payments OR paid online payments
+      const visibleOrders = data.filter(o => {
+        const isOnline = o.payment_method === 'pix' || o.payment_method === 'credit_card';
+        const isPaid = o.payment_status === 'paid';
+        return !isOnline || isPaid;
+      });
+      setOrders(visibleOrders);
+      // Fetch items for visible orders
+      visibleOrders.forEach((order) => fetchOrderItems(order.id));
     }
   };
 

@@ -119,7 +119,13 @@ const EstablishmentDashboard = () => {
       .limit(50);
 
     if (data) {
-      setOrders(data);
+      // Filter: offline payments OR paid online payments
+      const visibleOrders = data.filter(o => {
+        const isOnline = o.payment_method === 'pix' || o.payment_method === 'credit_card';
+        const isPaid = o.payment_status === 'paid';
+        return !isOnline || isPaid;
+      });
+      setOrders(visibleOrders);
     }
   };
 

@@ -220,12 +220,21 @@ export const useOrderNotification = ({
     const fetchPendingOrders = async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id")
+        .select("*")
         .eq("establishment_id", establishmentId)
         .eq("status", "pending");
 
-      if (data && data.length > 0) {
-        setPendingOrdersWithSound(new Set(data.map(o => o.id)));
+      if (data) {
+        // Filter: offline payments OR paid online payments
+        const visibleOrders = data.filter(o => {
+          const isOnline = o.payment_method === 'pix' || o.payment_method === 'credit_card';
+          const isPaid = o.payment_status === 'paid';
+          return !isOnline || isPaid;
+        });
+
+        if (visibleOrders.length > 0) {
+          setPendingOrdersWithSound(new Set(visibleOrders.map(o => o.id)));
+        }
       }
     };
 
@@ -250,8 +259,13 @@ export const useOrderNotification = ({
         },
         (payload) => {
           const newOrder = payload.new as Order;
-          showNotification(newOrder);
-          onNewOrder?.(newOrder);
+          const isOnline = newOrder.payment_method === 'pix' || newOrder.payment_method === 'credit_card';
+          const isPaid = newOrder.payment_status === 'paid';
+
+          if (!isOnline || isPaid) {
+            showNotification(newOrder);
+            onNewOrder?.(newOrder);
+          }
         }
       )
       .on(
@@ -264,6 +278,17 @@ export const useOrderNotification = ({
         },
         (payload) => {
           const updatedOrder = payload.new as Order;
+          const oldOrder = payload.old as Order;
+
+          const isOnline = updatedOrder.payment_method === 'pix' || updatedOrder.payment_method === 'credit_card';
+          const wasPaid = oldOrder?.payment_status === 'paid';
+          const isPaid = updatedOrder.payment_status === 'paid';
+
+          // If it was online and just got paid, and is still pending, notify as new
+          if (isOnline && !wasPaid && isPaid && updatedOrder.status === 'pending') {
+            showNotification(updatedOrder);
+            onNewOrder?.(updatedOrder);
+          }
 
           // Stop sound when order is no longer pending
           if (updatedOrder.status !== "pending") {
