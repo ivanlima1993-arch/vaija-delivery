@@ -192,7 +192,7 @@ const Wallet = () => {
 
                                 <div className="p-4 bg-white/10 rounded-xl border border-white/10">
                                     <p className="text-sm opacity-80 mb-1">Seu saldo atual</p>
-                                    <p className="text-3xl font-bold text-white">R$ {balance.toFixed(2).replace(".", ",")}</p>
+                                    <p className="text-3xl font-bold text-white">R$ {(balance || 0).toFixed(2).replace(".", ",")}</p>
                                 </div>
                             </div>
 
@@ -239,7 +239,7 @@ const Wallet = () => {
                                                 </div>
                                             </div>
                                             <p className={`font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                                                {tx.type === 'credit' ? '+' : '-'} R$ {Number(tx.amount).toFixed(2).replace(".", ",")}
+                                                {tx.type === 'credit' ? '+' : '-'} R$ {(Number(tx.amount) || 0).toFixed(2).replace(".", ",")}
                                             </p>
                                         </div>
                                     ))}

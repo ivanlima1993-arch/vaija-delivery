@@ -47,9 +47,11 @@ const EstablishmentDashboard = () => {
     establishmentId: establishment?.id || null,
     soundEnabled,
     onNewOrder: (order) => {
-      setOrders((prev) => [order, ...prev]);
+      if (!order || !order.id) return;
+      setOrders((prev) => [order, ...prev.filter(o => o.id !== order.id)]);
     },
     onOrderUpdate: (order) => {
+      if (!order || !order.id) return;
       setOrders((prev) =>
         prev.map((o) => (o.id === order.id ? { ...o, ...order } : o))
       );
@@ -123,6 +125,7 @@ const EstablishmentDashboard = () => {
     if (data) {
       // Filter: offline payments OR paid online payments
       const visibleOrders = data.filter(o => {
+        if (!o) return false;
         const isOnline = o.payment_method === 'pix' || o.payment_method === 'credit_card';
         const isPaid = o.payment_status === 'paid';
         return !isOnline || isPaid;
@@ -147,12 +150,12 @@ const EstablishmentDashboard = () => {
     }
   };
 
-  const pendingOrders = orders.filter((o) => o.status === "pending");
-  const preparingOrders = orders.filter((o) => o.status === "preparing");
+  const pendingOrders = orders.filter((o) => o?.status === "pending");
+  const preparingOrders = orders.filter((o) => o?.status === "preparing");
   const todayOrders = orders.filter(
-    (o) => new Date(o.created_at).toDateString() === new Date().toDateString()
+    (o) => o?.created_at && new Date(o.created_at).toDateString() === new Date().toDateString()
   );
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + Number(o.total), 0);
+  const todayRevenue = todayOrders.reduce((sum, o) => sum + (Number(o?.total) || 0), 0);
 
   const handlePrint = async (order: Order) => {
     // Fetch order items first
@@ -457,7 +460,7 @@ const EstablishmentDashboard = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">
-                        R$ {todayRevenue.toFixed(2)}
+                        R$ {(todayRevenue || 0).toFixed(2)}
                       </p>
                       <p className="text-sm text-muted-foreground">Faturamento</p>
                     </div>

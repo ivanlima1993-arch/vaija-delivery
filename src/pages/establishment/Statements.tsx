@@ -106,7 +106,7 @@ const EstablishmentStatements = () => {
                     <ArrowUpCircle className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">R$ {credits.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">R$ {(credits || 0).toFixed(2)}</p>
                     <p className="text-sm text-muted-foreground">Entradas</p>
                   </div>
                 </div>
@@ -119,7 +119,7 @@ const EstablishmentStatements = () => {
                     <ArrowDownCircle className="w-6 h-6 text-red-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">R$ {debits.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">R$ {(debits || 0).toFixed(2)}</p>
                     <p className="text-sm text-muted-foreground">Saídas</p>
                   </div>
                 </div>
@@ -132,7 +132,7 @@ const EstablishmentStatements = () => {
                     <Receipt className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">R$ {balance.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">R$ {(balance || 0).toFixed(2)}</p>
                     <p className="text-sm text-muted-foreground">Saldo</p>
                   </div>
                 </div>
@@ -172,7 +172,7 @@ const EstablishmentStatements = () => {
                         </div>
                       </div>
                       <p className={`font-bold ${transaction.type === "credit" ? "text-green-600" : "text-red-600"}`}>
-                        {transaction.type === "credit" ? "+" : "-"}R$ {transaction.value.toFixed(2)}
+                        {transaction.type === "credit" ? "+" : "-"}R$ {(Number(transaction.value) || 0).toFixed(2)}
                       </p>
                     </div>
                   ))}

@@ -59,10 +59,12 @@ const EstablishmentOrders = () => {
     establishmentId,
     soundEnabled,
     onNewOrder: (order) => {
-      setOrders((prev) => [order, ...prev]);
+      if (!order || !order.id) return;
+      setOrders((prev) => [order, ...prev.filter(o => o.id !== order.id)]);
       fetchOrderItems(order.id);
     },
     onOrderUpdate: (order) => {
+      if (!order || !order.id) return;
       setOrders((prev) =>
         prev.map((o) => (o.id === order.id ? { ...o, ...order } : o))
       );
@@ -109,13 +111,14 @@ const EstablishmentOrders = () => {
     if (data) {
       // Filter: offline payments OR paid online payments
       const visibleOrders = data.filter(o => {
+        if (!o) return false;
         const isOnline = o.payment_method === 'pix' || o.payment_method === 'credit_card';
         const isPaid = o.payment_status === 'paid';
         return !isOnline || isPaid;
       });
       setOrders(visibleOrders);
       // Fetch items for visible orders
-      visibleOrders.forEach((order) => fetchOrderItems(order.id));
+      visibleOrders.forEach((order) => order?.id && fetchOrderItems(order.id));
     }
   };
 
@@ -153,13 +156,15 @@ const EstablishmentOrders = () => {
     if (error) {
       toast.error("Erro ao atualizar pedido");
     } else {
-      toast.success(`Pedido atualizado para: ${statusConfig[newStatus].label}`);
+      const label = statusConfig[newStatus]?.label || newStatus;
+      toast.success(`Pedido atualizado para: ${label}`);
     }
   };
 
-  const filteredOrders = orders.filter((o) =>
-    filter === "all" ? true : o.status === filter
-  );
+  const filteredOrders = orders.filter((o) => {
+    if (!o) return false;
+    return filter === "all" ? true : o.status === filter;
+  });
 
   const getNextStatus = (currentStatus: OrderStatus): OrderStatus | null => {
     const flow: Record<OrderStatus, OrderStatus | null> = {
@@ -230,7 +235,7 @@ const EstablishmentOrders = () => {
                       ${item.product_name}
                       ${item.notes ? `<br/><small><i>- ${item.notes}</i></small>` : ""}
                     </td>
-                    <td style="vertical-align: top; text-align: right;">R$ ${(Number(item.subtotal) / item.quantity).toFixed(2)}</td>
+                    <td style="vertical-align: top; text-align: right;">R$ {((Number(item.subtotal) || 0) / (item.quantity || 1)).toFixed(2)}</td>
                   </tr>
                 `
         )
@@ -257,7 +262,7 @@ const EstablishmentOrders = () => {
       }
             <div class="total-final">
               <span>TOTAL:</span>
-              <span>R$ ${Number(order.total).toFixed(2)}</span>
+              <span>R$ ${(Number(order.total) || 0).toFixed(2)}</span>
             </div>
           </div>
 
@@ -384,8 +389,10 @@ const EstablishmentOrders = () => {
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence>
               {filteredOrders.map((order) => {
+                if (!order?.id) return null;
                 const statusKey = (order.status as OrderStatus) || "pending";
-                const StatusIcon = statusConfig[statusKey].icon;
+                const StatusConfig = statusConfig[statusKey] || statusConfig.pending;
+                const StatusIcon = StatusConfig.icon;
                 const items = orderItems[order.id] || [];
                 const nextStatus = getNextStatus(statusKey);
 
@@ -408,9 +415,9 @@ const EstablishmentOrders = () => {
                             Pedido #{order.order_number}
                           </CardTitle>
                           <div className="flex items-center gap-2">
-                            <Badge className={`${statusConfig[statusKey].color} text-white`}>
+                            <Badge className={`${StatusConfig.color} text-white`}>
                               <StatusIcon className="w-3 h-3 mr-1" />
-                              {statusConfig[statusKey].label}
+                              {StatusConfig.label}
                             </Badge>
                             <Button
                               variant="ghost"
@@ -457,7 +464,7 @@ const EstablishmentOrders = () => {
 
                         <div className="flex items-center justify-between pt-2 border-t">
                           <span className="font-bold text-lg text-primary">
-                            R$ {Number(order.total).toFixed(2)}
+                            R$ {(Number(order.total) || 0).toFixed(2)}
                           </span>
                           {nextStatus && (
                             <Button
@@ -582,11 +589,11 @@ const EstablishmentOrders = () => {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                    <span>R$ {Number(selectedOrder.subtotal).toFixed(2)}</span>
+                    <span>R$ {(Number(selectedOrder?.subtotal) || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Taxa de entrega</span>
-                    <span>R$ {Number(selectedOrder.delivery_fee).toFixed(2)}</span>
+                    <span>R$ {(Number(selectedOrder?.delivery_fee) || 0).toFixed(2)}</span>
                   </div>
                   {Number(selectedOrder.discount) > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
@@ -621,15 +628,15 @@ const EstablishmentOrders = () => {
                     <Button
                       className="flex-1"
                       onClick={() => {
-                        updateOrderStatus(
-                          selectedOrder.id,
-                          getNextStatus(selectedOrder.status)!
-                        );
-                        setSelectedOrder(null);
+                        const next = getNextStatus(selectedOrder.status);
+                        if (next) {
+                          updateOrderStatus(selectedOrder.id, next);
+                          setSelectedOrder(null);
+                        }
                       }}
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {statusConfig[getNextStatus(selectedOrder.status)!].label}
+                      {statusConfig[getNextStatus(selectedOrder.status)!]?.label || "Próximo Passo"}
                     </Button>
                   )}
                 </div>

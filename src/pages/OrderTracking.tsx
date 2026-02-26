@@ -63,9 +63,9 @@ const OrderTracking = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     "Notification" in window && Notification.permission === "granted"
   );
-  
+
   const { data: existingReview, refetch: refetchReview } = useOrderReview(orderId);
-  
+
   // Customer order notification hook
   const { requestNotificationPermission, initializeStatus } = useCustomerOrderNotification({
     orderId: orderId || null,
@@ -95,7 +95,7 @@ const OrderTracking = () => {
 
       if (error) throw error;
       setOrder(orderData);
-      
+
       // Initialize status for notification hook (prevents notification on first load)
       initializeStatus(orderData.status);
 
@@ -186,7 +186,7 @@ const OrderTracking = () => {
               {new Date(order.created_at).toLocaleDateString("pt-BR")}
             </p>
           </div>
-          
+
           {/* Notification Toggle */}
           {!isDelivered && (
             <Button
@@ -203,7 +203,7 @@ const OrderTracking = () => {
               )}
             </Button>
           )}
-          
+
           <Badge className={statusConfig[order.status]?.color}>
             {statusConfig[order.status]?.label}
           </Badge>
@@ -366,7 +366,7 @@ const OrderTracking = () => {
                       {item.quantity}x {item.product_name}
                     </span>
                     <span className="font-medium">
-                      R$ {item.subtotal.toFixed(2)}
+                      R$ {(Number(item.subtotal) || 0).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -374,15 +374,15 @@ const OrderTracking = () => {
               <div className="mt-4 pt-4 border-t border-border space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
-                  <span>R$ {order.subtotal.toFixed(2)}</span>
+                  <span>R$ {(Number(order?.subtotal) || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Taxa de entrega</span>
-                  <span>R$ {order.delivery_fee.toFixed(2)}</span>
+                  <span>R$ {(Number(order?.delivery_fee) || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>R$ {order.total.toFixed(2)}</span>
+                  <span>R$ {(Number(order?.total) || 0).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>

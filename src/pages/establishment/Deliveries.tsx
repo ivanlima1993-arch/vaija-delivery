@@ -32,7 +32,7 @@ const EstablishmentDeliveries = () => {
   };
 
   const todayDelivered = orders.filter(
-    (o) => o.status === "delivered" && new Date(o.delivered_at).toDateString() === new Date().toDateString()
+    (o) => o?.status === "delivered" && o?.delivered_at && new Date(o.delivered_at).toDateString() === new Date().toDateString()
   ).length;
 
   const inTransit = orders.filter((o) => o.status === "out_for_delivery").length;
@@ -289,7 +289,7 @@ const EstablishmentDeliveries = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className="font-bold">R$ {Number(order.total).toFixed(2)}</p>
+                          <p className="font-bold">R$ {(Number(order?.total) || 0).toFixed(2)}</p>
                         </div>
                         <Button
                           variant="ghost"
