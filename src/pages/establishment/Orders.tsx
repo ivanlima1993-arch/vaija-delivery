@@ -568,7 +568,7 @@ const EstablishmentOrders = () => {
                           )}
                         </div>
                         <span className="font-medium">
-                          R$ {Number(item.subtotal).toFixed(2)}
+                          R$ {(Number(item.subtotal) || 0).toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -598,7 +598,7 @@ const EstablishmentOrders = () => {
                   {Number(selectedOrder.discount) > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto</span>
-                      <span>-R$ {Number(selectedOrder.discount).toFixed(2)}</span>
+                      <span>-R$ {(Number(selectedOrder.discount) || 0).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
