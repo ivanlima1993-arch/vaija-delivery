@@ -384,9 +384,10 @@ const EstablishmentOrders = () => {
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence>
               {filteredOrders.map((order) => {
-                const StatusIcon = statusConfig[order.status].icon;
+                const statusKey = (order.status as OrderStatus) || "pending";
+                const StatusIcon = statusConfig[statusKey].icon;
                 const items = orderItems[order.id] || [];
-                const nextStatus = getNextStatus(order.status);
+                const nextStatus = getNextStatus(statusKey);
 
                 return (
                   <motion.div
@@ -407,9 +408,9 @@ const EstablishmentOrders = () => {
                             Pedido #{order.order_number}
                           </CardTitle>
                           <div className="flex items-center gap-2">
-                            <Badge className={`${statusConfig[order.status].color} text-white`}>
+                            <Badge className={`${statusConfig[statusKey].color} text-white`}>
                               <StatusIcon className="w-3 h-3 mr-1" />
-                              {statusConfig[order.status].label}
+                              {statusConfig[statusKey].label}
                             </Badge>
                             <Button
                               variant="ghost"

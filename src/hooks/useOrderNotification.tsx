@@ -282,25 +282,35 @@ export const useOrderNotification = ({
         },
         (payload) => {
           if (!payload?.new) return;
-          const updatedOrder = payload.new as Order;
+          const initialOrder = payload.new as Order;
           const oldOrder = (payload.old || {}) as any;
 
-          const isOnline = updatedOrder.payment_method === 'pix' || updatedOrder.payment_method === 'credit_card';
+          const isOnline = initialOrder.payment_method === 'pix' || initialOrder.payment_method === 'credit_card';
           const wasPaid = oldOrder.payment_status === 'paid';
-          const isPaid = updatedOrder.payment_status === 'paid';
+          const isPaid = initialOrder.payment_status === 'paid';
 
           // If it was online and just got paid, and is still pending, notify as new
-          if (isOnline && !wasPaid && isPaid && updatedOrder.status === 'pending') {
-            showNotification(updatedOrder);
-            onNewOrder?.(updatedOrder);
+          if (isOnline && !wasPaid && isPaid && initialOrder.status === 'pending') {
+            // Fetch full order data to ensure we have all fields for the UI
+            supabase
+              .from("orders")
+              .select("*")
+              .eq("id", initialOrder.id)
+              .maybeSingle()
+              .then(({ data: fullOrder }) => {
+                if (fullOrder) {
+                  const updatedOrder = fullOrder as Order;
+                  showNotification(updatedOrder);
+                  onNewOrder?.(updatedOrder);
+                }
+              });
+          } else {
+            // Stop sound when order is no longer pending
+            if (initialOrder.status && initialOrder.status !== "pending") {
+              stopSoundForOrder(initialOrder.id);
+            }
+            onOrderUpdate?.(initialOrder);
           }
-
-          // Stop sound when order is no longer pending
-          if (updatedOrder.status !== "pending") {
-            stopSoundForOrder(updatedOrder.id);
-          }
-
-          onOrderUpdate?.(updatedOrder);
         }
       )
       .subscribe();
