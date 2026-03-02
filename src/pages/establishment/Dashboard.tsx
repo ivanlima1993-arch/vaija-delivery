@@ -21,6 +21,8 @@ import {
   Volume2,
   UserPlus,
   Printer,
+  CreditCard,
+  Wallet,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -42,6 +44,7 @@ const EstablishmentDashboard = () => {
   const {
     playNotificationSound,
     stopAllSounds,
+    stopSoundForOrder,
     hasPendingSounds
   } = useOrderNotification({
     establishmentId: establishment?.id || null,
@@ -55,6 +58,10 @@ const EstablishmentDashboard = () => {
       setOrders((prev) =>
         prev.map((o) => (o.id === order.id ? { ...o, ...order } : o))
       );
+      // Stop sound if order is no longer pending
+      if (order.status !== "pending") {
+        stopSoundForOrder(order.id);
+      }
     },
   });
 
@@ -586,6 +593,21 @@ const EstablishmentDashboard = () => {
                         <p className="text-sm text-muted-foreground">
                           {order.customer_name}
                         </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="px-1.5 py-0 text-[10px] flex gap-1 items-center bg-muted/50">
+                            {order.payment_method === 'pix' || order.payment_method === 'credit_card' ? (
+                              <CreditCard className="w-2.5 h-2.5" />
+                            ) : (
+                              <Wallet className="w-2.5 h-2.5" />
+                            )}
+                            {order.payment_method === 'pix' ? 'PIX' :
+                              order.payment_method === 'credit_card' ? 'C. Online' :
+                                order.payment_method === 'money' ? 'Dinheiro' : 'Cartão Entrega'}
+                          </Badge>
+                          <Badge variant="outline" className={`px-1.5 py-0 text-[10px] ${order.payment_status === 'paid' ? 'text-green-600 border-green-600' : 'text-yellow-600 border-yellow-600'}`}>
+                            {order.payment_status === 'paid' ? 'Pago' : 'Pendente'}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">

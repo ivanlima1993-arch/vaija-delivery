@@ -23,6 +23,8 @@ import {
   Menu,
   UserPlus,
   Printer,
+  CreditCard,
+  Wallet,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -55,7 +57,7 @@ const EstablishmentOrders = () => {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   // Real-time order notifications
-  const { playNotificationSound } = useOrderNotification({
+  const { playNotificationSound, stopSoundForOrder } = useOrderNotification({
     establishmentId,
     soundEnabled,
     onNewOrder: (order) => {
@@ -68,6 +70,10 @@ const EstablishmentOrders = () => {
       setOrders((prev) =>
         prev.map((o) => (o.id === order.id ? { ...o, ...order } : o))
       );
+      // Stop sound if order is no longer pending
+      if (order.status !== "pending") {
+        stopSoundForOrder(order.id);
+      }
     },
   });
 
@@ -443,6 +449,22 @@ const EstablishmentOrders = () => {
                           {new Date(order.created_at).toLocaleString("pt-BR")}
                         </div>
 
+                        <div className="flex items-center gap-2 py-1">
+                          <Badge variant="secondary" className="bg-muted text-foreground flex gap-1 items-center">
+                            {order.payment_method === 'pix' || order.payment_method === 'credit_card' ? (
+                              <CreditCard className="w-3 h-3" />
+                            ) : (
+                              <Wallet className="w-3 h-3" />
+                            )}
+                            {order.payment_method === 'pix' ? 'PIX' :
+                              order.payment_method === 'credit_card' ? 'Cartão Online' :
+                                order.payment_method === 'money' ? 'Dinheiro' : 'Cartão na Entrega'}
+                          </Badge>
+                          <Badge variant="outline" className={order.payment_status === 'paid' ? 'text-green-600 border-green-600' : 'text-yellow-600 border-yellow-600'}>
+                            {order.payment_status === 'paid' ? 'Pago' : 'Pendente'}
+                          </Badge>
+                        </div>
+
                         {/* Items Preview */}
                         <div className="bg-muted/50 rounded-lg p-3">
                           {items.slice(0, 2).map((item) => (
@@ -547,6 +569,27 @@ const EstablishmentOrders = () => {
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-primary mt-0.5" />
                     <span>{selectedOrder.delivery_address}</span>
+                  </div>
+
+                  <div className="pt-2 border-t mt-2">
+                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Pagamento</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 rounded-md text-primary text-sm font-medium">
+                        {selectedOrder.payment_method === 'pix' || selectedOrder.payment_method === 'credit_card' ? (
+                          <CreditCard className="w-4 h-4" />
+                        ) : (
+                          <Wallet className="w-4 h-4" />
+                        )}
+                        <span>
+                          {selectedOrder.payment_method === 'pix' ? 'PIX' :
+                            selectedOrder.payment_method === 'credit_card' ? 'Cartão Online' :
+                              selectedOrder.payment_method === 'money' ? 'Dinheiro' : 'Cartão na Entrega'}
+                        </span>
+                      </div>
+                      <Badge className={selectedOrder.payment_status === 'paid' ? 'bg-green-500' : 'bg-yellow-500'}>
+                        {selectedOrder.payment_status === 'paid' ? 'PAGAMENTO CONFIRMADO' : 'PAGAR NA ENTREGA'}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
 
