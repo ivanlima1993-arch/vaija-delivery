@@ -7,7 +7,7 @@ export const usePushNotifications = () => {
   useEffect(() => {
     const supported = "Notification" in window;
     setIsSupported(supported);
-    
+
     if (supported) {
       setPermission(Notification.permission);
     }
@@ -36,19 +36,41 @@ export const usePushNotifications = () => {
         return null;
       }
 
-      try {
-        const notification = new Notification(title, {
-          icon: "/pwa-192x192.png",
-          badge: "/pwa-192x192.png",
-          requireInteraction: true,
-          ...options,
+      // Use ServiceWorker for notifications to avoid "Illegal constructor" on mobile
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(title, {
+            icon: "/pwa-192x192.png",
+            badge: "/pwa-192x192.png",
+            requireInteraction: true,
+            ...options,
+          });
+        }).catch(err => {
+          console.error("ServiceWorker notification failed:", err);
+          try {
+            return new Notification(title, {
+              icon: "/pwa-192x192.png",
+              badge: "/pwa-192x192.png",
+              requireInteraction: true,
+              ...options,
+            });
+          } catch (e) {
+            console.error("Manual notification fallback failed:", e);
+          }
         });
-
-        return notification;
-      } catch (error) {
-        console.error("Error sending notification:", error);
-        return null;
+      } else {
+        try {
+          return new Notification(title, {
+            icon: "/pwa-192x192.png",
+            badge: "/pwa-192x192.png",
+            requireInteraction: true,
+            ...options,
+          });
+        } catch (error) {
+          console.error("Error sending notification:", error);
+        }
       }
+      return null;
     },
     [isSupported, permission]
   );

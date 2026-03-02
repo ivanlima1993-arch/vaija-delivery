@@ -128,20 +128,34 @@ export const useDriverOrderNotifications = () => {
         }
       );
 
-      // Browser push notification
-      if ("Notification" in window && Notification.permission === "granted") {
-        const notification = new Notification("🛵 Novo Pedido Disponível!", {
-          body: `${establishmentName}\nTaxa de entrega: R$ ${deliveryFee}`,
-          icon: "/pwa-192x192.png",
-          tag: `driver-order-${order.id}`,
-          requireInteraction: true,
-        });
+      // Use ServiceWorker for notifications to avoid "Illegal constructor" on mobile
+      if ("serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification("🛵 Novo Pedido Disponível!", {
+            body: `${establishmentName}\nTaxa de entrega: R$ ${deliveryFee}`,
+            icon: "/pwa-192x192.png",
+            tag: `driver-order-${order.id}`,
+            requireInteraction: true,
+          });
+        }).catch(err => {
+          console.error("ServiceWorker notification failed:", err);
+          try {
+            const notification = new Notification("🛵 Novo Pedido Disponível!", {
+              body: `${establishmentName}\nTaxa de entrega: R$ ${deliveryFee}`,
+              icon: "/pwa-192x192.png",
+              tag: `driver-order-${order.id}`,
+              requireInteraction: true,
+            });
 
-        notification.onclick = () => {
-          window.focus();
-          navigate("/entregador/disponiveis");
-          notification.close();
-        };
+            notification.onclick = () => {
+              window.focus();
+              navigate("/entregador/disponiveis");
+              notification.close();
+            };
+          } catch (e) {
+            console.error("Manual notification fallback failed:", e);
+          }
+        });
       }
     },
     [playNotificationSound, navigate]

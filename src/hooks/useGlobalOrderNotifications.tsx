@@ -128,20 +128,34 @@ export const useGlobalOrderNotifications = () => {
       }
     );
 
-    // Browser push notification
-    if ("Notification" in window && Notification.permission === "granted") {
-      const notification = new Notification(message.title, {
-        body: `${message.body}\nPedido #${order.order_number}`,
-        icon: "/pwa-192x192.png",
-        tag: `order-${order.id}-${order.status}`,
-        requireInteraction: order.status === "out_for_delivery",
-      });
+    // Use ServiceWorker for notifications to avoid "Illegal constructor" on mobile
+    if ("serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(message.title, {
+          body: `${message.body}\nPedido #${order.order_number}`,
+          icon: "/pwa-192x192.png",
+          tag: `order-${order.id}-${order.status}`,
+          requireInteraction: order.status === "out_for_delivery",
+        });
+      }).catch(err => {
+        console.error("ServiceWorker notification failed:", err);
+        try {
+          const notification = new Notification(message.title, {
+            body: `${message.body}\nPedido #${order.order_number}`,
+            icon: "/pwa-192x192.png",
+            tag: `order-${order.id}-${order.status}`,
+            requireInteraction: order.status === "out_for_delivery",
+          });
 
-      notification.onclick = () => {
-        window.focus();
-        navigate(`/pedido/${order.id}`);
-        notification.close();
-      };
+          notification.onclick = () => {
+            window.focus();
+            navigate(`/pedido/${order.id}`);
+            notification.close();
+          };
+        } catch (e) {
+          console.error("Manual notification fallback failed:", e);
+        }
+      });
     }
   }, [playNotificationSound, navigate]);
 

@@ -199,13 +199,28 @@ export const useOrderNotification = ({
       }
     );
 
-    // Try to use browser notification if permission granted
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification("🔔 Novo Pedido!", {
-        body: `Pedido #${orderNumber} - R$ ${orderTotal}`,
-        icon: "/pwa-192x192.png",
-        requireInteraction: true,
-        tag: `order-${order.id}`,
+    // Use ServiceWorker for notifications to avoid "Illegal constructor" on mobile
+    if ("serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification("🔔 Novo Pedido!", {
+          body: `Pedido #${orderNumber} - R$ ${orderTotal}`,
+          icon: "/pwa-192x192.png",
+          requireInteraction: true,
+          tag: `order-${order.id}`,
+        });
+      }).catch(err => {
+        console.error("ServiceWorker notification failed:", err);
+        // Fallback to manual constructor if possible
+        try {
+          new Notification("🔔 Novo Pedido!", {
+            body: `Pedido #${orderNumber} - R$ ${orderTotal}`,
+            icon: "/pwa-192x192.png",
+            requireInteraction: true,
+            tag: `order-${order.id}`,
+          });
+        } catch (e) {
+          console.error("Manual notification fallback failed:", e);
+        }
       });
     }
   }, [addOrderToSoundList]);

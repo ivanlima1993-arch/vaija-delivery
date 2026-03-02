@@ -139,13 +139,27 @@ export const useCustomerOrderNotification = ({
       }
     );
 
-    // Browser notification
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(message.title, {
-        body: `${message.body}\nPedido #${order.order_number}`,
-        icon: "/favicon.ico",
-        tag: `order-${order.id}-${order.status}`,
-        requireInteraction: order.status === "out_for_delivery",
+    // Use ServiceWorker for notifications to avoid "Illegal constructor" on mobile
+    if ("serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(message.title, {
+          body: `${message.body}\nPedido #${order.order_number}`,
+          icon: "/favicon.ico",
+          tag: `order-${order.id}-${order.status}`,
+          requireInteraction: order.status === "out_for_delivery",
+        });
+      }).catch(err => {
+        console.error("ServiceWorker notification failed:", err);
+        try {
+          new Notification(message.title, {
+            body: `${message.body}\nPedido #${order.order_number}`,
+            icon: "/favicon.ico",
+            tag: `order-${order.id}-${order.status}`,
+            requireInteraction: order.status === "out_for_delivery",
+          });
+        } catch (e) {
+          console.error("Manual notification fallback failed:", e);
+        }
       });
     }
   }, [playNotificationSound]);
