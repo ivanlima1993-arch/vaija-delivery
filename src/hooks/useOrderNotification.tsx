@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
@@ -18,6 +19,7 @@ export const useOrderNotification = ({
   onOrderUpdate,
   soundEnabled = true,
 }: UseOrderNotificationOptions) => {
+  const navigate = useNavigate();
   const [pendingOrdersWithSound, setPendingOrdersWithSound] = useState<Set<string>>(new Set());
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,28 +113,24 @@ export const useOrderNotification = ({
 
   // Play persistent sound for pending orders
   useEffect(() => {
+    // Clear any existing interval to start fresh
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
     if (pendingOrdersWithSound.size > 0 && soundEnabled) {
       // Play immediately
       playBeepSequence();
 
       // Start interval to repeat every 3 seconds
-      if (!intervalRef.current) {
-        intervalRef.current = setInterval(() => {
-          if (pendingOrdersWithSound.size > 0 && soundEnabled) {
-            playBeepSequence();
-          }
-        }, 3000);
-      }
-    } else {
-      // Stop interval when no pending orders
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      intervalRef.current = setInterval(() => {
+        playBeepSequence();
+      }, 3000);
     }
 
     return () => {
-      if (intervalRef.current && pendingOrdersWithSound.size === 0) {
+      if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
@@ -177,25 +175,34 @@ export const useOrderNotification = ({
 
     // Show toast with custom styling
     toast.success(
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center animate-pulse">
-          <span className="text-white text-lg">🔔</span>
+      <div
+        className="flex items-center gap-4 w-full cursor-pointer p-1"
+        onClick={() => {
+          navigate("/estabelecimento/pedidos");
+          toast.dismiss();
+        }}
+      >
+        <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-primary opacity-20 animate-ping rounded-full"></div>
+          <span className="text-primary text-xl relative z-10">🔔</span>
         </div>
-        <div>
-          <p className="font-bold text-base">Novo Pedido!</p>
-          <p className="text-sm text-muted-foreground">
-            Pedido #{orderNumber} - R$ {orderTotal}
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <p className="font-extrabold text-base text-primary uppercase tracking-tight">Novo Pedido Recebido!</p>
+            <span className="text-[10px] bg-primary/10 px-2 py-0.5 rounded-full font-bold">AGORA</span>
+          </div>
+          <p className="text-sm font-medium mt-0.5">
+            Ref: <span className="font-bold">#{orderNumber}</span> • Total: <span className="text-green-600 font-bold">R$ {orderTotal}</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 italic">
+            Clique para aceitar ou recusar este pedido
           </p>
         </div>
       </div>,
       {
-        duration: Infinity, // Keep until dismissed
+        duration: Infinity,
         position: "top-center",
-        className: "border-2 border-primary bg-card shadow-lg",
-        action: {
-          label: "Ver",
-          onClick: () => { },
-        },
+        className: "border-2 border-primary bg-card/95 backdrop-blur-sm shadow-2xl rounded-2xl p-4 min-w-[340px] hover:scale-[1.02] transition-transform",
       }
     );
 

@@ -602,7 +602,7 @@ const EstablishmentDashboard = () => {
                             )}
                             {order.payment_method === 'pix' ? 'PIX' :
                               order.payment_method === 'credit_card' ? 'C. Online' :
-                                order.payment_method === 'money' ? 'Dinheiro' : 'Cartão Entrega'}
+                                order.payment_method === 'cash' ? 'Dinheiro' : 'Cartão Entrega'}
                           </Badge>
                           <Badge variant="outline" className={`px-1.5 py-0 text-[10px] ${order.payment_status === 'paid' ? 'text-green-600 border-green-600' : 'text-yellow-600 border-yellow-600'}`}>
                             {order.payment_status === 'paid' ? 'Pago' : 'Pendente'}

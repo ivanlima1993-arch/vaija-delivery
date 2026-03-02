@@ -164,6 +164,11 @@ const EstablishmentOrders = () => {
     } else {
       const label = statusConfig[newStatus]?.label || newStatus;
       toast.success(`Pedido atualizado para: ${label}`);
+
+      // Stop sound immediately if no longer pending
+      if (newStatus !== "pending") {
+        stopSoundForOrder(orderId);
+      }
     }
   };
 
@@ -458,7 +463,7 @@ const EstablishmentOrders = () => {
                             )}
                             {order.payment_method === 'pix' ? 'PIX' :
                               order.payment_method === 'credit_card' ? 'Cartão Online' :
-                                order.payment_method === 'money' ? 'Dinheiro' : 'Cartão na Entrega'}
+                                order.payment_method === 'cash' ? 'Dinheiro' : 'Cartão na Entrega'}
                           </Badge>
                           <Badge variant="outline" className={order.payment_status === 'paid' ? 'text-green-600 border-green-600' : 'text-yellow-600 border-yellow-600'}>
                             {order.payment_status === 'paid' ? 'Pago' : 'Pendente'}
@@ -583,7 +588,7 @@ const EstablishmentOrders = () => {
                         <span>
                           {selectedOrder.payment_method === 'pix' ? 'PIX' :
                             selectedOrder.payment_method === 'credit_card' ? 'Cartão Online' :
-                              selectedOrder.payment_method === 'money' ? 'Dinheiro' : 'Cartão na Entrega'}
+                              selectedOrder.payment_method === 'cash' ? 'Dinheiro' : 'Cartão na Entrega'}
                         </span>
                       </div>
                       <Badge className={selectedOrder.payment_status === 'paid' ? 'bg-green-500' : 'bg-yellow-500'}>
