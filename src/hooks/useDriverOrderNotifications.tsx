@@ -136,6 +136,9 @@ export const useDriverOrderNotifications = () => {
             icon: "/pwa-192x192.png",
             tag: `driver-order-${order.id}`,
             requireInteraction: true,
+            data: {
+              url: window.location.origin + window.location.pathname + "#/entregador/disponiveis",
+            },
           });
         }).catch(err => {
           console.error("ServiceWorker notification failed:", err);

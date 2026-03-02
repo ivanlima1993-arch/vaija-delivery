@@ -21,7 +21,12 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "manifest.json"],
       manifest: false,
+      devOptions: {
+        enabled: true,
+        type: "module",
+      },
       workbox: {
+        importScripts: ["/notification-handler.js"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [

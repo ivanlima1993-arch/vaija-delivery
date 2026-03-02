@@ -147,6 +147,9 @@ export const useCustomerOrderNotification = ({
           icon: "/favicon.ico",
           tag: `order-${order.id}-${order.status}`,
           requireInteraction: order.status === "out_for_delivery",
+          data: {
+            url: window.location.origin + window.location.pathname + `#/pedido/${order.id}`,
+          },
         });
       }).catch(err => {
         console.error("ServiceWorker notification failed:", err);

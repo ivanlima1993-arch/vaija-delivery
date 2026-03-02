@@ -207,6 +207,9 @@ export const useOrderNotification = ({
           icon: "/pwa-192x192.png",
           requireInteraction: true,
           tag: `order-${order.id}`,
+          data: {
+            url: window.location.origin + window.location.pathname + "#/estabelecimento/pedidos",
+          },
         });
       }).catch(err => {
         console.error("ServiceWorker notification failed:", err);
