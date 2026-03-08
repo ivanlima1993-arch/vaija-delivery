@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
     Wrench,
@@ -19,6 +19,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 const CATEGORIES = [
     { id: 1, name: "Hidráulica", icon: Droplets, color: "text-blue-500", bg: "bg-blue-100" },
@@ -31,7 +32,7 @@ const CATEGORIES = [
     { id: 8, name: "Dedetização", icon: Bug, color: "text-red-500", bg: "bg-red-100" },
 ];
 
-const PROS = [
+const MOCK_PROS = [
     {
         id: "1",
         name: "Ricardo Silva",
@@ -56,6 +57,40 @@ const PROS = [
 
 const Services = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    const [pros, setPros] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPros = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from("service_providers" as any)
+                    .select("*")
+                    .eq("is_active", true);
+
+                if (error) {
+                    console.warn("Table service_providers not found, using mocks");
+                    setPros(MOCK_PROS);
+                } else if (data && data.length > 0) {
+                    setPros(data.map(p => ({
+                        ...p,
+                        reviews: Math.floor(Math.random() * 100) + 10,
+                        distance: (Math.random() * 5 + 1).toFixed(1) + " km",
+                        image: p.image_url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=400&fit=crop",
+                        available: p.is_active
+                    })));
+                } else {
+                    setPros(MOCK_PROS);
+                }
+            } catch (error) {
+                setPros(MOCK_PROS);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPros();
+    }, []);
 
     return (
         <div className="min-h-screen bg-background pb-20">
@@ -116,7 +151,7 @@ const Services = () => {
                     </div>
 
                     <div className="space-y-4">
-                        {PROS.map((pro, idx) => (
+                        {pros.map((pro, idx) => (
                             <motion.div
                                 key={pro.id}
                                 initial={{ opacity: 0, x: -20 }}

@@ -16,6 +16,7 @@ import {
   Megaphone,
   FileText,
   Banknote,
+  Wrench,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -80,6 +81,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       icon: BarChart3,
       label: "Relatórios",
       path: "/admin/relatorios",
+    },
+    {
+      icon: Wrench,
+      label: "Profissionais",
+      path: "/admin/profissionais",
     },
     {
       icon: Settings,
