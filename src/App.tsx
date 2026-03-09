@@ -42,6 +42,7 @@ import AdminCoupons from "./pages/admin/Coupons";
 import AdminPromotions from "./pages/admin/Promotions";
 import AdminInvoices from "./pages/admin/Invoices";
 import AdminWithdrawals from "./pages/admin/Withdrawals";
+import AdminServiceProviders from "./pages/admin/ServiceProviders";
 import DriverDashboard from "./pages/driver/Dashboard";
 import AvailableOrders from "./pages/driver/AvailableOrders";
 import InRoute from "./pages/driver/InRoute";
