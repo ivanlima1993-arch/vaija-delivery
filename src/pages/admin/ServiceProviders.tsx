@@ -52,6 +52,15 @@ const CATEGORIES = [
     "Reformas",
     "Montagem",
     "Dedetização",
+    "Jardinagem",
+    "Chaveiro",
+    "Informática",
+    "Mecânica",
+    "Refrigeração",
+    "Aulas",
+    "Eventos",
+    "Saúde",
+    "Pedreiro",
 ];
 
 const AdminServiceProviders = () => {

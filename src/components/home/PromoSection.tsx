@@ -1,10 +1,28 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Truck, Percent, Wallet } from "lucide-react";
+import { Truck, Percent, Wallet, Loader2, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useAddress } from "@/contexts/AddressContext";
 
-const promos = [
+interface Promotion {
+  id: string;
+  title: string;
+  description: string | null;
+  discount_type: string;
+  discount_value: number | null;
+  banner_url: string | null;
+  valid_from: string;
+  valid_until: string | null;
+  is_active: boolean | null;
+  city_id: string | null;
+  neighborhood_id: string | null;
+  establishment_id: string | null;
+}
+
+const MOCK_PROMOS = [
   {
-    id: 1,
+    id: "1",
     title: "Entrega Grátis",
     highlight: "Primeiro Pedido",
     description: "Em pedidos acima de R$ 35",
@@ -13,7 +31,7 @@ const promos = [
     pattern: "bg-orange-400/20",
   },
   {
-    id: 2,
+    id: "2",
     title: "Cupom VAIJA20",
     highlight: "20% DE DESCONTO",
     description: "Válido para restaurantes selecionados",
@@ -22,7 +40,7 @@ const promos = [
     pattern: "bg-emerald-400/20",
   },
   {
-    id: 3,
+    id: "3",
     title: "Clube de Vantagens",
     highlight: "CASHBACK REAL",
     description: "Receba até 10% de volta no saldo",
@@ -33,6 +51,94 @@ const promos = [
 ];
 
 const PromoSection = () => {
+  const { selectedCityId } = useAddress();
+  const [promotions, setPromotions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("promotions")
+          .select("*")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        // Filter and map to visual format
+        const now = new Date();
+        const filtered = (data || []).filter(p => {
+          // Check validity
+          const start = new Date(p.valid_from);
+          const end = p.valid_until ? new Date(p.valid_until) : null;
+          if (start > now || (end && end < now)) return false;
+
+          // Check region
+          if (p.city_id && p.city_id !== selectedCityId) return false;
+
+          return true;
+        });
+
+        if (filtered.length > 0) {
+          const mapped = filtered.map(p => {
+            let icon = Gift;
+            let gradient = "from-primary to-primary/80";
+            let pattern = "bg-primary/20";
+            let highlight = p.title;
+
+            if (p.discount_type === "free_delivery") {
+              icon = Truck;
+              gradient = "from-orange-500 to-primary";
+              pattern = "bg-orange-400/20";
+              highlight = "Entrega Grátis";
+            } else if (p.discount_type === "percentage") {
+              icon = Percent;
+              gradient = "from-emerald-500 to-green-600";
+              pattern = "bg-emerald-400/20";
+              highlight = `${p.discount_value}% OFF`;
+            } else if (p.discount_type === "fixed") {
+              icon = Wallet;
+              gradient = "from-blue-500 to-info";
+              pattern = "bg-blue-400/20";
+              highlight = `R$ ${Number(p.discount_value).toFixed(2)} OFF`;
+            }
+
+            return {
+              id: p.id,
+              title: p.title,
+              highlight: highlight,
+              description: p.description,
+              icon: icon,
+              gradient: gradient,
+              pattern: pattern,
+              banner_url: p.banner_url
+            };
+          });
+          setPromotions(mapped);
+        } else {
+          setPromotions(MOCK_PROMOS);
+        }
+      } catch (err) {
+        console.error("Error fetching promotions:", err);
+        setPromotions(MOCK_PROMOS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPromotions();
+  }, [selectedCityId]);
+
+  if (loading) {
+    return (
+      <div className="container py-12 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <section className="py-12 overflow-hidden bg-[#fafafa]">
       <div className="container">
@@ -42,7 +148,7 @@ const PromoSection = () => {
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 md:grid md:grid-cols-3 md:mx-0 md:px-0">
-          {promos.map((promo, index) => (
+          {promotions.map((promo, index) => (
             <motion.div
               key={promo.id}
               initial={{ opacity: 0, x: 20 }}
@@ -51,9 +157,16 @@ const PromoSection = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5, scale: 1.02 }}
               className={`relative min-w-[300px] md:min-w-0 h-[180px] p-6 rounded-[32px] bg-gradient-to-br ${promo.gradient} text-white cursor-pointer shadow-elevated overflow-hidden group`}
+              style={promo.banner_url ? { 
+                backgroundImage: `linear-gradient(to bottom right, rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${promo.banner_url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              } : {}}
             >
-              {/* Background Pattern */}
-              <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 blur-3xl opacity-50 ${promo.pattern}`} />
+              {/* Background Pattern - only if no banner */}
+              {!promo.banner_url && (
+                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 blur-3xl opacity-50 ${promo.pattern}`} />
+              )}
 
               <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className="flex items-start justify-between">
