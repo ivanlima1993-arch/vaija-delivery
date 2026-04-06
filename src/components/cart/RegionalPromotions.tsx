@@ -75,10 +75,31 @@ export const RegionalPromotions = ({
       setPromotions(filteredPromotions as Promotion[]);
 
       // Auto-apply the best applicable promotion
-      const applicablePromo = filteredPromotions.find(
+      const applicablePromos = filteredPromotions.filter(
         (p) => !p.min_order_value || subtotal >= Number(p.min_order_value)
       );
-      onPromotionApply?.(applicablePromo as Promotion || null);
+
+      let bestPromo: Promotion | null = null;
+      let maxDiscount = 0;
+
+      applicablePromos.forEach((promo) => {
+        let currentDiscount = 0;
+        if (promo.discount_type === "percentage") {
+          currentDiscount = (subtotal * Number(promo.discount_value)) / 100;
+        } else if (promo.discount_type === "fixed") {
+          currentDiscount = Number(promo.discount_value);
+        } else if (promo.discount_type === "free_delivery") {
+          // Assume average delivery fee for comparison if we don't have it
+          currentDiscount = 10; 
+        }
+
+        if (currentDiscount > maxDiscount) {
+          maxDiscount = currentDiscount;
+          bestPromo = promo as Promotion;
+        }
+      });
+
+      onPromotionApply?.(bestPromo);
     } catch (error) {
       console.error("Error fetching promotions:", error);
     } finally {

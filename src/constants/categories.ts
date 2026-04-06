@@ -16,6 +16,8 @@ import {
   Shirt,
   FileText,
   Store,
+  HardHat,
+  Hammer,
   LucideIcon
 } from "lucide-react";
 
@@ -45,6 +47,8 @@ export const DISPLAY_CATEGORIES: Category[] = [
   { id: "electronics", name: "Eletrônicos", icon: Zap, color: "bg-blue-100 text-blue-600" },
   { id: "laundry", name: "Lavanderia", icon: Shirt, color: "bg-sky-100 text-sky-600" },
   { id: "documents", name: "Documentos", icon: FileText, color: "bg-gray-100 text-gray-600" },
+  { id: "construction", name: "Pedreiro", icon: HardHat, color: "bg-orange-100 text-orange-700" },
+  { id: "services", name: "Reformas", icon: Hammer, color: "bg-slate-100 text-slate-600" },
 ];
 
 // Categories for establishment registration forms (includes subcategories)
@@ -67,6 +71,8 @@ export const ESTABLISHMENT_CATEGORIES = [
   { value: "electronics", label: "Eletrônicos" },
   { value: "laundry", label: "Lavanderia" },
   { value: "documents", label: "Documentos/Entregas" },
+  { value: "construction", label: "Pedreiro" },
+  { value: "services", label: "Reformas/Serviços" },
   // Subcategories for restaurants
   { value: "hamburgueria", label: "Hamburgueria" },
   { value: "japonesa", label: "Comida Japonesa" },
