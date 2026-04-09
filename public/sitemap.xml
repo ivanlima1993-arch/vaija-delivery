@@ -1,44 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Substitua https://vaijadelivery.com.br pela URL real do seu site -->
   <url>
-    <loc>https://vaijadelivery.com.br/</loc>
+    <loc>https://ivanlima1993-arch.github.io/vaija-delivery/</loc>
     <lastmod>2024-04-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://vaijadelivery.com.br/#/servicos</loc>
+    <loc>https://ivanlima1993-arch.github.io/vaija-delivery/#/servicos</loc>
     <lastmod>2024-04-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://vaijadelivery.com.br/#/restaurantes</loc>
+    <loc>https://ivanlima1993-arch.github.io/vaija-delivery/#/restaurantes</loc>
     <lastmod>2024-04-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://vaijadelivery.com.br/#/categorias</loc>
+    <loc>https://ivanlima1993-arch.github.io/vaija-delivery/#/categorias</loc>
     <lastmod>2024-04-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://vaijadelivery.com.br/#/sobre-nos</loc>
+    <loc>https://ivanlima1993-arch.github.io/vaija-delivery/#/sobre-nos</loc>
     <lastmod>2024-04-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://vaijadelivery.com.br/#/termos-de-uso</loc>
+    <loc>https://ivanlima1993-arch.github.io/vaija-delivery/#/termos-de-uso</loc>
     <lastmod>2024-04-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://vaijadelivery.com.br/#/politica-de-privacidade</loc>
+    <loc>https://ivanlima1993-arch.github.io/vaija-delivery/#/politica-de-privacidade</loc>
     <lastmod>2024-04-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>

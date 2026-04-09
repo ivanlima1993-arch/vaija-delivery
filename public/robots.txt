@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://vaijadelivery.com.br/sitemap.xml
+Sitemap: https://ivanlima1993-arch.github.io/vaija-delivery/sitemap.xml
