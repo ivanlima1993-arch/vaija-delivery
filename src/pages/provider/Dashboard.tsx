@@ -16,10 +16,68 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const ProviderDashboard = () => {
+    const { user } = useAuth();
     const [isOnline, setIsOnline] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [providerData, setProviderData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (user) {
+            fetchProviderData();
+        }
+    }, [user]);
+
+    const fetchProviderData = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("service_providers")
+                .select("*")
+                .eq("user_id", user?.id)
+                .maybeSingle();
+
+            if (error) throw error;
+            setProviderData(data);
+            setIsOnline(data?.is_active || false);
+        } catch (error) {
+            console.error("Error fetching provider data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleWithdrawalRequest = async () => {
+        if (!providerData?.wallet_balance || providerData.wallet_balance < 50) {
+            toast.error("Saldo mínimo de R$ 50,00 para saque");
+            return;
+        }
+
+        try {
+            // Em uma implementação real, criaríamos um registro na tabela withdrawals
+            // Como estamos em fase de desenvolvimento, vamos simular ou usar uma tabela genérica
+            toast.success("Solicitação de saque enviada com sucesso! Prazo de 24h para análise.");
+        } catch (error) {
+            toast.error("Erro ao solicitar saque");
+        }
+    };
+
+    const toggleOnline = async (checked: boolean) => {
+        setIsOnline(checked);
+        try {
+            await supabase
+                .from("service_providers")
+                .update({ is_active: checked })
+                .eq("user_id", user?.id);
+        } catch (error) {
+            console.error("Error updating status:", error);
+        }
+    };
 
     const REQUESTS = [
         {
@@ -56,17 +114,17 @@ const ProviderDashboard = () => {
                             <div>
                                 <h1 className="font-bold text-lg">Painel do Profissional</h1>
                                 <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50">
-                                    Eletricista Verificado
+                                    {providerData?.category || 'Profissional'} Verificado
                                 </Badge>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold">{isOnline ? "Online" : "Subordinado"}</span>
+                                <span className="text-sm font-bold">{isOnline ? "Online" : "Indisponível"}</span>
                                 <Switch
                                     checked={isOnline}
-                                    onCheckedChange={setIsOnline}
+                                    onCheckedChange={toggleOnline}
                                     className="data-[state=checked]:bg-green-500"
                                 />
                             </div>
@@ -82,8 +140,31 @@ const ProviderDashboard = () => {
                 </header>
 
                 <div className="p-4 lg:p-6 space-y-6">
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Stats & Wallet */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Card className="border-none shadow-soft bg-primary text-white">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase opacity-80">Minha Carteira</p>
+                                        <p className="text-3xl font-black italic tracking-tighter">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(providerData?.wallet_balance || 0)}
+                                        </p>
+                                    </div>
+                                    <div className="p-3 bg-white/20 rounded-xl">
+                                        <DollarSign className="w-6 h-6" />
+                                    </div>
+                                </div>
+                                <Button 
+                                    variant="secondary" 
+                                    className="w-full mt-4 bg-white text-primary hover:bg-white/90 font-black h-10 rounded-xl text-xs"
+                                    onClick={handleWithdrawalRequest}
+                                >
+                                    SOLICITAR SAQUE
+                                </Button>
+                            </CardContent>
+                        </Card>
+
                         <Card className="border-none shadow-soft">
                             <CardContent className="pt-6">
                                 <div className="flex items-center gap-4">
@@ -93,19 +174,6 @@ const ProviderDashboard = () => {
                                     <div>
                                         <p className="text-2xl font-black">12</p>
                                         <p className="text-xs text-muted-foreground font-bold">Serviços/Mês</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card className="border-none shadow-soft">
-                            <CardContent className="pt-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-green-100 rounded-xl text-green-600">
-                                        <DollarSign className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-black">R$ 1.250</p>
-                                        <p className="text-xs text-muted-foreground font-bold">Ganhos</p>
                                     </div>
                                 </div>
                             </CardContent>

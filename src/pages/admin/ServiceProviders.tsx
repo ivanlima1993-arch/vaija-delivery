@@ -41,6 +41,9 @@ import {
     User,
     Star,
     MapPin,
+    FileText,
+    Calendar,
+    Home
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -80,10 +83,18 @@ const AdminServiceProviders = () => {
         phone: "",
         category: "",
         description: "",
+        address: "",
+        cpf: "",
+        birth_date: "",
+        city_id: "",
         image_url: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=400&fit=crop",
         rating: 5.0,
         is_active: true,
+        wallet_balance: 0
     });
+
+    const [selectedProvider, setSelectedProvider] = useState<any>(null);
+    const [cities, setCities] = useState<any[]>([]);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -100,8 +111,17 @@ const AdminServiceProviders = () => {
         if (user && isAdmin) {
             fetchProviders();
             fetchPendingEstablishments();
+            fetchCities();
         }
     }, [user, authLoading, isAdmin, navigate]);
+
+    const fetchCities = async () => {
+        const { data } = await supabase
+            .from("cities")
+            .select("*")
+            .eq("is_active", true);
+        setCities(data || []);
+    };
 
     const fetchPendingEstablishments = async () => {
         const { count } = await supabase
@@ -152,6 +172,22 @@ const AdminServiceProviders = () => {
         }
     };
 
+    const handleUpdateBalance = async (id: string, newBalance: number) => {
+        try {
+            const { error } = await supabase
+                .from("service_providers")
+                .update({ wallet_balance: newBalance })
+                .eq("id", id);
+            
+            if (error) throw error;
+            
+            setProviders(providers.map(p => p.id === id ? { ...p, wallet_balance: newBalance } : p));
+            toast.success("Saldo atualizado");
+        } catch (error) {
+            toast.error("Erro ao atualizar saldo");
+        }
+    };
+
     const handleAddProvider = async () => {
         if (!formData.name || !formData.phone || !formData.category) {
             toast.error("Preencha os campos obrigatórios");
@@ -192,9 +228,14 @@ const AdminServiceProviders = () => {
                 phone: "",
                 category: "",
                 description: "",
+                address: "",
+                cpf: "",
+                birth_date: "",
+                city_id: "",
                 image_url: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=400&fit=crop",
                 rating: 5.0,
                 is_active: true,
+                wallet_balance: 0
             });
         } catch (error: any) {
             toast.error("Erro ao adicionar profissional: " + error.message);
@@ -303,7 +344,8 @@ const AdminServiceProviders = () => {
                                             <TableHead>Profissional</TableHead>
                                             <TableHead>Categoria</TableHead>
                                             <TableHead>Telefone</TableHead>
-                                            <TableHead>Avaliação</TableHead>
+                                            <TableHead>Cidade</TableHead>
+                                            <TableHead>Saldo</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">Ações</TableHead>
                                         </TableRow>
@@ -331,19 +373,28 @@ const AdminServiceProviders = () => {
                                                             {pro.category}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell>{pro.phone}</TableCell>
+                                                     <TableCell>{pro.phone}</TableCell>
                                                     <TableCell>
-                                                        <div className="flex items-center gap-1">
-                                                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                                            <span className="font-bold">{pro.rating}</span>
-                                                        </div>
+                                                        {cities.find(c => c.id === pro.city_id)?.name || "N/A"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="font-bold text-primary">
+                                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pro.wallet_balance || 0)}
+                                                        </span>
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge variant={pro.is_active ? "default" : "secondary"}>
                                                             {pro.is_active ? "Ativo" : "Inativo"}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell className="text-right">
+                                                    <TableCell className="text-right flex items-center justify-end gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => setSelectedProvider(pro)}
+                                                        >
+                                                            Detalhes
+                                                        </Button>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -417,11 +468,148 @@ const AdminServiceProviders = () => {
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             />
                         </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="cpf">CPF</Label>
+                                <Input
+                                    id="cpf"
+                                    placeholder="000.000.000-00"
+                                    value={formData.cpf}
+                                    onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="birth">Data Nasc.</Label>
+                                <Input
+                                    id="birth"
+                                    type="date"
+                                    value={formData.birth_date}
+                                    onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="address">Endereço Completo</Label>
+                            <Input
+                                id="address"
+                                placeholder="Rua, Número, Bairro..."
+                                value={formData.address}
+                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Cidade de Atuação</Label>
+                            <Select value={formData.city_id} onValueChange={(v) => setFormData({ ...formData, city_id: v })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione a cidade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {cities.map(city => (
+                                        <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsAddMode(false)}>Cancelar</Button>
                         <Button onClick={handleAddProvider}>Salvar Profissional</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Details Dialog */}
+            <Dialog open={!!selectedProvider} onOpenChange={() => setSelectedProvider(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Detalhes do Profissional</DialogTitle>
+                    </DialogHeader>
+
+                    {selectedProvider && (
+                        <div className="grid gap-6 py-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary">
+                                    <img 
+                                        src={selectedProvider.image_url} 
+                                        alt={selectedProvider.name} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black">{selectedProvider.name || selectedProvider.full_name}</h2>
+                                    <Badge variant="outline" className="text-primary border-primary">
+                                        {selectedProvider.category}
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                                        <FileText className="w-3 h-3" /> CPF
+                                    </Label>
+                                    <p className="font-bold">{selectedProvider.cpf || "Não informado"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" /> Data de Nascimento
+                                    </Label>
+                                    <p className="font-bold">
+                                        {selectedProvider.birth_date ? new Date(selectedProvider.birth_date).toLocaleDateString('pt-BR') : "Não informada"}
+                                    </p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                                        <Home className="w-3 h-3" /> Endereço
+                                    </Label>
+                                    <p className="font-bold">{selectedProvider.address || "Não informado"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" /> Cidade
+                                    </Label>
+                                    <p className="font-bold">
+                                        {cities.find(c => c.id === selectedProvider.city_id)?.name || "Não definida"}
+                                    </p>
+                                </div>
+                                <div className="space-y-1 col-span-2 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                    <Label className="text-xs text-primary uppercase flex items-center gap-1 font-black">
+                                        <DollarSign className="w-3 h-3" /> Saldo da Carteira
+                                    </Label>
+                                    <div className="flex items-center justify-between gap-4 mt-2">
+                                        <p className="text-2xl font-black text-primary">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedProvider.wallet_balance || 0)}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Input 
+                                                type="number" 
+                                                className="w-24 h-8"
+                                                placeholder="Novo"
+                                                id="new-balance-input"
+                                            />
+                                            <Button 
+                                                size="sm" 
+                                                className="h-8"
+                                                onClick={() => {
+                                                    const input = document.getElementById('new-balance-input') as HTMLInputElement;
+                                                    if (input.value) {
+                                                        handleUpdateBalance(selectedProvider.id, parseFloat(input.value));
+                                                        setSelectedProvider({ ...selectedProvider, wallet_balance: parseFloat(input.value) });
+                                                    }
+                                                }}
+                                            >
+                                                Ajustar
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button onClick={() => setSelectedProvider(null)}>Fechar</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

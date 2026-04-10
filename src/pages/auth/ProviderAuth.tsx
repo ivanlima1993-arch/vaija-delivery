@@ -61,12 +61,27 @@ const ProviderAuth = () => {
         category: "",
         description: "",
         email: "",
+        cpf: "",
+        birth_date: "",
+        address: "",
+        city_id: "",
+        image_url: "",
     });
+
+    const [cities, setCities] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchCities = async () => {
+            const { data } = await supabase.from("cities").select("*").eq("is_active", true);
+            if (data) setCities(data);
+        };
+        fetchCities();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!formData.name || !formData.phone || !formData.category) {
+        if (!formData.name || !formData.phone || !formData.category || !formData.cpf || !formData.birth_date || !formData.address || !formData.city_id) {
             toast.error("Preencha todos os campos obrigatórios");
             return;
         }
@@ -84,6 +99,11 @@ const ProviderAuth = () => {
                     category: formData.category,
                     description: formData.description,
                     email: formData.email,
+                    cpf: formData.cpf,
+                    birth_date: formData.birth_date,
+                    address: formData.address,
+                    city_id: formData.city_id,
+                    image_url: formData.image_url,
                     is_active: false // Começa como inativo para aprovação do admin
                 }]);
 
@@ -177,12 +197,26 @@ const ProviderAuth = () => {
                     <form onSubmit={handleSubmit} className="bg-card p-6 md:p-8 rounded-[2rem] shadow-soft border border-border/50 space-y-6">
                         <div className="space-y-4">
                             <div className="grid gap-2">
+                                <Label htmlFor="image_url" className="font-bold flex items-center gap-2">
+                                    Link da sua Foto (Perfil)
+                                </Label>
+                                <Input 
+                                    id="image_url"
+                                    placeholder="Cole o link da sua foto profissional"
+                                    className="h-12 rounded-xl"
+                                    value={formData.image_url}
+                                    onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
                                 <Label htmlFor="name" className="font-bold flex items-center gap-2">
                                     <User className="w-4 h-4 text-primary" /> Nome Completo
                                 </Label>
                                 <Input 
                                     id="name"
-                                    placeholder="Como quer ser chamado?"
+                                    placeholder="Ex: João Silva"
                                     className="h-12 rounded-xl"
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -192,12 +226,37 @@ const ProviderAuth = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
+                                    <Label htmlFor="cpf" className="font-bold">CPF</Label>
+                                    <Input 
+                                        id="cpf"
+                                        placeholder="000.000.000-00"
+                                        className="h-12 rounded-xl"
+                                        value={formData.cpf}
+                                        onChange={(e) => setFormData({...formData, cpf: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="birth_date" className="font-bold">Data de Nascimento</Label>
+                                    <Input 
+                                        id="birth_date"
+                                        type="date"
+                                        className="h-12 rounded-xl"
+                                        value={formData.birth_date}
+                                        onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
                                     <Label htmlFor="phone" className="font-bold flex items-center gap-2">
                                         <Phone className="w-4 h-4 text-primary" /> WhatsApp
                                     </Label>
                                     <Input 
                                         id="phone"
-                                        placeholder="(00) 00000-0000"
+                                        placeholder="(79) 99999-9999"
                                         className="h-12 rounded-xl"
                                         value={formData.phone}
                                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
@@ -221,6 +280,36 @@ const ProviderAuth = () => {
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="city" className="font-bold">Cidade onde vai atuar</Label>
+                                    <Select 
+                                        value={formData.city_id}
+                                        onValueChange={(v) => setFormData({...formData, city_id: v})}
+                                    >
+                                        <SelectTrigger className="h-12 rounded-xl">
+                                            <SelectValue placeholder="Selecione a cidade" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {cities.map(city => (
+                                                <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="address" className="font-bold">Endereço Completo</Label>
+                                    <Input 
+                                        id="address"
+                                        placeholder="Rua, Número, Bairro"
+                                        className="h-12 rounded-xl"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                        required
+                                    />
                                 </div>
                             </div>
 
