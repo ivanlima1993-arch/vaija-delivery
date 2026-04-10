@@ -63,6 +63,7 @@ import Cart from "./pages/Cart";
 import Wallet from "./pages/Wallet";
 import Services from "./pages/Services";
 import ProviderDashboard from "./pages/provider/Dashboard";
+import ProviderAuth from "./pages/auth/ProviderAuth";
 
 const queryClient = new QueryClient();
 
@@ -147,6 +148,7 @@ const App = () => {
                 <Route path="/pedido/:orderId" element={<OrderTracking />} />
                 <Route path="/servicos" element={<Services />} />
                 <Route path="/profissional" element={<ProviderDashboard />} />
+                <Route path="/profissional/auth" element={<ProviderAuth />} />
                 <Route path="/instalar" element={<Install />} />
                 <Route path="/termos-de-uso" element={<TermsOfUse />} />
                 <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
