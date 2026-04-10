@@ -161,7 +161,11 @@ const AdminServiceProviders = () => {
         try {
             const { data, error } = await supabase
                 .from("service_providers" as any)
-                .insert([formData])
+                .insert([{
+                    ...formData,
+                    id: crypto.randomUUID(),
+                    full_name: formData.name // Adiciona suporte para a coluna full_name
+                }])
                 .select();
 
             if (error) {
@@ -319,7 +323,7 @@ const AdminServiceProviders = () => {
                                                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                                                                 <User className="w-5 h-5 text-primary" />
                                                             </div>
-                                                            <span className="font-bold">{pro.name}</span>
+                                                            <span className="font-bold">{pro.name || pro.full_name}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
