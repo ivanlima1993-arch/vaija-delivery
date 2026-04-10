@@ -9,6 +9,7 @@ import {
     Briefcase, 
     FileText, 
     CheckCircle2,
+    Sparkles,
     HardHat,
     Hammer,
     Paintbrush,
