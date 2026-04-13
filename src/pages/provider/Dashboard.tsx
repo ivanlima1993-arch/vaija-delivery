@@ -10,7 +10,14 @@ import {
     DollarSign,
     Menu,
     Bell,
-    Volume2
+    Volume2,
+    ShieldCheck,
+    AlertCircle,
+    History,
+    Settings,
+    User,
+    LogOut,
+    Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,16 +95,15 @@ const ProviderDashboard = () => {
             price: "R$ 80,00",
             status: "pending",
         },
-        {
-            id: "2",
-            customer: "Maria Souza",
-            service: "Reparo em Tomada",
-            address: "Av. Principal, 444",
-            time: "Agendado para 14:00",
-            price: "R$ 60,00",
-            status: "accepted",
-        },
     ];
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background flex">
@@ -111,10 +117,18 @@ const ProviderDashboard = () => {
                                 <Menu className="w-5 h-5" />
                             </Button>
                             <div>
-                                <h1 className="font-bold text-lg">Painel do Profissional</h1>
-                                <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50">
-                                    {providerData?.category || 'Profissional'} Verificado
-                                </Badge>
+                                <h1 className="font-bold text-lg">Olá, {providerData?.name?.split(' ')[0]}!</h1>
+                                <div className="flex items-center gap-2">
+                                    {providerData?.is_active ? (
+                                        <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50 gap-1 px-1">
+                                            <ShieldCheck className="w-3 h-3" /> Perfil Verificado
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-amber-600 border-amber-600 bg-amber-50 gap-1 px-1">
+                                            <AlertCircle className="w-3 h-3" /> Aguardando Aprovação
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -139,40 +153,86 @@ const ProviderDashboard = () => {
                 </header>
 
                 <div className="p-4 lg:p-6 space-y-6">
+                    {!providerData?.is_active && (
+                        <Card className="border-none bg-amber-500/10 border-amber-500/20 text-amber-700">
+                            <CardContent className="p-4 flex gap-4 items-center">
+                                <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white shrink-0">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="font-black uppercase text-xs">Atenção ao seu Perfil</p>
+                                    <p className="text-sm font-medium">Seu cadastro está em análise. Você ainda não pode receber novos pedidos, mas pode configurar seu perfil.</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Stats & Wallet */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card className="border-none shadow-soft bg-primary text-white">
-                            <CardContent className="pt-6">
-                                <div className="flex items-center justify-between">
+                        <Card className="border-none shadow-soft bg-gradient-to-br from-primary to-primary-foreground text-white relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-500">
+                                <DollarSign className="w-24 h-24" />
+                            </div>
+                            <CardContent className="pt-6 relative">
+                                <div className="flex flex-col h-full justify-between">
                                     <div>
-                                        <p className="text-xs font-bold uppercase opacity-80">Minha Carteira</p>
-                                        <p className="text-3xl font-black italic tracking-tighter">
+                                        <p className="text-xs font-bold uppercase opacity-80 mb-1">Ganhos Disponíveis</p>
+                                        <p className="text-4xl font-black italic tracking-tighter">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(providerData?.wallet_balance || 0)}
                                         </p>
                                     </div>
-                                    <div className="p-3 bg-white/20 rounded-xl">
-                                        <DollarSign className="w-6 h-6" />
-                                    </div>
+                                    <Button 
+                                        variant="secondary" 
+                                        className="w-full mt-6 bg-white text-primary hover:bg-white/90 font-black h-12 rounded-2xl text-sm shadow-xl"
+                                        onClick={handleWithdrawalRequest}
+                                        disabled={!providerData?.is_active}
+                                    >
+                                        SOLICITAR SAQUE
+                                    </Button>
                                 </div>
-                                <Button 
-                                    variant="secondary" 
-                                    className="w-full mt-4 bg-white text-primary hover:bg-white/90 font-black h-10 rounded-xl text-xs"
-                                    onClick={handleWithdrawalRequest}
-                                >
-                                    SOLICITAR SAQUE
-                                </Button>
                             </CardContent>
                         </Card>
 
-                        <Card className="border-none shadow-soft">
-                            <CardContent className="pt-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
-                                        <Briefcase className="w-6 h-6" />
+                        <div className="grid grid-cols-2 gap-4 col-span-1 md:col-span-1 lg:col-span-2">
+                             <Card className="border-none shadow-soft hover:shadow-lg transition-shadow">
+                                <CardContent className="pt-6">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                                            <Briefcase className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-2xl font-black italic">0</p>
+                                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Serviços Hoje</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-2xl font-black">12</p>
-                                        <p className="text-xs text-muted-foreground font-bold">Serviços/Mês</p>
+                                </CardContent>
+                            </Card>
+                             <Card className="border-none shadow-soft hover:shadow-lg transition-shadow">
+                                <CardContent className="pt-6 text-primary">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                            <Star className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-2xl font-black italic">5.0</p>
+                                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Avaliação</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <Card className="border-none shadow-soft bg-card lg:col-span-1">
+                            <CardContent className="pt-6">
+                                <div className="space-y-4">
+                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Ações Rápidas</p>
+                                    <div className="space-y-2">
+                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-10 rounded-xl gap-2">
+                                            <History className="w-4 h-4 text-primary" /> Histórico
+                                        </Button>
+                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-10 rounded-xl gap-2">
+                                            <Settings className="w-4 h-4 text-primary" /> Configurações
+                                        </Button>
                                     </div>
                                 </div>
                             </CardContent>
@@ -180,7 +240,7 @@ const ProviderDashboard = () => {
                     </div>
 
                     {/* Service Requests */}
-                    <section className="space-y-4">
+                    <section className="space-y-4 pt-4">
                         <h2 className="text-xl font-black italic uppercase tracking-tight flex items-center gap-2">
                             <Clock className="w-6 h-6 text-primary" />
                             Solicitações Recentes

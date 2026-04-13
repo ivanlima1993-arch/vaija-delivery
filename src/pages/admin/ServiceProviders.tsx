@@ -44,7 +44,11 @@ import {
     FileText,
     Calendar,
     Home,
-    DollarSign
+    DollarSign,
+    CheckCircle,
+    XCircle,
+    Check,
+    X
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -170,6 +174,22 @@ const AdminServiceProviders = () => {
             console.error("Error fetching providers:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+        try {
+            const { error } = await supabase
+                .from("service_providers")
+                .update({ is_active: !currentStatus })
+                .eq("id", id);
+            
+            if (error) throw error;
+            
+            setProviders(providers.map(p => p.id === id ? { ...p, is_active: !currentStatus } : p));
+            toast.success(currentStatus ? "Profissional desativado" : "Profissional aprovado com sucesso!");
+        } catch (error) {
+            toast.error("Erro ao atualizar status do profissional");
         }
     };
 
@@ -384,11 +404,22 @@ const AdminServiceProviders = () => {
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant={pro.is_active ? "default" : "secondary"}>
-                                                            {pro.is_active ? "Ativo" : "Inativo"}
+                                                        <Badge variant={pro.is_active ? "default" : "secondary"} className={pro.is_active ? "bg-green-500 text-white" : "bg-yellow-500 text-white"}>
+                                                            {pro.is_active ? "Ativo" : "Pendente"}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right flex items-center justify-end gap-2">
+                                                        {!pro.is_active && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="text-green-600 hover:bg-green-50"
+                                                                onClick={() => handleToggleStatus(pro.id, false)}
+                                                                title="Aprovar"
+                                                            >
+                                                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                                            </Button>
+                                                        )}
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
@@ -609,8 +640,32 @@ const AdminServiceProviders = () => {
                         </div>
                     )}
 
-                    <DialogFooter>
-                        <Button onClick={() => setSelectedProvider(null)}>Fechar</Button>
+                    <DialogFooter className="flex justify-between items-center sm:justify-between w-full">
+                        <div className="flex gap-2">
+                            {selectedProvider && !selectedProvider.is_active ? (
+                                <Button 
+                                    className="bg-green-600 hover:bg-green-700"
+                                    onClick={() => {
+                                        handleToggleStatus(selectedProvider.id, false);
+                                        setSelectedProvider(null);
+                                    }}
+                                >
+                                    <Check className="w-4 h-4 mr-2" /> Aprovar Cadastro
+                                </Button>
+                            ) : (
+                                <Button 
+                                    variant="outline"
+                                    className="text-destructive border-destructive hover:bg-destructive/10"
+                                    onClick={() => {
+                                        handleToggleStatus(selectedProvider.id, true);
+                                        setSelectedProvider(null);
+                                    }}
+                                >
+                                    <X className="w-4 h-4 mr-2" /> Desativar Perfil
+                                </Button>
+                            )}
+                        </div>
+                        <Button variant="secondary" onClick={() => setSelectedProvider(null)}>Fechar</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
