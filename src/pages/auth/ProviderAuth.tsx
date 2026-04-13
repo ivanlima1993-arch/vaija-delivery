@@ -293,16 +293,16 @@ const ProviderAuth = () => {
                     </div>
 
                     {/* Auth Mode Toggle */}
-                    <div className="flex bg-card p-1 rounded-2xl border border-border/50 max-w-sm mx-auto">
+                    <div className="flex bg-card p-1.5 rounded-2xl border border-border/50 max-w-sm mx-auto shadow-inner">
                         <button
                             onClick={() => setAuthMode("login")}
-                            className={`flex-1 py-3 rounded-xl font-bold transition-all ${authMode === "login" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-muted"}`}
+                            className={`flex-1 py-3.5 rounded-xl font-black transition-all duration-300 ${authMode === "login" ? "bg-primary text-white shadow-[0_8px_16px_-4px_rgba(234,30,37,0.3)]" : "text-muted-foreground hover:bg-muted/50"}`}
                         >
                             LOGIN
                         </button>
                         <button
                             onClick={() => setAuthMode("register")}
-                            className={`flex-1 py-3 rounded-xl font-bold transition-all ${authMode === "register" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-muted"}`}
+                            className={`flex-1 py-3.5 rounded-xl font-black transition-all duration-300 ${authMode === "register" ? "bg-primary text-white shadow-[0_8px_16px_-4px_rgba(234,30,37,0.3)]" : "text-muted-foreground hover:bg-muted/50"}`}
                         >
                             CADASTRO
                         </button>
@@ -561,15 +561,15 @@ const ProviderAuth = () => {
 
                         <Button 
                             type="submit" 
-                            className="w-full bg-primary hover:bg-primary/90 text-white font-black h-16 rounded-2xl text-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                            className="w-full bg-primary hover:bg-primary/90 text-white font-black h-16 rounded-[1.5rem] text-xl shadow-[0_12px_24px_-8px_rgba(234,30,37,0.4)] transition-all active:scale-[0.98]"
                             disabled={loading || uploading}
                         >
                             {loading ? (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                     <Loader2 className="w-6 h-6 animate-spin" />
                                     <span>{authMode === "login" ? "ENTRANDO..." : "ENVIANDO..."}</span>
                                 </div>
-                            ) : (authMode === "login" ? "ENTRAR" : "CADASTRAR E COMEÇAR")}
+                            ) : (authMode === "login" ? "ENTRAR AGORA" : "CADASTRAR E COMEÇAR")}
                         </Button>
 
                         <p className="text-center text-xs text-muted-foreground font-medium">

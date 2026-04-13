@@ -227,11 +227,11 @@ const ProviderDashboard = () => {
                                 <div className="space-y-4">
                                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Ações Rápidas</p>
                                     <div className="space-y-2">
-                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-10 rounded-xl gap-2">
-                                            <History className="w-4 h-4 text-primary" /> Histórico
+                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98">
+                                            <History className="w-5 h-5" /> Histórico de Ganhos
                                         </Button>
-                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-10 rounded-xl gap-2">
-                                            <Settings className="w-4 h-4 text-primary" /> Configurações
+                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98">
+                                            <Settings className="w-5 h-5" /> Configurações Gerais
                                         </Button>
                                     </div>
                                 </div>
@@ -292,20 +292,20 @@ const ProviderDashboard = () => {
                                             <div className="p-4 flex gap-3">
                                                 {req.status === 'pending' ? (
                                                     <>
-                                                        <Button className="flex-1 bg-primary hover:bg-primary/90 font-black h-12 rounded-xl">
+                                                        <Button className="flex-1 bg-primary hover:bg-primary/90 font-black h-14 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-white">
                                                             ACEITAR SERVIÇO
                                                         </Button>
-                                                        <Button variant="outline" className="w-12 h-12 rounded-xl border-accent-foreground/10">
-                                                            <XCircle className="w-6 h-6 text-destructive" />
+                                                        <Button variant="outline" className="w-14 h-14 rounded-2xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 group">
+                                                            <XCircle className="w-7 h-7 text-destructive transition-transform group-hover:scale-110" />
                                                         </Button>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Button className="flex-1 bg-green-600 hover:bg-green-700 font-black h-12 rounded-xl">
+                                                        <Button className="flex-1 bg-green-600 hover:bg-green-700 font-black h-14 rounded-2xl shadow-lg shadow-green-600/20 transition-all active:scale-95 text-white">
                                                             CONCLUIR SERVIÇO
                                                         </Button>
-                                                        <Button variant="secondary" className="w-12 h-12 rounded-xl">
-                                                            <MessageSquare className="w-6 h-6" />
+                                                        <Button variant="secondary" className="w-14 h-14 rounded-2xl hover:bg-primary/10 hover:text-primary transition-all active:scale-95">
+                                                            <MessageSquare className="w-7 h-7" />
                                                         </Button>
                                                     </>
                                                 )}

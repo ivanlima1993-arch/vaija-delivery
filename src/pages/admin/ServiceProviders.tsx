@@ -407,22 +407,21 @@ const AdminServiceProviders = () => {
                                                         <Badge variant={pro.is_active ? "default" : "secondary"} className={pro.is_active ? "bg-green-500 text-white" : "bg-yellow-500 text-white"}>
                                                             {pro.is_active ? "Ativo" : "Pendente"}
                                                         </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right flex items-center justify-end gap-2">
+                                                                                                    <TableCell className="text-right flex items-center justify-end gap-2">
                                                         {!pro.is_active && (
                                                             <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="text-green-600 hover:bg-green-50"
+                                                                variant="default"
+                                                                size="sm"
+                                                                className="bg-green-600 hover:bg-green-700 text-white font-bold h-9 rounded-lg shadow-sm px-3"
                                                                 onClick={() => handleToggleStatus(pro.id, false)}
-                                                                title="Aprovar"
                                                             >
-                                                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                                                <CheckCircle className="w-4 h-4 mr-1.5" /> Aprovar
                                                             </Button>
                                                         )}
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
+                                                            className="font-bold h-9 rounded-lg border-primary/20 hover:bg-primary/5 transition-all active:scale-95"
                                                             onClick={() => setSelectedProvider(pro)}
                                                         >
                                                             Detalhes
@@ -430,12 +429,12 @@ const AdminServiceProviders = () => {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="text-destructive hover:bg-destructive/10"
+                                                            className="text-destructive hover:bg-destructive/10 h-9 w-9 rounded-lg"
                                                             onClick={() => handleDeleteProvider(pro.id)}
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </Button>
-                                                    </TableCell>
+                                                     </TableCell>       </TableCell>
                                                 </TableRow>
                                             ))
                                         )}
@@ -640,11 +639,11 @@ const AdminServiceProviders = () => {
                         </div>
                     )}
 
-                    <DialogFooter className="flex justify-between items-center sm:justify-between w-full">
+                    <DialogFooter className="flex justify-between items-center sm:justify-between w-full pt-6 border-t border-border/50">
                         <div className="flex gap-2">
                             {selectedProvider && !selectedProvider.is_active ? (
                                 <Button 
-                                    className="bg-green-600 hover:bg-green-700"
+                                    className="bg-green-600 hover:bg-green-700 font-bold px-6 h-11 rounded-xl shadow-lg shadow-green-600/20"
                                     onClick={() => {
                                         handleToggleStatus(selectedProvider.id, false);
                                         setSelectedProvider(null);
@@ -655,7 +654,7 @@ const AdminServiceProviders = () => {
                             ) : (
                                 <Button 
                                     variant="outline"
-                                    className="text-destructive border-destructive hover:bg-destructive/10"
+                                    className="text-destructive border-destructive/20 hover:bg-destructive/5 font-bold px-6 h-11 rounded-xl"
                                     onClick={() => {
                                         handleToggleStatus(selectedProvider.id, true);
                                         setSelectedProvider(null);
@@ -665,7 +664,7 @@ const AdminServiceProviders = () => {
                                 </Button>
                             )}
                         </div>
-                        <Button variant="secondary" onClick={() => setSelectedProvider(null)}>Fechar</Button>
+                        <Button variant="secondary" className="font-bold h-11 px-6 rounded-xl" onClick={() => setSelectedProvider(null)}>Fechar</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
