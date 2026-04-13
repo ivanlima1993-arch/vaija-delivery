@@ -23,6 +23,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle, 
+    DialogDescription,
+    DialogFooter 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,6 +43,9 @@ const ProviderDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [providerData, setProviderData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isDepositOpen, setIsDepositOpen] = useState(false);
+    const [depositValue, setDepositValue] = useState("");
+    const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -65,15 +78,72 @@ const ProviderDashboard = () => {
         }
 
         try {
-            // Em uma implementação real, criaríamos um registro na tabela withdrawals
-            // Como estamos em fase de desenvolvimento, vamos simular ou usar uma tabela genérica
             toast.success("Solicitação de saque enviada com sucesso! Prazo de 24h para análise.");
         } catch (error) {
             toast.error("Erro ao solicitar saque");
         }
     };
 
+    const handleDeposit = async () => {
+        const value = parseFloat(depositValue);
+        if (isNaN(value) || value <= 0) {
+            toast.error("Informe um valor válido");
+            return;
+        }
+
+        setProcessing(true);
+        try {
+            const newBalance = (providerData?.wallet_balance || 0) + value;
+            const { error } = await supabase
+                .from("service_providers")
+                .update({ wallet_balance: newBalance })
+                .eq("user_id", user?.id);
+
+            if (error) throw error;
+
+            setProviderData({ ...providerData, wallet_balance: newBalance });
+            toast.success(`Crédito de R$ ${value.toFixed(2)} adicionado com sucesso!`);
+            setIsDepositOpen(false);
+            setDepositValue("");
+        } catch (error) {
+            toast.error("Erro ao processar depósito");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleAcceptService = async (requestId: string) => {
+        const CALL_FEE = 1.50;
+        
+        if ((providerData?.wallet_balance || 0) < CALL_FEE) {
+            toast.error("Saldo insuficiente para aceitar chamados. Recarregue sua carteira.");
+            setIsDepositOpen(true);
+            return;
+        }
+
+        try {
+            const newBalance = (providerData?.wallet_balance || 0) - CALL_FEE;
+            const { error } = await supabase
+                .from("service_providers")
+                .update({ wallet_balance: newBalance })
+                .eq("user_id", user?.id);
+
+            if (error) throw error;
+
+            setProviderData({ ...providerData, wallet_balance: newBalance });
+            toast.success(`Chamado aceito! Débito de R$ ${CALL_FEE.toFixed(2)} realizado.`);
+        } catch (error) {
+            toast.error("Erro ao processar aceitação do chamado");
+        }
+    };
+
     const toggleOnline = async (checked: boolean) => {
+        if (checked && (providerData?.wallet_balance || 0) < 5.00) {
+            toast.error("Saldo mínimo de R$ 5,00 necessário para ficar Online");
+            setIsOnline(false);
+            return;
+        }
+
         setIsOnline(checked);
         try {
             await supabase
@@ -153,7 +223,7 @@ const ProviderDashboard = () => {
                 </header>
 
                 <div className="p-4 lg:p-6 space-y-6">
-                    {!providerData?.is_active && (
+                    {!providerData?.is_active && providerData?.wallet_balance >= 5 && (
                         <Card className="border-none bg-amber-500/10 border-amber-500/20 text-amber-700">
                             <CardContent className="p-4 flex gap-4 items-center">
                                 <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white shrink-0">
@@ -163,6 +233,27 @@ const ProviderDashboard = () => {
                                     <p className="font-black uppercase text-xs">Atenção ao seu Perfil</p>
                                     <p className="text-sm font-medium">Seu cadastro está em análise. Você ainda não pode receber novos pedidos, mas pode configurar seu perfil.</p>
                                 </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {providerData?.wallet_balance < 5 && (
+                        <Card className="border-none bg-destructive/10 border-destructive/20 text-destructive">
+                            <CardContent className="p-4 flex gap-4 items-center">
+                                <div className="w-12 h-12 bg-destructive rounded-2xl flex items-center justify-center text-white shrink-0">
+                                    <DollarSign className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-1 flex-1">
+                                    <p className="font-black uppercase text-xs">Saldo Insuficiente</p>
+                                    <p className="text-sm font-medium">Você precisa de no mínimo R$ 5,00 para receber novos chamados.</p>
+                                </div>
+                                <Button 
+                                    size="sm" 
+                                    className="bg-destructive hover:bg-destructive/90 text-white font-bold rounded-xl"
+                                    onClick={() => setIsDepositOpen(true)}
+                                >
+                                    RECARREGAR
+                                </Button>
                             </CardContent>
                         </Card>
                     )}
@@ -181,14 +272,23 @@ const ProviderDashboard = () => {
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(providerData?.wallet_balance || 0)}
                                         </p>
                                     </div>
-                                    <Button 
-                                        variant="secondary" 
-                                        className="w-full mt-6 bg-white text-primary hover:bg-white/90 font-black h-12 rounded-2xl text-sm shadow-xl"
-                                        onClick={handleWithdrawalRequest}
-                                        disabled={!providerData?.is_active}
-                                    >
-                                        SOLICITAR SAQUE
-                                    </Button>
+                                    <div className="flex gap-2 mt-6">
+                                        <Button 
+                                            variant="secondary" 
+                                            className="flex-1 bg-white text-primary hover:bg-white/90 font-black h-12 rounded-2xl text-sm shadow-xl"
+                                            onClick={() => setIsDepositOpen(true)}
+                                        >
+                                            ADICIONAR SALDO
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="flex-1 bg-transparent border-white/30 text-white hover:bg-white/10 font-black h-12 rounded-2xl text-sm"
+                                            onClick={handleWithdrawalRequest}
+                                            disabled={!providerData?.is_active}
+                                        >
+                                            SAQUE
+                                        </Button>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -292,7 +392,10 @@ const ProviderDashboard = () => {
                                             <div className="p-4 flex gap-3">
                                                 {req.status === 'pending' ? (
                                                     <>
-                                                        <Button className="flex-1 bg-primary hover:bg-primary/90 font-black h-14 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-white">
+                                                        <Button 
+                                                            className="flex-1 bg-primary hover:bg-primary/90 font-black h-14 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-white"
+                                                            onClick={() => handleAcceptService(req.id)}
+                                                        >
                                                             ACEITAR SERVIÇO
                                                         </Button>
                                                         <Button variant="outline" className="w-14 h-14 rounded-2xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 group">
@@ -318,6 +421,55 @@ const ProviderDashboard = () => {
                     </section>
                 </div>
             </main>
+            {/* Deposit Dialog */}
+            <Dialog open={isDepositOpen} onOpenChange={setIsDepositOpen}>
+                <DialogContent className="rounded-3xl max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black italic uppercase">Recarregar Carteira</DialogTitle>
+                        <DialogDescription className="font-medium">
+                            Adicione créditos para receber chamados. 
+                            <span className="block text-primary font-bold mt-1">Regra: Cada chamado aceito debita R$ 1,50.</span>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-6 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="amount" className="font-bold">Valor do Depósito (R$)</Label>
+                            <Input
+                                id="amount"
+                                type="number"
+                                placeholder="0,00"
+                                className="h-14 rounded-2xl text-xl font-bold border-muted"
+                                value={depositValue}
+                                onChange={(e) => setDepositValue(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                            {[10, 20, 50].map((v) => (
+                                <Button 
+                                    key={v} 
+                                    variant="outline" 
+                                    className="h-12 rounded-xl font-black"
+                                    onClick={() => setDepositValue(v.toString())}
+                                >
+                                    + R$ {v}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button 
+                            className="w-full h-14 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20"
+                            onClick={handleDeposit}
+                            disabled={processing}
+                        >
+                            {processing ? "PROCESSANDO..." : "DEPOSITAR AGORA"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
