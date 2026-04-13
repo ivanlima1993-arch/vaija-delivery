@@ -16,7 +16,12 @@ import {
     Zap,
     Loader2,
     Lock,
-    Mail
+    Mail,
+    Droplets,
+    Sparkles,
+    Camera,
+    Upload,
+    X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
