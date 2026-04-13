@@ -14,7 +14,11 @@ import {
     Hammer,
     Paintbrush,
     Zap,
-    Droplets
+    Droplets,
+    Camera,
+    Upload,
+    X,
+    Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +73,9 @@ const ProviderAuth = () => {
     });
 
     const [cities, setCities] = useState<any[]>([]);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         const fetchCities = async () => {
@@ -78,17 +85,51 @@ const ProviderAuth = () => {
         fetchCities();
     }, []);
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!formData.name || !formData.phone || !formData.category || !formData.cpf || !formData.birth_date || !formData.address || !formData.city_id) {
-            toast.error("Preencha todos os campos obrigatórios");
+        if (!formData.name || !formData.phone || !formData.category || !formData.cpf || !formData.birth_date || !formData.address || !formData.city_id || (!imageFile && !formData.image_url)) {
+            toast.error("Preencha todos os campos obrigatórios, incluindo a foto de perfil");
             return;
         }
 
         setLoading(true);
 
         try {
+            let finalImageUrl = formData.image_url;
+
+            if (imageFile) {
+                setUploading(true);
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `provider-leads/${crypto.randomUUID()}.${fileExt}`;
+                
+                const { error: uploadError, data } = await supabase.storage
+                    .from('avatars')
+                    .upload(fileName, imageFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+                
+                finalImageUrl = publicUrl;
+                setUploading(false);
+            }
+
             const { error } = await supabase
                 .from("service_providers" as any)
                 .insert([{
@@ -103,7 +144,7 @@ const ProviderAuth = () => {
                     birth_date: formData.birth_date,
                     address: formData.address,
                     city_id: formData.city_id,
-                    image_url: formData.image_url,
+                    image_url: finalImageUrl,
                     is_active: false // Começa como inativo para aprovação do admin
                 }]);
 
@@ -196,18 +237,58 @@ const ProviderAuth = () => {
 
                     <form onSubmit={handleSubmit} className="bg-card p-6 md:p-8 rounded-[2rem] shadow-soft border border-border/50 space-y-6">
                         <div className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="image_url" className="font-bold flex items-center gap-2">
-                                    Link da sua Foto (Perfil)
+                            <div className="grid gap-4">
+                                <Label className="font-bold flex items-center gap-2">
+                                    <Camera className="w-4 h-4 text-primary" /> Foto do Perfil
                                 </Label>
-                                <Input 
-                                    id="image_url"
-                                    placeholder="Cole o link da sua foto profissional"
-                                    className="h-12 rounded-xl"
-                                    value={formData.image_url}
-                                    onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                                    required
-                                />
+                                
+                                <div className="flex flex-col items-center gap-4 p-6 border-2 border-dashed border-border rounded-[2rem] bg-muted/30 transition-all hover:bg-muted/50 hover:border-primary/50 relative overflow-hidden group">
+                                    {imagePreview ? (
+                                        <div className="relative w-32 h-32 md:w-40 md:h-40">
+                                            <img 
+                                                src={imagePreview} 
+                                                alt="Preview" 
+                                                className="w-full h-full object-cover rounded-full border-4 border-background shadow-xl"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={removeImage}
+                                                className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-2 shadow-lg hover:scale-110 transition-transform"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div 
+                                            className="text-center cursor-pointer py-4"
+                                            onClick={() => document.getElementById('photo-upload')?.click()}
+                                        >
+                                            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                                <Upload className="w-10 h-10 text-primary" />
+                                            </div>
+                                            <p className="text-sm font-bold text-foreground">Clique para enviar sua foto</p>
+                                            <p className="text-xs text-muted-foreground mt-1">PNG, JPG de até 5MB</p>
+                                        </div>
+                                    )}
+                                    
+                                    <input 
+                                        id="photo-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleImageChange}
+                                        required={!imageFile}
+                                    />
+
+                                    {uploading && (
+                                        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                                                <p className="text-xs font-black uppercase">Enviando foto...</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="grid gap-2">
@@ -342,9 +423,14 @@ const ProviderAuth = () => {
                         <Button 
                             type="submit" 
                             className="w-full bg-primary hover:bg-primary/90 text-white font-black h-16 rounded-2xl text-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
-                            disabled={loading}
+                            disabled={loading || uploading}
                         >
-                            {loading ? "BRASCANDO DADOS..." : "CADASTRAR E COMEÇAR"}
+                            {loading ? (
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="w-6 h-6 animate-spin" />
+                                    <span>ENVIANDO...</span>
+                                </div>
+                            ) : "CADASTRAR E COMEÇAR"}
                         </Button>
 
                         <p className="text-center text-xs text-muted-foreground font-medium">
