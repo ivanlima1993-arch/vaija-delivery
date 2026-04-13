@@ -43,7 +43,8 @@ import {
     MapPin,
     FileText,
     Calendar,
-    Home
+    Home,
+    DollarSign
 } from "lucide-react";
 
 const CATEGORIES = [
