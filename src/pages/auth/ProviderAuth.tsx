@@ -65,6 +65,8 @@ const ProviderAuth = () => {
     const [loginCpf, setLoginCpf] = useState("");
     const [loginPassword, setLoginPassword] = useState("");
 
+    const normalizeCpf = (cpf: string) => cpf.replace(/\D/g, "");
+
     const [formData, setFormData] = useState({
         name: "",
         phone: "",
@@ -169,7 +171,7 @@ const ProviderAuth = () => {
                         category: formData.category,
                         description: formData.description,
                         email: formData.email,
-                        cpf: formData.cpf,
+                        cpf: normalizeCpf(formData.cpf),
                         birth_date: formData.birth_date,
                         address: formData.address,
                         city_id: formData.city_id,
@@ -195,11 +197,11 @@ const ProviderAuth = () => {
         setLoading(true);
 
         try {
-            // 1. Find email by CPF
+            // 1. Find email by CPF (normalized)
             const { data: provider, error: fetchError } = await supabase
                 .from("service_providers")
                 .select("email, is_active")
-                .eq("cpf", loginCpf)
+                .eq("cpf", normalizeCpf(loginCpf))
                 .maybeSingle();
 
             if (fetchError) throw fetchError;
