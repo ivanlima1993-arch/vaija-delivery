@@ -9,6 +9,7 @@ interface AuthState {
   isEstablishment: boolean;
   isAdmin: boolean;
   isDriver: boolean;
+  isProvider: boolean;
   isDriverApproved: boolean;
   driverRejectionReason: string | null;
   driverRegistrationSubmittedAt: string | null;
@@ -23,6 +24,7 @@ export const useAuth = () => {
     isEstablishment: false,
     isAdmin: false,
     isDriver: false,
+    isProvider: false,
     isDriverApproved: false,
     driverRejectionReason: null,
     driverRegistrationSubmittedAt: null,
@@ -51,6 +53,7 @@ export const useAuth = () => {
           isEstablishment: roles?.some((r) => r.role === "establishment") ?? false,
           isAdmin: roles?.some((r) => r.role === "admin") ?? false,
           isDriver: roles?.some((r) => r.role === "driver") ?? false,
+          isProvider: roles?.some((r) => r.role === "provider") ?? false,
           isDriverApproved: profile?.is_driver_approved ?? false,
           driverRejectionReason: profile?.driver_rejection_reason ?? null,
           driverRegistrationSubmittedAt: profile?.driver_registration_submitted_at ?? null,
