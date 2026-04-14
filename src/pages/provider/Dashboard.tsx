@@ -136,8 +136,17 @@ const ProviderDashboard = () => {
 
         setProcessing(true);
         try {
-            const { data, error } = await supabase.functions.invoke('asaas-payment', {
-                body: {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const { data: sessionData } = await supabase.auth.getSession();
+            const token = sessionData?.session?.access_token;
+            
+            const response = await fetch(`${supabaseUrl}/functions/v1/asaas-payment`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
                     action: "create_recharge",
                     amount: value,
                     billingType: paymentMethod === "pix" ? "PIX" : "CREDIT_CARD",
@@ -152,10 +161,14 @@ const ProviderDashboard = () => {
                         postalCode: '00000000',
                         addressNumber: '0'
                     } : undefined
-                }
+                })
             });
 
-            if (error) throw error;
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                throw new Error(data?.error || `Erro HTTP ${response.status}: ${JSON.stringify(data) || response.statusText}`);
+            }
             if (data?.error) throw new Error(data.error);
 
             if (paymentMethod === 'pix') {
@@ -172,7 +185,23 @@ const ProviderDashboard = () => {
                 resetDeposit();
             }
         } catch (error: any) {
-            toast.error("Erro no pagamento: " + (error.message || "Tente novamente"));
+            console.error("Payment error full details:", error);
+            
+            // supabase-js v2 wraps non-2xx responses in a FunctionsHttpError that contains the response object in error.context
+            let errorMsg = error.message;
+            if (error.context && typeof error.context.text === 'function') {
+                try {
+                    const errorBody = await error.context.text();
+                    errorMsg = `${error.message} - Body: ${errorBody}`;
+                } catch (e) {}
+            } else if (error.context && typeof error.context.json === 'function') {
+                try {
+                    const errorJson = await error.context.json();
+                    errorMsg = `${error.message} - JSON: ${JSON.stringify(errorJson)}`;
+                } catch (e) {}
+            }
+            
+            toast.error("Erro no pagamento: " + errorMsg);
         } finally {
             setProcessing(false);
         }
