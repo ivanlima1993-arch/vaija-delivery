@@ -54,6 +54,7 @@ const ProviderDashboard = () => {
     const [depositStep, setDepositStep] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | null>(null);
     const [pixData, setPixData] = useState<any>(null);
+    const [cpf, setCpf] = useState("");
     const [cardData, setCardData] = useState({
         holderName: "",
         number: "",
@@ -107,6 +108,14 @@ const ProviderDashboard = () => {
             if (error) throw error;
             setProviderData(data);
             setIsOnline(data?.is_active || false);
+
+            // Load CPF from profiles table
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("cpf_cnpj")
+                .eq("user_id", user?.id)
+                .maybeSingle();
+            if (profile?.cpf_cnpj) setCpf(profile.cpf_cnpj);
         } catch (error) {
             console.error("Error fetching provider data:", error);
         } finally {
@@ -153,6 +162,7 @@ const ProviderDashboard = () => {
                     action: "create_recharge",
                     amount: value,
                     billingType: effectiveMethod === "pix" ? "PIX" : "CREDIT_CARD",
+                    cpfCnpj: cpf.replace(/\D/g, ""),
                     cardInfo: effectiveMethod === 'card' ? {
                         cardHolder: cardData.holderName,
                         cardNumber: cardData.number,
@@ -161,6 +171,7 @@ const ProviderDashboard = () => {
                         ccv: cardData.cvv,
                     } : undefined,
                     holderInfo: effectiveMethod === 'card' ? {
+                        cpfCnpj: cpf.replace(/\D/g, ""),
                         postalCode: '00000000',
                         addressNumber: '0'
                     } : undefined
@@ -712,12 +723,31 @@ const ProviderDashboard = () => {
                                     ))}
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label htmlFor="cpf" className="font-black text-xs uppercase tracking-widest text-muted-foreground pl-1">CPF / CNPJ</Label>
+                                    <Input
+                                        id="cpf"
+                                        type="text"
+                                        placeholder="000.000.000-00"
+                                        maxLength={18}
+                                        className="h-12 rounded-2xl border-muted focus-visible:ring-primary"
+                                        value={cpf}
+                                        onChange={(e) => setCpf(e.target.value.replace(/[^\d.\-\/]/g, ""))}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground italic pl-1">Necessário para emissão do comprovante via Asaas.</p>
+                                </div>
+
                                 <Button 
                                     className="w-full h-16 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20 transition-all active:scale-95"
                                     onClick={() => {
                                         const value = parseFloat(depositValue);
                                         if (isNaN(value) || value <= 0) {
                                             toast.error("Informe um valor válido");
+                                            return;
+                                        }
+                                        const cleanCpf = cpf.replace(/\D/g, "");
+                                        if (!cleanCpf || (cleanCpf.length !== 11 && cleanCpf.length !== 14)) {
+                                            toast.error("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido");
                                             return;
                                         }
                                         setDepositStep(2);
