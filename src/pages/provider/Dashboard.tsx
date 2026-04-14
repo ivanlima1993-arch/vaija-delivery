@@ -138,8 +138,8 @@ const ProviderDashboard = () => {
 
     const handleDeposit = async (method?: "pix" | "card") => {
         const value = parseFloat(depositValue);
-        if (isNaN(value) || value <= 0) {
-            toast.error("Informe um valor válido");
+        if (isNaN(value) || value < 15) {
+            toast.error("O valor mínimo de recarga é R$ 15,00");
             return;
         }
 
@@ -711,7 +711,7 @@ const ProviderDashboard = () => {
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3">
-                                    {[10, 20, 50].map((v) => (
+                                    {[15, 20, 50].map((v) => (
                                         <Button 
                                             key={v} 
                                             variant="outline" 
@@ -741,8 +741,8 @@ const ProviderDashboard = () => {
                                     className="w-full h-16 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20 transition-all active:scale-95"
                                     onClick={() => {
                                         const value = parseFloat(depositValue);
-                                        if (isNaN(value) || value <= 0) {
-                                            toast.error("Informe um valor válido");
+                                        if (isNaN(value) || value < 15) {
+                                            toast.error("O valor mínimo de recarga é R$ 15,00");
                                             return;
                                         }
                                         const cleanCpf = cpf.replace(/\D/g, "");
