@@ -193,19 +193,27 @@ const AdminServiceProviders = () => {
         }
     };
 
-    const handleUpdateBalance = async (id: string, newBalance: number) => {
+    const handleUpdateBalance = async (provider: any, newBalance: number) => {
+        const diff = newBalance - (provider.wallet_balance || 0);
+        if (diff === 0) return;
+
         try {
             const { error } = await supabase
-                .from("service_providers")
-                .update({ wallet_balance: newBalance })
-                .eq("id", id);
+                .from("wallet_transactions")
+                .insert([{
+                    user_id: provider.user_id,
+                    amount: Math.abs(diff),
+                    type: diff > 0 ? "credit" : "debit",
+                    description: `Ajuste administrativo - Admin: ${user?.email}`
+                }]);
             
             if (error) throw error;
             
-            setProviders(providers.map(p => p.id === id ? { ...p, wallet_balance: newBalance } : p));
-            toast.success("Saldo atualizado");
-        } catch (error) {
-            toast.error("Erro ao atualizar saldo");
+            setProviders(providers.map(p => p.id === provider.id ? { ...p, wallet_balance: newBalance } : p));
+            toast.success("Saldo atualizado com sucesso via transação.");
+        } catch (error: any) {
+            console.error("Error updating balance:", error);
+            toast.error("Erro ao atualizar saldo: " + error.message);
         }
     };
 
@@ -624,10 +632,11 @@ const AdminServiceProviders = () => {
                                                 className="h-8"
                                                 onClick={() => {
                                                     const input = document.getElementById('new-balance-input') as HTMLInputElement;
-                                                    if (input.value) {
-                                                        handleUpdateBalance(selectedProvider.id, parseFloat(input.value));
-                                                        setSelectedProvider({ ...selectedProvider, wallet_balance: parseFloat(input.value) });
-                                                    }
+                                                     if (input.value) {
+                                                        const val = parseFloat(input.value);
+                                                        handleUpdateBalance(selectedProvider, val);
+                                                        setSelectedProvider({ ...selectedProvider, wallet_balance: val });
+                                                     }
                                                 }}
                                             >
                                                 Ajustar

@@ -24,11 +24,24 @@ import {
     MapPin,
     Clock
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle, 
+    DialogDescription,
+    DialogFooter 
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const CATEGORIES = [
     { id: 1, name: "Hidráulica", icon: Droplets, color: "text-blue-500", bg: "bg-blue-100" },
@@ -74,9 +87,20 @@ const MOCK_PROS = [
 ];
 
 const Services = () => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [pros, setPros] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+    const [selectedPro, setSelectedPro] = useState<any>(null);
+    const [requestData, setRequestData] = useState({
+        serviceType: "",
+        description: "",
+        address: "",
+        phone: ""
+    });
+    const [sending, setSending] = useState(false);
 
     useEffect(() => {
         const fetchPros = async () => {
@@ -108,7 +132,66 @@ const Services = () => {
         };
 
         fetchPros();
-    }, []);
+
+        // If user is logged in, pre-fill phone from profile
+        if (user) {
+            const fetchProfile = async () => {
+                const { data } = await supabase
+                    .from("profiles")
+                    .select("phone")
+                    .eq("user_id", user.id)
+                    .single();
+                if (data?.phone) {
+                    setRequestData(prev => ({ ...prev, phone: data.phone }));
+                }
+            };
+            fetchProfile();
+        }
+    }, [user]);
+
+    const handleOpenRequest = (pro: any) => {
+        if (!user) {
+            toast.error("Você precisa estar logado para solicitar um orçamento");
+            navigate("/auth");
+            return;
+        }
+        setSelectedPro(pro);
+        setRequestData(prev => ({ ...prev, serviceType: pro.category }));
+        setIsRequestModalOpen(true);
+    };
+
+    const handleSendRequest = async () => {
+        if (!requestData.description || !requestData.address || !requestData.phone) {
+            toast.error("Por favor, preencha todos os campos");
+            return;
+        }
+
+        setSending(true);
+        try {
+            const { error } = await supabase
+                .from("service_requests")
+                .insert([{
+                    customer_id: user?.id,
+                    provider_id: selectedPro.id,
+                    service_type: requestData.serviceType,
+                    description: requestData.description,
+                    address: requestData.address,
+                    customer_phone: requestData.phone,
+                    status: 'pending'
+                }]);
+
+            if (error) throw error;
+
+            toast.success("Solicitação enviada! O profissional entrará em contato em breve.");
+            setIsRequestModalOpen(false);
+            setRequestData({ serviceType: "", description: "", address: "", phone: "" });
+        } catch (error: any) {
+            console.error("Error sending request:", error);
+            toast.error("Erro ao enviar solicitação: " + error.message);
+        } finally {
+            setSending(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background pb-20">
@@ -175,6 +258,7 @@ const Services = () => {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.3 + idx * 0.1 }}
+                                onClick={() => handleOpenRequest(pro)}
                             >
                                 <Card className="overflow-hidden border-none shadow-soft hover:shadow-md transition-shadow cursor-pointer">
                                     <CardContent className="p-4 flex gap-4">
@@ -233,12 +317,73 @@ const Services = () => {
                         <h3 className="text-2xl font-black italic">PROBLEMAS EM CASA?</h3>
                         <p className="text-primary-foreground/90 font-medium">Os melhores profissionais da sua região estão aqui no Vai Já.</p>
                         <Button className="bg-white text-primary hover:bg-white/90 font-black mt-2">
-                            QUERO UM ORÇAMENTO
+                            SOLICITAR AJUDA AGORA
                         </Button>
                     </div>
                     <Sparkles className="absolute right-[-20px] bottom-[-20px] w-40 h-40 text-white/10 rotate-12" />
                 </motion.div>
             </main>
+
+            {/* Request Modal */}
+            <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+                <DialogContent className="max-w-md rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">Solicitar Orçamento</DialogTitle>
+                        <DialogDescription className="font-bold">
+                            Fale com <span className="text-primary">{selectedPro?.name}</span> para resolver seu problema.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">O que você precisa?</Label>
+                            <Input 
+                                placeholder="Ex: Instalação de fiação" 
+                                className="h-12 rounded-xl border-muted font-bold"
+                                value={requestData.serviceType}
+                                onChange={(e) => setRequestData({ ...requestData, serviceType: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Descrição do Problema</Label>
+                            <Textarea 
+                                placeholder="Conte em detalhes o que está acontecendo..." 
+                                className="rounded-xl border-muted font-medium min-h-[100px]"
+                                value={requestData.description}
+                                onChange={(e) => setRequestData({ ...requestData, description: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Seu Telefone</Label>
+                                <Input 
+                                    placeholder="(00) 00000-0000" 
+                                    className="h-12 rounded-xl border-muted font-bold"
+                                    value={requestData.phone}
+                                    onChange={(e) => setRequestData({ ...requestData, phone: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Seu Endereço</Label>
+                                <Input 
+                                    placeholder="Rua, Número, Bairro" 
+                                    className="h-12 rounded-xl border-muted font-bold"
+                                    value={requestData.address}
+                                    onChange={(e) => setRequestData({ ...requestData, address: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                            className="w-full h-14 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20"
+                            onClick={handleSendRequest}
+                            disabled={sending}
+                        >
+                            {sending ? "ENVIANDO..." : "ENVIAR SOLICITAÇÃO"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

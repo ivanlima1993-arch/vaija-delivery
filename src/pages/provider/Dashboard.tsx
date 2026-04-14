@@ -17,7 +17,12 @@ import {
     Settings,
     User,
     LogOut,
-    Star
+    Star,
+    CreditCard,
+    QrCode,
+    Copy,
+    Check,
+    Calendar as CalendarIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,12 +51,50 @@ const ProviderDashboard = () => {
     const [isDepositOpen, setIsDepositOpen] = useState(false);
     const [depositValue, setDepositValue] = useState("");
     const [processing, setProcessing] = useState(false);
+    const [depositStep, setDepositStep] = useState(1);
+    const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | null>(null);
+    const [pixData, setPixData] = useState<any>(null);
+    const [cardData, setCardData] = useState({
+        holderName: "",
+        number: "",
+        expiry: "",
+        cvv: ""
+    });
+    const [requests, setRequests] = useState<any[]>([]);
+    const [isSchedulingOpen, setIsSchedulingOpen] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState<any>(null);
+    const [scheduleDate, setScheduleDate] = useState("");
 
     useEffect(() => {
         if (user) {
             fetchProviderData();
+            fetchRequests();
         }
     }, [user]);
+
+    const fetchRequests = async () => {
+        try {
+            // First get the provider's ID
+            const { data: provider } = await supabase
+                .from("service_providers")
+                .select("id")
+                .eq("user_id", user?.id)
+                .single();
+
+            if (!provider) return;
+
+            const { data, error } = await supabase
+                .from("service_requests")
+                .select("*")
+                .eq("provider_id", provider.id)
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+            setRequests(data || []);
+        } catch (error) {
+            console.error("Error fetching requests:", error);
+        }
+    };
 
     const fetchProviderData = async () => {
         try {
@@ -93,47 +136,163 @@ const ProviderDashboard = () => {
 
         setProcessing(true);
         try {
-            const newBalance = (providerData?.wallet_balance || 0) + value;
-            const { error } = await supabase
-                .from("service_providers")
-                .update({ wallet_balance: newBalance })
-                .eq("user_id", user?.id);
+            const { data, error } = await supabase.functions.invoke('asaas-integration', {
+                body: {
+                    amount: value,
+                    paymentMethod: paymentMethod,
+                    providerId: providerData.id,
+                    cardData: paymentMethod === 'card' ? cardData : null
+                }
+            });
 
             if (error) throw error;
 
-            setProviderData({ ...providerData, wallet_balance: newBalance });
-            toast.success(`Crédito de R$ ${value.toFixed(2)} adicionado com sucesso!`);
-            setIsDepositOpen(false);
-            setDepositValue("");
-        } catch (error) {
-            toast.error("Erro ao processar depósito");
+            if (paymentMethod === 'pix') {
+                setPixData(data.pixDetails);
+                setDepositStep(3);
+                // Start polling/check loop
+                startStatusCheck(data.paymentId);
+            } else {
+                toast.success("Pagamento com cartão processado!");
+                fetchProviderData(); // Refresh balance
+                resetDeposit();
+            }
+        } catch (error: any) {
+            toast.error("Erro no pagamento: " + (error.message || "Tente novamente"));
         } finally {
             setProcessing(false);
         }
     };
 
+    const startStatusCheck = (paymentId: string) => {
+        const interval = setInterval(async () => {
+            const { data: tx } = await supabase
+                .from('wallet_transactions')
+                .select('status')
+                .eq('asaas_payment_id', paymentId)
+                .single();
+
+            if (tx?.status === 'confirmed') {
+                toast.success("Pagamento via PIX confirmado! Saldo atualizado.");
+                fetchProviderData();
+                resetDeposit();
+                clearInterval(interval);
+            }
+        }, 5000);
+
+        // Auto-clear after 5 minutes
+        setTimeout(() => clearInterval(interval), 300000);
+    };
+
+    const resetDeposit = () => {
+        setIsDepositOpen(false);
+        setDepositValue("");
+        setDepositStep(1);
+        setPaymentMethod(null);
+        setPixData(null);
+        setCardData({ holderName: "", number: "", expiry: "", cvv: "" });
+    };
+
     const handleAcceptService = async (requestId: string) => {
         const CALL_FEE = 1.50;
+        const MIN_ORDER_BALANCE = 5.00;
         
-        if ((providerData?.wallet_balance || 0) < CALL_FEE) {
-            toast.error("Saldo insuficiente para aceitar chamados. Recarregue sua carteira.");
+        if ((providerData?.wallet_balance || 0) < MIN_ORDER_BALANCE) {
+            toast.error(`Saldo insuficiente (mínimo R$ ${MIN_ORDER_BALANCE.toFixed(2)}). Recarregue sua carteira.`);
             setIsDepositOpen(true);
             return;
         }
 
         try {
-            const newBalance = (providerData?.wallet_balance || 0) - CALL_FEE;
-            const { error } = await supabase
-                .from("service_providers")
-                .update({ wallet_balance: newBalance })
-                .eq("user_id", user?.id);
+            setProcessing(true);
+            
+            // Create a transaction record
+            const { error: txError } = await supabase
+                .from("wallet_transactions")
+                .insert([{
+                    user_id: user?.id,
+                    amount: CALL_FEE,
+                    type: "debit",
+                    status: "confirmed",
+                    description: `Taxa de serviço - Chamado #${requestId.slice(0, 8)} aceito`
+                }]);
 
-            if (error) throw error;
+            if (txError) throw txError;
 
-            setProviderData({ ...providerData, wallet_balance: newBalance });
-            toast.success(`Chamado aceito! Débito de R$ ${CALL_FEE.toFixed(2)} realizado.`);
-        } catch (error) {
-            toast.error("Erro ao processar aceitação do chamado");
+            // Update request status
+            const { error: reqError } = await supabase
+                .from("service_requests")
+                .update({ status: 'accepted' })
+                .eq("id", requestId);
+
+            if (reqError) throw reqError;
+
+            // Refresh data
+            await Promise.all([fetchProviderData(), fetchRequests()]);
+            toast.success(`Chamado aceito! Taxa de R$ ${CALL_FEE.toFixed(2)} descontada.`);
+
+        } catch (error: any) {
+            console.error("Error accepting service:", error);
+            toast.error("Erro ao processar aceitação: " + (error.message || "Tente novamente"));
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleScheduleService = async () => {
+        if (!scheduleDate) {
+            toast.error("Selecione uma data e horário");
+            return;
+        }
+
+        const CALL_FEE = 1.50;
+        const MIN_ORDER_BALANCE = 5.00;
+        
+        if ((providerData?.wallet_balance || 0) < MIN_ORDER_BALANCE) {
+            toast.error(`Saldo insuficiente (mínimo R$ ${MIN_ORDER_BALANCE.toFixed(2)}). Recarregue sua carteira.`);
+            setIsDepositOpen(true);
+            return;
+        }
+
+        try {
+            setProcessing(true);
+            
+            // Create a transaction record
+            const { error: txError } = await supabase
+                .from("wallet_transactions")
+                .insert([{
+                    user_id: user?.id,
+                    amount: CALL_FEE,
+                    type: "debit",
+                    status: "confirmed",
+                    description: `Taxa de serviço - Chamado #${selectedRequest.id.slice(0, 8)} agendado`
+                }]);
+
+            if (txError) throw txError;
+
+            // Update request status and date
+            const { error: reqError } = await supabase
+                .from("service_requests")
+                .update({ 
+                    status: 'scheduled',
+                    scheduled_at: new Date(scheduleDate).toISOString()
+                })
+                .eq("id", selectedRequest.id);
+
+            if (reqError) throw reqError;
+
+            // Refresh data
+            await Promise.all([fetchProviderData(), fetchRequests()]);
+            toast.success(`Serviço agendado para ${new Date(scheduleDate).toLocaleString()}! Taxa de R$ ${CALL_FEE.toFixed(2)} descontada.`);
+            setIsSchedulingOpen(false);
+            setSelectedRequest(null);
+            setScheduleDate("");
+
+        } catch (error: any) {
+            console.error("Error scheduling service:", error);
+            toast.error("Erro ao processar agendamento: " + (error.message || "Tente novamente"));
+        } finally {
+            setProcessing(false);
         }
     };
 
@@ -155,17 +314,9 @@ const ProviderDashboard = () => {
         }
     };
 
-    const REQUESTS = [
-        {
-            id: "1",
-            customer: "João Pereira",
-            service: "Instalação de Chuveiro",
-            address: "Rua das Flores, 123",
-            time: "Há 5 min",
-            price: "R$ 80,00",
-            status: "pending",
-        },
-    ];
+    const pendingRequests = requests.filter(r => r.status === 'pending');
+    const scheduledRequests = requests.filter(r => r.status === 'scheduled');
+    const inProgressRequests = requests.filter(r => r.status === 'accepted');
 
     if (loading) {
         return (
@@ -347,7 +498,10 @@ const ProviderDashboard = () => {
                         </h2>
 
                         <div className="space-y-4">
-                            {REQUESTS.map((req) => (
+                            {pendingRequests.length === 0 && (
+                                <p className="text-center py-8 text-muted-foreground font-medium italic">Nenhuma nova solicitação no momento.</p>
+                            )}
+                            {pendingRequests.map((req) => (
                                 <motion.div
                                     key={req.id}
                                     initial={{ opacity: 0, scale: 0.95 }}
@@ -358,14 +512,18 @@ const ProviderDashboard = () => {
                                             <div className="p-4 flex justify-between items-start border-b border-border/50">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <Badge className={req.status === 'pending' ? 'bg-amber-500' : 'bg-primary'}>
-                                                            {req.status === 'pending' ? 'NOVA SOLICITAÇÃO' : 'EM ANDAMENTO'}
+                                                        <Badge className='bg-amber-500'>
+                                                            NOVA SOLICITAÇÃO
                                                         </Badge>
-                                                        <span className="text-xs text-muted-foreground font-bold">{req.time}</span>
+                                                        <span className="text-xs text-muted-foreground font-bold italic">
+                                                            {new Date(req.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
                                                     </div>
-                                                    <h3 className="font-black text-lg">{req.service}</h3>
+                                                    <h3 className="font-black text-lg">{req.service_type}</h3>
                                                 </div>
-                                                <p className="text-xl font-black text-primary">{req.price}</p>
+                                                <p className="text-xl font-black text-primary">
+                                                    {req.price ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.price) : "A combinar"}
+                                                </p>
                                             </div>
 
                                             <div className="p-4 bg-muted/30 grid grid-cols-2 gap-4">
@@ -375,7 +533,7 @@ const ProviderDashboard = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] uppercase font-black text-muted-foreground">Cliente</p>
-                                                        <p className="text-sm font-bold">{req.customer}</p>
+                                                        <p className="text-sm font-bold">{req.customer_name || "Usuário Vai Já"}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -389,29 +547,28 @@ const ProviderDashboard = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="p-4 flex gap-3">
-                                                {req.status === 'pending' ? (
-                                                    <>
-                                                        <Button 
-                                                            className="flex-1 bg-primary hover:bg-primary/90 font-black h-14 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-white"
-                                                            onClick={() => handleAcceptService(req.id)}
-                                                        >
-                                                            ACEITAR SERVIÇO
-                                                        </Button>
-                                                        <Button variant="outline" className="w-14 h-14 rounded-2xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 group">
-                                                            <XCircle className="w-7 h-7 text-destructive transition-transform group-hover:scale-110" />
-                                                        </Button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Button className="flex-1 bg-green-600 hover:bg-green-700 font-black h-14 rounded-2xl shadow-lg shadow-green-600/20 transition-all active:scale-95 text-white">
-                                                            CONCLUIR SERVIÇO
-                                                        </Button>
-                                                        <Button variant="secondary" className="w-14 h-14 rounded-2xl hover:bg-primary/10 hover:text-primary transition-all active:scale-95">
-                                                            <MessageSquare className="w-7 h-7" />
-                                                        </Button>
-                                                    </>
-                                                )}
+                                            <div className="p-4 flex flex-col gap-3">
+                                                <div className="flex gap-3">
+                                                    <Button 
+                                                        className="flex-1 bg-primary hover:bg-primary/90 font-black h-14 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-white"
+                                                        onClick={() => handleAcceptService(req.id)}
+                                                    >
+                                                        ACEITAR AGORA
+                                                    </Button>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        className="flex-1 border-primary text-primary hover:bg-primary/5 font-black h-14 rounded-2xl transition-all active:scale-95"
+                                                        onClick={() => {
+                                                            setSelectedRequest(req);
+                                                            setIsSchedulingOpen(true);
+                                                        }}
+                                                    >
+                                                        <CalendarIcon className="w-4 h-4 mr-2" /> AGENDAR
+                                                    </Button>
+                                                </div>
+                                                <Button variant="ghost" className="w-full text-destructive font-bold h-10 hover:bg-destructive/5">
+                                                    RECUSAR CHAMADO
+                                                </Button>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -419,53 +576,285 @@ const ProviderDashboard = () => {
                             ))}
                         </div>
                     </section>
+
+                    {/* Scheduled Services / Agenda */}
+                    <section className="space-y-4 pt-4">
+                        <h2 className="text-xl font-black italic uppercase tracking-tight flex items-center gap-2">
+                            <CalendarIcon className="w-6 h-6 text-primary" />
+                            Minha Agenda
+                        </h2>
+                        <div className="space-y-4">
+                             {scheduledRequests.length === 0 && (
+                                <p className="text-center py-8 text-muted-foreground font-medium italic">Sua agenda está vazia.</p>
+                            )}
+                            {scheduledRequests.map((req) => (
+                                <Card key={req.id} className="border-none shadow-soft overflow-hidden">
+                                     <div className="bg-primary/10 p-3 px-4 flex justify-between items-center border-b border-primary/20">
+                                        <div className="flex items-center gap-2">
+                                            <CalendarIcon className="w-4 h-4 text-primary" />
+                                            <span className="text-sm font-bold text-primary uppercase">
+                                                {new Date(req.scheduled_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <Badge className="bg-primary text-white">AGENDADO</Badge>
+                                    </div>
+                                    <CardContent className="p-4">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div>
+                                                <h3 className="font-black text-lg">{req.service_type}</h3>
+                                                <p className="text-sm text-muted-foreground">{req.customer_name}</p>
+                                            </div>
+                                            <Button variant="secondary" size="icon" className="rounded-xl">
+                                                <MessageSquare className="w-5 h-5" />
+                                            </Button>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                                            <MapPin className="w-4 h-4" />
+                                            <span className="truncate">{req.address}</span>
+                                        </div>
+                                        <Button className="w-full bg-green-600 hover:bg-green-700 font-bold h-12 rounded-xl text-white">
+                                            INICIAR SERVIÇO AGORA
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </section>
                 </div>
             </main>
             {/* Deposit Dialog */}
-            <Dialog open={isDepositOpen} onOpenChange={setIsDepositOpen}>
-                <DialogContent className="rounded-3xl max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-black italic uppercase">Recarregar Carteira</DialogTitle>
-                        <DialogDescription className="font-medium">
-                            Adicione créditos para receber chamados. 
-                            <span className="block text-primary font-bold mt-1">Regra: Cada chamado aceito debita R$ 1,50.</span>
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="py-6 space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="amount" className="font-bold">Valor do Depósito (R$)</Label>
-                            <Input
-                                id="amount"
-                                type="number"
-                                placeholder="0,00"
-                                className="h-14 rounded-2xl text-xl font-bold border-muted"
-                                value={depositValue}
-                                onChange={(e) => setDepositValue(e.target.value)}
-                            />
+            <Dialog open={isDepositOpen} onOpenChange={(open) => {
+                if (!open) resetDeposit();
+                else setIsDepositOpen(true);
+            }}>
+                <DialogContent className="rounded-[2.5rem] max-w-sm overflow-hidden p-0 border-none shadow-2xl">
+                    <div className="bg-primary p-8 text-white relative">
+                        <div className="absolute top-0 right-0 p-8 opacity-10">
+                            <DollarSign className="w-20 h-20" />
                         </div>
-
-                        <div className="grid grid-cols-3 gap-2">
-                            {[10, 20, 50].map((v) => (
-                                <Button 
-                                    key={v} 
-                                    variant="outline" 
-                                    className="h-12 rounded-xl font-black"
-                                    onClick={() => setDepositValue(v.toString())}
-                                >
-                                    + R$ {v}
-                                </Button>
-                            ))}
-                        </div>
+                        <DialogTitle className="text-3xl font-black italic uppercase tracking-tighter mb-2">Recarregar</DialogTitle>
+                        <p className="text-xs font-bold opacity-80 uppercase tracking-widest">Passo {depositStep} de 3</p>
                     </div>
 
+                    <div className="p-8 space-y-6 bg-card">
+                        {depositStep === 1 && (
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="amount" className="font-black text-xs uppercase tracking-widest text-muted-foreground pl-1">Valor do Depósito</Label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-primary text-xl">R$</span>
+                                        <Input
+                                            id="amount"
+                                            type="number"
+                                            placeholder="0,00"
+                                            className="h-16 rounded-2xl text-2xl font-black border-muted pl-12 focus-visible:ring-primary shadow-inner"
+                                            value={depositValue}
+                                            onChange={(e) => setDepositValue(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[10, 20, 50].map((v) => (
+                                        <Button 
+                                            key={v} 
+                                            variant="outline" 
+                                            className="h-12 rounded-xl font-black border-muted/50 hover:border-primary hover:text-primary transition-all active:scale-95"
+                                            onClick={() => setDepositValue(v.toString())}
+                                        >
+                                            + R$ {v}
+                                        </Button>
+                                    ))}
+                                </div>
+
+                                <Button 
+                                    className="w-full h-16 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20 transition-all active:scale-95"
+                                    onClick={handleDeposit}
+                                    disabled={processing}
+                                >
+                                    {processing ? "GERANDO PIX..." : "GERAR QR CODE PIX"}
+                                </Button>
+                            </div>
+                        )}
+
+                        {depositStep === 2 && (
+                            <div className="space-y-4">
+                                <p className="font-black text-xs uppercase tracking-widest text-muted-foreground mb-4 pl-1">Escolha a Forma de Pagamento</p>
+                                
+                                <button 
+                                    onClick={() => {
+                                        setPaymentMethod("pix");
+                                        setDepositStep(3);
+                                    }}
+                                    className="w-full flex items-center gap-4 p-5 rounded-2xl border border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                                >
+                                    <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                        <QrCode className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-black text-sm uppercase">PIX</p>
+                                        <p className="text-xs font-semibold text-muted-foreground">Aprovação imediata</p>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    onClick={() => {
+                                        setPaymentMethod("card");
+                                        setDepositStep(3);
+                                    }}
+                                    className="w-full flex items-center gap-4 p-5 rounded-2xl border border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                                >
+                                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                        <CreditCard className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-black text-sm uppercase">Cartão de Crédito</p>
+                                        <p className="text-xs font-semibold text-muted-foreground">Créditos em instantes</p>
+                                    </div>
+                                </button>
+
+                                <Button variant="ghost" className="w-full font-bold text-muted-foreground" onClick={() => setDepositStep(1)}>Voltar</Button>
+                            </div>
+                        )}
+
+                        {depositStep === 3 && paymentMethod === "pix" && (
+                            <div className="text-center space-y-6">
+                                <div className="bg-white p-6 rounded-3xl border shadow-inner inline-block mx-auto mb-2">
+                                    {pixData?.encodedImage ? (
+                                        <img 
+                                            src={`data:image/png;base64,${pixData.encodedImage}`} 
+                                            alt="Pix QR Code" 
+                                            className="w-48 h-48"
+                                        />
+                                    ) : (
+                                        <div className="w-48 h-48 flex items-center justify-center">
+                                            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="space-y-3">
+                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Escaneie o QR Code acima</p>
+                                    <Button 
+                                        variant="secondary" 
+                                        className="w-full h-14 rounded-2xl flex items-center gap-3 font-black text-xs px-2"
+                                        onClick={() => {
+                                            if (pixData?.payload) {
+                                                navigator.clipboard.writeText(pixData.payload);
+                                                toast.success("Chave PIX copiada!");
+                                            }
+                                        }}
+                                    >
+                                        <Copy className="w-4 h-4" /> COPIAR CHAVE PIX (COPIA E COLA)
+                                    </Button>
+                                </div>
+                                <div className="pt-4 flex flex-col gap-3">
+                                    <p className="text-xs text-muted-foreground italic">Aguardando confirmação automática...</p>
+                                    <Button variant="ghost" className="font-bold text-muted-foreground" onClick={() => setDepositStep(2)}>Trocar Forma</Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {depositStep === 3 && paymentMethod === "card" && (
+                            <div className="space-y-4">
+                                <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl text-white relative overflow-hidden h-44 flex flex-col justify-between shadow-2xl mb-6">
+                                     <div className="absolute top-0 right-0 p-4 opacity-20">
+                                        <div className="flex -space-x-2">
+                                            <div className="w-8 h-8 rounded-full bg-red-500" />
+                                            <div className="w-8 h-8 rounded-full bg-yellow-500" />
+                                        </div>
+                                     </div>
+                                     <div className="w-10 h-7 bg-yellow-500/20 rounded-md border border-yellow-500/50" />
+                                     <div className="space-y-1">
+                                        <p className="text-lg font-mono tracking-widest">**** **** **** ****</p>
+                                        <div className="flex justify-between items-end">
+                                            <p className="text-[10px] uppercase font-bold opacity-60 italic">NOME NO CARTÃO</p>
+                                            <p className="text-xs font-mono opacity-80">MM/AA</p>
+                                        </div>
+                                     </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="col-span-2 space-y-1">
+                                        <Label className="text-[10px] uppercase font-black text-muted-foreground ml-1">Nome no Cartão</Label>
+                                        <Input 
+                                            placeholder="Ex: João Silva" 
+                                            className="h-12 rounded-xl border-muted font-bold" 
+                                            value={cardData.holderName}
+                                            onChange={(e) => setCardData({ ...cardData, holderName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="col-span-2 space-y-1">
+                                        <Label className="text-[10px] uppercase font-black text-muted-foreground ml-1">Número do Cartão</Label>
+                                        <Input 
+                                            placeholder="0000 0000 0000 0000" 
+                                            className="h-12 rounded-xl border-muted font-bold" 
+                                            value={cardData.number}
+                                            onChange={(e) => setCardData({ ...cardData, number: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] uppercase font-black text-muted-foreground ml-1">Validade</Label>
+                                        <Input 
+                                            placeholder="MM/AA" 
+                                            className="h-12 rounded-xl border-muted font-bold" 
+                                            value={cardData.expiry}
+                                            onChange={(e) => setCardData({ ...cardData, expiry: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] uppercase font-black text-muted-foreground ml-1">CVV</Label>
+                                        <Input 
+                                            placeholder="123" 
+                                            className="h-12 rounded-xl border-muted font-bold" 
+                                            value={cardData.cvv}
+                                            onChange={(e) => setCardData({ ...cardData, cvv: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 flex flex-col gap-3">
+                                    <Button 
+                                        className="w-full h-16 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20"
+                                        onClick={handleDeposit}
+                                        disabled={processing}
+                                    >
+                                        {processing ? "PROCESSANDO..." : "PAGAR R$ " + parseFloat(depositValue).toFixed(2)}
+                                    </Button>
+                                    <Button variant="ghost" className="font-bold text-muted-foreground" onClick={() => setDepositStep(2)}>Trocar Forma</Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+            {/* Scheduling Dialog */}
+            <Dialog open={isSchedulingOpen} onOpenChange={setIsSchedulingOpen}>
+                <DialogContent className="max-w-sm rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">Agendar Serviço</DialogTitle>
+                        <DialogDescription className="font-bold">Escolha a melhor data e horário para este atendimento.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Data e Hora</Label>
+                            <Input 
+                                type="datetime-local" 
+                                className="h-14 rounded-2xl font-bold border-muted"
+                                value={scheduleDate}
+                                onChange={(e) => setScheduleDate(e.target.value)}
+                            />
+                        </div>
+                        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 text-xs font-medium text-primary">
+                            <p>Será cobrada a taxa de **R$ 1,50** após a confirmação do agendamento.</p>
+                        </div>
+                    </div>
                     <DialogFooter>
                         <Button 
                             className="w-full h-14 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20"
-                            onClick={handleDeposit}
+                            onClick={handleScheduleService}
                             disabled={processing}
                         >
-                            {processing ? "PROCESSANDO..." : "DEPOSITAR AGORA"}
+                            {processing ? "PROCESSANDO..." : "CONFIRMAR AGENDAMENTO"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
