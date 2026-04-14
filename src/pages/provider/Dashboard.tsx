@@ -127,12 +127,15 @@ const ProviderDashboard = () => {
         }
     };
 
-    const handleDeposit = async () => {
+    const handleDeposit = async (method?: "pix" | "card") => {
         const value = parseFloat(depositValue);
         if (isNaN(value) || value <= 0) {
             toast.error("Informe um valor válido");
             return;
         }
+
+        const effectiveMethod = method || paymentMethod;
+        if (effectiveMethod) setPaymentMethod(effectiveMethod);
 
         setProcessing(true);
         try {
@@ -149,15 +152,15 @@ const ProviderDashboard = () => {
                 body: JSON.stringify({
                     action: "create_recharge",
                     amount: value,
-                    billingType: paymentMethod === "pix" ? "PIX" : "CREDIT_CARD",
-                    cardInfo: paymentMethod === 'card' ? {
+                    billingType: effectiveMethod === "pix" ? "PIX" : "CREDIT_CARD",
+                    cardInfo: effectiveMethod === 'card' ? {
                         cardHolder: cardData.holderName,
                         cardNumber: cardData.number,
                         expiryMonth: cardData.expiry.split('/')[0],
                         expiryYear: cardData.expiry.split('/')[1],
                         ccv: cardData.cvv,
                     } : undefined,
-                    holderInfo: paymentMethod === 'card' ? {
+                    holderInfo: effectiveMethod === 'card' ? {
                         postalCode: '00000000',
                         addressNumber: '0'
                     } : undefined
@@ -171,13 +174,12 @@ const ProviderDashboard = () => {
             }
             if (data?.error) throw new Error(data.error);
 
-            if (paymentMethod === 'pix') {
+            if (effectiveMethod === 'pix') {
                 setPixData({
                     encodedImage: data.pixQrCode,
                     payload: data.pixCopyPaste
                 });
                 setDepositStep(3);
-                // Start polling/check loop
                 startStatusCheck(data.paymentId);
             } else {
                 toast.success("Pagamento com cartão processado!");
@@ -712,10 +714,17 @@ const ProviderDashboard = () => {
 
                                 <Button 
                                     className="w-full h-16 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20 transition-all active:scale-95"
-                                    onClick={handleDeposit}
+                                    onClick={() => {
+                                        const value = parseFloat(depositValue);
+                                        if (isNaN(value) || value <= 0) {
+                                            toast.error("Informe um valor válido");
+                                            return;
+                                        }
+                                        setDepositStep(2);
+                                    }}
                                     disabled={processing}
                                 >
-                                    {processing ? "GERANDO PIX..." : "GERAR QR CODE PIX"}
+                                    ESCOLHER FORMA DE PAGAMENTO
                                 </Button>
                             </div>
                         )}
@@ -725,18 +734,16 @@ const ProviderDashboard = () => {
                                 <p className="font-black text-xs uppercase tracking-widest text-muted-foreground mb-4 pl-1">Escolha a Forma de Pagamento</p>
                                 
                                 <button 
-                                    onClick={() => {
-                                        setPaymentMethod("pix");
-                                        setDepositStep(3);
-                                    }}
-                                    className="w-full flex items-center gap-4 p-5 rounded-2xl border border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                                    onClick={() => handleDeposit("pix")}
+                                    disabled={processing}
+                                    className="w-full flex items-center gap-4 p-5 rounded-2xl border border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group disabled:opacity-60"
                                 >
                                     <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                                         <QrCode className="w-6 h-6" />
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-black text-sm uppercase">PIX</p>
-                                        <p className="text-xs font-semibold text-muted-foreground">Aprovação imediata</p>
+                                        <p className="text-xs font-semibold text-muted-foreground">{processing ? "Gerando..." : "Aprovação imediata"}</p>
                                     </div>
                                 </button>
 
@@ -745,7 +752,8 @@ const ProviderDashboard = () => {
                                         setPaymentMethod("card");
                                         setDepositStep(3);
                                     }}
-                                    className="w-full flex items-center gap-4 p-5 rounded-2xl border border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                                    disabled={processing}
+                                    className="w-full flex items-center gap-4 p-5 rounded-2xl border border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group disabled:opacity-60"
                                 >
                                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                         <CreditCard className="w-6 h-6" />
