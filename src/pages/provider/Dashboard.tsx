@@ -136,19 +136,33 @@ const ProviderDashboard = () => {
 
         setProcessing(true);
         try {
-            const { data, error } = await supabase.functions.invoke('asaas-integration', {
+            const { data, error } = await supabase.functions.invoke('asaas-payment', {
                 body: {
+                    action: "create_recharge",
                     amount: value,
-                    paymentMethod: paymentMethod,
-                    providerId: providerData.id,
-                    cardData: paymentMethod === 'card' ? cardData : null
+                    billingType: paymentMethod === "pix" ? "PIX" : "CREDIT_CARD",
+                    cardInfo: paymentMethod === 'card' ? {
+                        cardHolder: cardData.holderName,
+                        cardNumber: cardData.number,
+                        expiryMonth: cardData.expiry.split('/')[0],
+                        expiryYear: cardData.expiry.split('/')[1],
+                        ccv: cardData.cvv,
+                    } : undefined,
+                    holderInfo: paymentMethod === 'card' ? {
+                        postalCode: '00000000',
+                        addressNumber: '0'
+                    } : undefined
                 }
             });
 
             if (error) throw error;
+            if (data?.error) throw new Error(data.error);
 
             if (paymentMethod === 'pix') {
-                setPixData(data.pixDetails);
+                setPixData({
+                    encodedImage: data.pixQrCode,
+                    payload: data.pixCopyPaste
+                });
                 setDepositStep(3);
                 // Start polling/check loop
                 startStatusCheck(data.paymentId);
