@@ -473,7 +473,7 @@ const ProviderDashboard = () => {
             fetchRequests();
         } catch (error: any) {
             console.error("Error rejecting service:", error);
-            toast.error("Erro ao recusar chamado.");
+            toast.error("Erro ao recusar chamado: " + (error.message || "Tente novamente"));
         } finally {
             setProcessing(false);
         }
