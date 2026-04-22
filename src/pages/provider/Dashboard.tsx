@@ -459,6 +459,26 @@ const ProviderDashboard = () => {
         }
     };
 
+    const handleRejectService = async (requestId: string) => {
+        try {
+            setProcessing(true);
+            const { error } = await supabase
+                .from("service_requests")
+                .update({ status: 'rejected' })
+                .eq("id", requestId);
+
+            if (error) throw error;
+
+            toast.success("Solicitação recusada.");
+            fetchRequests();
+        } catch (error: any) {
+            console.error("Error rejecting service:", error);
+            toast.error("Erro ao recusar chamado.");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const toggleOnline = async (checked: boolean) => {
         if (checked && (providerData?.wallet_balance || 0) < 15.00) {
             toast.error("Saldo mínimo de R$ 15,00 necessário para ficar Online");
@@ -751,7 +771,12 @@ const ProviderDashboard = () => {
                                                         <CalendarIcon className="w-4 h-4 mr-2" /> AGENDAR
                                                     </Button>
                                                 </div>
-                                                <Button variant="ghost" className="w-full text-destructive font-bold h-10 hover:bg-destructive/5">
+                                                <Button 
+                                                    variant="ghost" 
+                                                    className="w-full text-destructive font-bold h-10 hover:bg-destructive/5"
+                                                    onClick={() => handleRejectService(req.id)}
+                                                    disabled={processing}
+                                                >
                                                     RECUSAR CHAMADO
                                                 </Button>
                                             </div>
