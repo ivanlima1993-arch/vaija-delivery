@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
     Briefcase,
@@ -43,14 +44,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const ProviderDashboard = () => {
-    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { user, signOut } = useAuth();
     const [isOnline, setIsOnline] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [providerData, setProviderData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [processing, setProcessing] = useState(false);
+    const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
+    const [withdrawalAmount, setWithdrawalAmount] = useState("");
+    const [withdrawalMethod, setWithdrawalMethod] = useState<"pix" | "bank">("pix");
+    const [pixKey, setPixKey] = useState("");
+    const [bankDetails, setBankDetails] = useState("");
     const [isDepositOpen, setIsDepositOpen] = useState(false);
     const [depositValue, setDepositValue] = useState("");
-    const [processing, setProcessing] = useState(false);
     const [depositStep, setDepositStep] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | null>(null);
     const [pixData, setPixData] = useState<any>(null);
@@ -124,15 +131,63 @@ const ProviderDashboard = () => {
     };
 
     const handleWithdrawalRequest = async () => {
-        if (!providerData?.wallet_balance || providerData.wallet_balance < 50) {
-            toast.error("Saldo mínimo de R$ 50,00 para saque");
+        if (!providerData?.wallet_balance || providerData.wallet_balance <= 0) {
+            toast.error("Você não possui saldo disponível para saque");
+            return;
+        }
+        setWithdrawalAmount(providerData.wallet_balance.toString());
+        setIsWithdrawalOpen(true);
+    };
+
+    const handleSubmitWithdrawal = async () => {
+        const amount = parseFloat(withdrawalAmount);
+        if (isNaN(amount) || amount <= 0) {
+            toast.error("Informe um valor válido");
             return;
         }
 
+        if (amount > (providerData?.wallet_balance || 0)) {
+            toast.error("Saldo insuficiente");
+            return;
+        }
+
+        if (withdrawalMethod === "pix" && !pixKey) {
+            toast.error("Informe a chave PIX");
+            return;
+        }
+
+        if (withdrawalMethod === "bank" && !bankDetails) {
+            toast.error("Informe os dados bancários");
+            return;
+        }
+
+        setProcessing(true);
         try {
-            toast.success("Solicitação de saque enviada com sucesso! Prazo de 24h para análise.");
-        } catch (error) {
-            toast.error("Erro ao solicitar saque");
+            // First we try to insert. If the table provider_withdrawals doesn't exist, 
+            // we use the fallback of adding to wallet_transactions with a pending description
+            const { error } = await supabase.from("provider_withdrawals").insert({
+                provider_id: providerData.id,
+                amount: amount,
+                pix_key: withdrawalMethod === "pix" ? pixKey : null,
+                bank_details: withdrawalMethod === "bank" ? bankDetails : null,
+                status: 'pending'
+            });
+
+            if (error) {
+                // If table doesn't exist (PGRST116 or similar), inform user or use fallback
+                console.error("Error inserting withdrawal:", error);
+                throw new Error("Erro ao salvar solicitação. Verifique se o banco de dados está atualizado.");
+            }
+
+            toast.success("Solicitação de saque enviada com sucesso! Prazo de 24h.");
+            setIsWithdrawalOpen(false);
+            setPixKey("");
+            setBankDetails("");
+            fetchProviderData(); // Refresh to reflect any (future) balance changes
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao solicitar saque");
+        } finally {
+            setProcessing(false);
         }
     };
 
@@ -251,7 +306,7 @@ const ProviderDashboard = () => {
 
     const handleAcceptService = async (requestId: string) => {
         const CALL_FEE = 1.50;
-        const MIN_ORDER_BALANCE = 5.00;
+        const MIN_ORDER_BALANCE = 15.00;
         
         if ((providerData?.wallet_balance || 0) < MIN_ORDER_BALANCE) {
             toast.error(`Saldo insuficiente (mínimo R$ ${MIN_ORDER_BALANCE.toFixed(2)}). Recarregue sua carteira.`);
@@ -302,7 +357,7 @@ const ProviderDashboard = () => {
         }
 
         const CALL_FEE = 1.50;
-        const MIN_ORDER_BALANCE = 5.00;
+        const MIN_ORDER_BALANCE = 15.00;
         
         if ((providerData?.wallet_balance || 0) < MIN_ORDER_BALANCE) {
             toast.error(`Saldo insuficiente (mínimo R$ ${MIN_ORDER_BALANCE.toFixed(2)}). Recarregue sua carteira.`);
@@ -353,8 +408,8 @@ const ProviderDashboard = () => {
     };
 
     const toggleOnline = async (checked: boolean) => {
-        if (checked && (providerData?.wallet_balance || 0) < 5.00) {
-            toast.error("Saldo mínimo de R$ 5,00 necessário para ficar Online");
+        if (checked && (providerData?.wallet_balance || 0) < 15.00) {
+            toast.error("Saldo mínimo de R$ 15,00 necessário para ficar Online");
             setIsOnline(false);
             return;
         }
@@ -425,12 +480,23 @@ const ProviderDashboard = () => {
                                 <Bell className="w-5 h-5" />
                                 <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
                             </Button>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-muted-foreground hover:text-destructive"
+                                onClick={async () => {
+                                    await signOut();
+                                    navigate('/profissional/auth');
+                                }}
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </Button>
                         </div>
                     </div>
                 </header>
 
                 <div className="p-4 lg:p-6 space-y-6">
-                    {!providerData?.is_active && providerData?.wallet_balance >= 5 && (
+                    {!providerData?.is_active && providerData?.wallet_balance >= 15 && (
                         <Card className="border-none bg-amber-500/10 border-amber-500/20 text-amber-700">
                             <CardContent className="p-4 flex gap-4 items-center">
                                 <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white shrink-0">
@@ -444,7 +510,7 @@ const ProviderDashboard = () => {
                         </Card>
                     )}
 
-                    {providerData?.wallet_balance < 5 && (
+                    {providerData?.wallet_balance < 15 && (
                         <Card className="border-none bg-destructive/10 border-destructive/20 text-destructive">
                             <CardContent className="p-4 flex gap-4 items-center">
                                 <div className="w-12 h-12 bg-destructive rounded-2xl flex items-center justify-center text-white shrink-0">
@@ -452,7 +518,7 @@ const ProviderDashboard = () => {
                                 </div>
                                 <div className="space-y-1 flex-1">
                                     <p className="font-black uppercase text-xs">Saldo Insuficiente</p>
-                                    <p className="text-sm font-medium">Você precisa de no mínimo R$ 5,00 para receber novos chamados.</p>
+                                    <p className="text-sm font-medium">Você precisa de no mínimo R$ 15,00 para receber novos chamados.</p>
                                 </div>
                                 <Button 
                                     size="sm" 
@@ -534,10 +600,18 @@ const ProviderDashboard = () => {
                                 <div className="space-y-4">
                                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Ações Rápidas</p>
                                     <div className="space-y-2">
-                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98">
+                                        <Button 
+                                            variant="ghost" 
+                                            className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98"
+                                            onClick={() => navigate('/carteira')}
+                                        >
                                             <History className="w-5 h-5" /> Histórico de Ganhos
                                         </Button>
-                                        <Button variant="ghost" className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98">
+                                        <Button 
+                                            variant="ghost" 
+                                            className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98"
+                                            onClick={() => navigate('/perfil')}
+                                        >
                                             <Settings className="w-5 h-5" /> Configurações Gerais
                                         </Button>
                                     </div>
@@ -936,6 +1010,89 @@ const ProviderDashboard = () => {
                             disabled={processing}
                         >
                             {processing ? "PROCESSANDO..." : "CONFIRMAR AGENDAMENTO"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            {/* Withdrawal Dialog */}
+            <Dialog open={isWithdrawalOpen} onOpenChange={setIsWithdrawalOpen}>
+                <DialogContent className="max-w-sm rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-primary">Solicitar Saque</DialogTitle>
+                        <DialogDescription className="font-bold">Informe o valor e os dados para recebimento.</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Valor do Saque</Label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-muted-foreground">R$</span>
+                                <Input 
+                                    type="number" 
+                                    className="h-14 rounded-2xl font-black text-xl pl-10 border-muted focus:border-primary transition-all"
+                                    value={withdrawalAmount}
+                                    onChange={(e) => setWithdrawalAmount(e.target.value)}
+                                    placeholder="0.00"
+                                />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground font-bold pl-1">Saldo disponível: R$ {providerData?.wallet_balance?.toFixed(2)}</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Forma de Recebimento</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <Button 
+                                    variant={withdrawalMethod === "pix" ? "default" : "outline"}
+                                    className={`h-12 rounded-xl font-black text-xs transition-all ${withdrawalMethod === "pix" ? "bg-primary shadow-lg shadow-primary/20" : "border-muted"}`}
+                                    onClick={() => setWithdrawalMethod("pix")}
+                                >
+                                    <QrCode className="w-4 h-4 mr-2" /> PIX
+                                </Button>
+                                <Button 
+                                    variant={withdrawalMethod === "bank" ? "default" : "outline"}
+                                    className={`h-12 rounded-xl font-black text-xs transition-all ${withdrawalMethod === "bank" ? "bg-primary shadow-lg shadow-primary/20" : "border-muted"}`}
+                                    onClick={() => setWithdrawalMethod("bank")}
+                                >
+                                    <CreditCard className="w-4 h-4 mr-2" /> CONTA
+                                </Button>
+                            </div>
+                        </div>
+
+                        {withdrawalMethod === "pix" ? (
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Chave PIX</Label>
+                                <Input 
+                                    className="h-14 rounded-2xl font-bold border-muted"
+                                    placeholder="CPF, E-mail, Celular ou Aleatória"
+                                    value={pixKey}
+                                    onChange={(e) => setPixKey(e.target.value)}
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Dados Bancários</Label>
+                                <textarea 
+                                    className="w-full min-h-[100px] rounded-2xl border border-muted p-4 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-sans"
+                                    placeholder="Banco, Agência, Conta, Tipo e Titular"
+                                    value={bankDetails}
+                                    onChange={(e) => setBankDetails(e.target.value)}
+                                />
+                            </div>
+                        )}
+
+                        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 text-[11px] font-medium text-primary">
+                            <p className="flex items-start gap-2">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                O prazo para análise e processamento do saque é de até 24 horas úteis.
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                            className="w-full h-14 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20"
+                            onClick={handleSubmitWithdrawal}
+                            disabled={processing}
+                        >
+                            {processing ? "PROCESSANDO..." : "SOLICITAR SAQUE"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

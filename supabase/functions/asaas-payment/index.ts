@@ -287,6 +287,17 @@ serve(async (req) => {
           pixCopyPaste: pixQr.payload,
           expirationDate: pixQr.expirationDate,
         };
+      } else if (payment.status === "CONFIRMED" || payment.status === "RECEIVED") {
+        // Auto-credit recharge if card is instantly paid
+        const { error: creditError } = await supabase
+          .from("wallet_transactions")
+          .insert({
+            user_id: user.id,
+            amount: payment.value,
+            type: "credit",
+            description: `Recarga Asaas ${payment.id}`
+          });
+        if (creditError) console.error("Error crediting recharge on creation:", creditError);
       }
 
       return new Response(
