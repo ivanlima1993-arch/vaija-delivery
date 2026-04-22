@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, Lock, Save, Upload, Camera, Package, Clock, ChevronRight, Loader2, Wallet as WalletIcon } from "lucide-react";
+import { ArrowLeft, User, Lock, Save, Upload, Camera, Package, Clock, ChevronRight, Loader2, Wallet as WalletIcon, Briefcase, Calendar as CalendarIcon, XCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -26,6 +26,13 @@ const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
   cancelled: { label: "Cancelado", color: "bg-red-500" },
 };
 
+const serviceStatusConfig: Record<string, { label: string; color: string; icon: any }> = {
+  pending: { label: "Pendente", color: "bg-yellow-500", icon: Clock },
+  accepted: { label: "Aceito", color: "bg-blue-500", icon: CheckCircle2 },
+  scheduled: { label: "Agendado", color: "bg-green-600", icon: CalendarIcon },
+  rejected: { label: "Recusado", color: "bg-red-500", icon: XCircle },
+};
+
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -36,6 +43,8 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [serviceRequests, setServiceRequests] = useState<any[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profileData, setProfileData] = useState({
@@ -60,6 +69,7 @@ const Profile = () => {
     if (user) {
       fetchProfile();
       fetchOrders();
+      fetchServiceRequests();
     }
   }, [user, authLoading, navigate]);
 
@@ -104,6 +114,23 @@ const Profile = () => {
       console.error("Error fetching orders:", error);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const fetchServiceRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("service_requests")
+        .select("*, service_providers(full_name, category, image_url)")
+        .eq("customer_id", user!.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setServiceRequests(data || []);
+    } catch (error) {
+      console.error("Error fetching service requests:", error);
+    } finally {
+      setLoadingServices(false);
     }
   };
 
@@ -312,6 +339,86 @@ const Profile = () => {
                       Mostrando 5 de {orders.length} pedidos
                     </p>
                   )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Service Requests Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-primary" />
+                Meus Chamados de Serviço
+              </CardTitle>
+              <CardDescription>
+                Acompanhe as solicitações enviadas a profissionais
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingServices ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : serviceRequests.length === 0 ? (
+                <div className="text-center py-8">
+                  <Briefcase className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-muted-foreground">Você ainda não solicitou nenhum serviço</p>
+                  <Link to="/servicos">
+                    <Button variant="outline" className="mt-4">
+                      Solicitar agora
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {serviceRequests.map((req) => {
+                    const config = serviceStatusConfig[req.status] || serviceStatusConfig.pending;
+                    const StatusIcon = config.icon;
+                    const provider = req.service_providers || {};
+
+                    return (
+                      <div
+                        key={req.id}
+                        className="p-4 rounded-xl border border-border bg-card shadow-sm space-y-3"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-3">
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-border">
+                              <img 
+                                src={provider.image_url || "/placeholder.svg"} 
+                                alt={provider.full_name} 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                                <p className="font-bold text-sm">{provider.full_name || "Profissional"}</p>
+                                <p className="text-[10px] uppercase text-muted-foreground font-semibold">{req.service_type}</p>
+                            </div>
+                          </div>
+                          <Badge className={`${config.color} text-[10px] h-5`}>
+                            <StatusIcon className="w-3 h-3 mr-1" />
+                            {config.label}
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-xs bg-muted/50 p-2 rounded-lg italic text-muted-foreground">
+                            "{req.description}"
+                        </div>
+
+                        {req.status === 'scheduled' && req.scheduled_at && (
+                            <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50 p-2 rounded-lg">
+                                <CalendarIcon className="w-4 h-4" />
+                                Agendado para: {new Date(req.scheduled_at).toLocaleString('pt-BR')}
+                            </div>
+                        )}
+
+                        <div className="flex justify-between items-center text-[10px] text-muted-foreground pt-1">
+                            <span>Enviado em {new Date(req.created_at).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

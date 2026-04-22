@@ -190,9 +190,10 @@ const Services = () => {
 
             if (error) throw error;
 
-            toast.success("Solicitação enviada! O profissional entrará em contato em breve.");
+            toast.success("Solicitação enviada! Acompanhe em seu perfil.");
             setIsRequestModalOpen(false);
             setRequestData({ serviceType: "", description: "", address: "", phone: "" });
+            navigate("/perfil");
         } catch (error: any) {
             console.error("Error sending request:", error);
             toast.error("Erro ao enviar solicitação: " + error.message);
