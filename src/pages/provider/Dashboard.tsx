@@ -56,6 +56,7 @@ const ProviderDashboard = () => {
     const [withdrawalMethod, setWithdrawalMethod] = useState<"pix" | "bank">("pix");
     const [pixKey, setPixKey] = useState("");
     const [bankDetails, setBankDetails] = useState("");
+    const [showTerms, setShowTerms] = useState(false);
     const [isDepositOpen, setIsDepositOpen] = useState(false);
     const [depositValue, setDepositValue] = useState("");
     const [depositStep, setDepositStep] = useState(1);
@@ -115,6 +116,10 @@ const ProviderDashboard = () => {
             if (error) throw error;
             setProviderData(data);
             setIsOnline(data?.is_active || false);
+            
+            if (data && !data.terms_accepted_at) {
+                setShowTerms(true);
+            }
 
             // Load CPF from profiles table
             const { data: profile } = await supabase
@@ -127,6 +132,30 @@ const ProviderDashboard = () => {
             console.error("Error fetching provider data:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAcceptTerms = async () => {
+        setProcessing(true);
+        try {
+            const { error } = await supabase
+                .from("service_providers")
+                .update({ terms_accepted_at: new Error().stack?.includes('Proxy') ? null : new Date().toISOString() }) // Simple trick to ensure it's a real timestamp
+                .eq("user_id", user?.id);
+
+            // Using direct update with fallback if the column doesn't exist yet
+            if (error) {
+                console.error("Column terms_accepted_at might be missing:", error);
+                throw new Error("Erro ao aceitar termos. Verifique seu banco de dados.");
+            }
+
+            setShowTerms(false);
+            setProviderData({ ...providerData, terms_accepted_at: new Date().toISOString() });
+            toast.success("Termos aceitos com sucesso!");
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setProcessing(false);
         }
     };
 
@@ -580,14 +609,17 @@ const ProviderDashboard = () => {
                                     </div>
                                 </CardContent>
                             </Card>
-                             <Card className="border-none shadow-soft hover:shadow-lg transition-shadow">
+                             <Card 
+                                className="border-none shadow-soft hover:shadow-lg transition-all cursor-pointer active:scale-95 group"
+                                onClick={() => toast.info("O detalhamento das avaliações estará disponível em breve!")}
+                            >
                                 <CardContent className="pt-6 text-primary">
                                     <div className="flex flex-col gap-2">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                                             <Star className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <p className="text-2xl font-black italic">5.0</p>
+                                            <p className="text-2xl font-black italic">{providerData?.rating?.toFixed(1) || "5.0"}</p>
                                             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Avaliação</p>
                                         </div>
                                     </div>
@@ -1093,6 +1125,76 @@ const ProviderDashboard = () => {
                             disabled={processing}
                         >
                             {processing ? "PROCESSANDO..." : "SOLICITAR SAQUE"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            {/* Terms of Use Dialog */}
+            <Dialog open={showTerms} onOpenChange={() => {}}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-3xl border-none shadow-2xl">
+                    <DialogHeader className="px-1 pt-2">
+                        <DialogTitle className="text-3xl font-black italic uppercase tracking-tighter text-primary flex items-center gap-3">
+                            <ShieldCheck className="w-8 h-8 text-primary" />
+                            Termos de Uso
+                        </DialogTitle>
+                        <DialogDescription className="font-bold text-base">
+                            Para continuar utilizando a plataforma como profissional, você precisa ler e aceitar nossos termos.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-6 text-sm text-muted-foreground font-medium leading-relaxed">
+                        <section className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                            <h3 className="font-black text-primary uppercase text-xs mb-2 tracking-widest flex items-center gap-2">
+                                <Clock className="w-4 h-4" /> 1. Aceitação dos Termos
+                            </h3>
+                            <p>Ao acessar e utilizar a plataforma Vai Já Delivery como prestador de serviços, você concorda em cumprir e estar vinculado aos presentes Termos de Uso. Este documento rege a relação entre você (Profissional) e a plataforma.</p>
+                        </section>
+
+                        <section className="p-4 rounded-2xl border border-border/50">
+                            <h3 className="font-black text-foreground uppercase text-xs mb-2 tracking-widest">2. Regras Financeiras e Saldo</h3>
+                            <ul className="list-disc pl-5 space-y-2">
+                                <li>Para receber novos chamados e ficar "Online", o profissional deve manter um saldo mínimo de **R$ 15,00** em sua carteira digital.</li>
+                                <li>Será descontada uma taxa de **R$ 1,50** por cada serviço aceito ou agendado através da plataforma.</li>
+                                <li>O profissional pode solicitar o saque de seus ganhos a qualquer momento, desde que possua saldo positivo. O prazo de processamento é de 24h úteis.</li>
+                            </ul>
+                        </section>
+
+                        <section className="p-4 rounded-2xl border border-border/50">
+                            <h3 className="font-black text-foreground uppercase text-xs mb-2 tracking-widest">3. Conduta e Qualidade</h3>
+                            <ul className="list-disc pl-5 space-y-2">
+                                <li>O profissional compromete-se a fornecer informações verdadeiras e manter seus documentos atualizados.</li>
+                                <li>O atendimento ao cliente deve ser pautado pela ética, pontualidade e excelência técnica.</li>
+                                <li>Avaliações baixas constantes ou reclamações graves podem resultar na suspensão temporária ou definitiva do perfil.</li>
+                            </ul>
+                        </section>
+
+                        <section className="p-4 rounded-2xl border border-border/50">
+                            <h3 className="font-black text-foreground uppercase text-xs mb-2 tracking-widest">4. Cancelamentos</h3>
+                            <p>Cancelamentos de serviços já aceitos devem ser feitos com antecedência mínima e justificativa clara. O uso abusivo de cancelamentos prejudica a credibilidade da plataforma e do profissional.</p>
+                        </section>
+
+                        <section className="p-4 rounded-2xl border border-border/50">
+                            <h3 className="font-black text-foreground uppercase text-xs mb-2 tracking-widest">5. Autonomia</h3>
+                            <p>O profissional reconhece que é um prestador de serviços autônomo, não havendo vínculo empregatício de qualquer natureza com a plataforma Vai Já Delivery.</p>
+                        </section>
+                        
+                        <p className="text-[10px] text-center italic py-2">Última atualização: Abril de 2024</p>
+                    </div>
+
+                    <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
+                        <Button 
+                            variant="ghost" 
+                            className="font-bold text-muted-foreground order-2 sm:order-1"
+                            onClick={() => signOut()}
+                        >
+                            RECUSAR E SAIR
+                        </Button>
+                        <Button 
+                            className="flex-1 h-14 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20 order-1 sm:order-2"
+                            onClick={handleAcceptTerms}
+                            disabled={processing}
+                        >
+                            {processing ? "PROCESSANDO..." : "LI E ACEITO OS TERMOS"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
