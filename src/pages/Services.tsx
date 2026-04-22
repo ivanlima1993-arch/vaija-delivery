@@ -168,10 +168,18 @@ const Services = () => {
 
         setSending(true);
         try {
+            // Fetch customer name from profile
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("user_id", user?.id)
+                .single();
+
             const { error } = await supabase
                 .from("service_requests")
                 .insert([{
                     customer_id: user?.id,
+                    customer_name: profile?.full_name || "Usuário Vai Já",
                     provider_id: selectedPro.id,
                     service_type: requestData.serviceType,
                     description: requestData.description,

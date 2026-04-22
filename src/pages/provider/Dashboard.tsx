@@ -94,7 +94,7 @@ const ProviderDashboard = () => {
 
             const { data, error } = await supabase
                 .from("service_requests")
-                .select("*")
+                .select("*, customer:profiles!service_requests_customer_id_fkey(full_name)")
                 .eq("provider_id", provider.id)
                 .order("created_at", { ascending: false });
 
@@ -695,7 +695,7 @@ const ProviderDashboard = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] uppercase font-black text-muted-foreground">Cliente</p>
-                                                        <p className="text-sm font-bold">{req.customer_name || "Usuário Vai Já"}</p>
+                                                        <p className="text-sm font-bold">{(req.customer as any)?.full_name || req.customer_name || "Usuário Vai Já"}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
