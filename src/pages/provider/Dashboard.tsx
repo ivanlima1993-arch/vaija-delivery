@@ -94,12 +94,35 @@ const ProviderDashboard = () => {
 
             const { data, error } = await supabase
                 .from("service_requests")
-                .select("*, customer:profiles!service_requests_customer_id_fkey(full_name)")
+                .select("*")
                 .eq("provider_id", provider.id)
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
-            setRequests(data || []);
+            
+            // Fetch customer names from profiles for these requests to ensure they appear
+            const customerIds = [...new Set(data?.map(r => r.customer_id).filter(Boolean))];
+            
+            if (customerIds.length > 0) {
+                const { data: profiles } = await supabase
+                    .from("profiles")
+                    .select("user_id, full_name")
+                    .in("user_id", customerIds);
+                
+                const profileMap = (profiles || []).reduce((acc: Record<string, string>, p) => {
+                    acc[p.user_id] = p.full_name;
+                    return acc;
+                }, {});
+
+                const enrichedData = data?.map(r => ({
+                    ...r,
+                    customer_full_name: profileMap[r.customer_id] || r.customer_name || "Usuário Vai Já"
+                }));
+                
+                setRequests(enrichedData || []);
+            } else {
+                setRequests(data || []);
+            }
         } catch (error) {
             console.error("Error fetching requests:", error);
         }
@@ -695,7 +718,7 @@ const ProviderDashboard = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] uppercase font-black text-muted-foreground">Cliente</p>
-                                                        <p className="text-sm font-bold">{(req.customer as any)?.full_name || req.customer_name || "Usuário Vai Já"}</p>
+                                                        <p className="text-sm font-bold">{req.customer_full_name || req.customer_name || "Usuário Vai Já"}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
