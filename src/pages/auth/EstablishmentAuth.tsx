@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -275,6 +275,15 @@ const EstablishmentAuth = () => {
               >
                 {loading ? "Carregando..." : mode === "login" ? "Entrar" : "Cadastrar"}
               </Button>
+              
+              {mode === "register" && (
+                <p className="text-[10px] text-center text-muted-foreground mt-2">
+                  Ao cadastrar, você concorda com nossos{" "}
+                  <Link to="/termos-estabelecimento" className="text-orange-600 hover:underline">
+                    Termos de Uso para Estabelecimentos
+                  </Link>.
+                </p>
+              )}
             </div>
           </form>
 

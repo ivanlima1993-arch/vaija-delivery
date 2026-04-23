@@ -53,6 +53,7 @@ import OrderTracking from "./pages/OrderTracking";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 import TermsOfUse from "./pages/TermsOfUse";
+import EstablishmentTerms from "./pages/EstablishmentTerms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AboutUs from "./pages/AboutUs";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
@@ -151,6 +152,7 @@ const App = () => {
                 <Route path="/profissional/auth" element={<ProviderAuth />} />
                 <Route path="/instalar" element={<Install />} />
                 <Route path="/termos-de-uso" element={<TermsOfUse />} />
+                <Route path="/termos-estabelecimento" element={<EstablishmentTerms />} />
                 <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
                 <Route path="/sobre-nos" element={<AboutUs />} />
                 <Route path="*" element={<NotFound />} />
