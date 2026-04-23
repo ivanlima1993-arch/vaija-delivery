@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
+import AnalysisScreen from "@/components/establishment/AnalysisScreen";
 import {
   Store,
   ShoppingBag,
@@ -36,6 +37,7 @@ const EstablishmentDashboard = () => {
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPendingApproval, setIsPendingApproval] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -87,16 +89,24 @@ const EstablishmentDashboard = () => {
 
     const { data: est } = await supabase
       .from("establishments")
-      .select("is_approved")
+      .select("*")
       .eq("owner_id", user.id)
       .maybeSingle();
 
-    if (!est || est.is_approved !== true) {
-      toast.error("Seu acesso ainda não foi aprovado pelo administrador.");
-      await supabase.auth.signOut();
-      navigate("/auth");
+    if (!est) {
+      setLoading(false);
+      return; 
+    }
+
+    if (est.is_approved !== true) {
+      setEstablishment(est);
+      setIsPendingApproval(true);
+      setLoading(false);
     } else {
-      fetchEstablishment();
+      setEstablishment(est);
+      setIsPendingApproval(false);
+      fetchOrders(est.id);
+      setLoading(false);
     }
   };
 
@@ -294,6 +304,20 @@ const EstablishmentDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
+    );
+  }
+
+  if (isPendingApproval) {
+    return (
+      <AnalysisScreen
+        establishmentName={establishment?.name || "Estabelecimento"}
+        createdAt={establishment?.created_at || new Date().toISOString()}
+        onRefresh={() => checkApproval()}
+        onSignOut={async () => {
+          await supabase.auth.signOut();
+          navigate("/auth");
+        }}
+      />
     );
   }
 
