@@ -73,28 +73,27 @@ const EstablishmentDashboard = () => {
       return;
     }
 
-    if (!authLoading && user && !isEstablishment) {
-      toast.error("Você não tem acesso a esta área");
-      navigate("/");
-      return;
-    }
-
-    if (!authLoading && user && isEstablishment) {
+    if (!authLoading && user) {
       checkApproval();
     }
   }, [user, authLoading, isEstablishment, navigate]);
 
-  const checkApproval = async () => {
+  const checkApproval = async (retry = true) => {
     if (!user?.id) return;
 
-    const { data: est } = await supabase
+    const { data: est, error } = await supabase
       .from("establishments")
       .select("*")
       .eq("owner_id", user.id)
       .maybeSingle();
 
     if (!est) {
-      setLoading(false);
+      if (retry) {
+        // Wait 1.5s and try again once (useful for new registrations)
+        setTimeout(() => checkApproval(false), 1500);
+      } else {
+        setLoading(false);
+      }
       return; 
     }
 

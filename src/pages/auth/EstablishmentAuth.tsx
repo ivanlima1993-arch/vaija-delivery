@@ -88,31 +88,41 @@ const EstablishmentAuth = () => {
 
       if (error) throw error;
 
-      if (data.user) {
-        // Add establishment role
-        await supabase.from("user_roles").insert({
-          user_id: data.user.id,
-          role: "establishment",
-        });
+        if (data.user) {
+          // Add establishment role
+          await supabase.from("user_roles").insert({
+            user_id: data.user.id,
+            role: "establishment",
+          });
 
-        // Create establishment
-        await supabase.from("establishments").insert({
-          owner_id: data.user.id,
-          name: formData.establishmentName,
-          phone: formData.phone,
-          cpf_cnpj: formData.cpfCnpj,
-          category: formData.category,
-        });
+          // Create establishment
+          await supabase.from("establishments").insert({
+            owner_id: data.user.id,
+            name: formData.establishmentName,
+            phone: formData.phone,
+            cpf_cnpj: formData.cpfCnpj,
+            category: formData.category,
+          });
 
-        toast.success("Cadastro realizado! Aguarde aprovação do seu estabelecimento.");
-        navigate("/estabelecimento");
+          // Force a small delay to ensure DB consistency and check session
+          const { data: sessionData } = await supabase.auth.getSession();
+          
+          if (!sessionData.session) {
+            // If No session (can happen if confirm email is required), we can't show analysis
+            toast.success("Cadastro realizado! Por favor, verifique seu e-mail para ativar sua conta.");
+            setMode("login");
+          } else {
+            toast.success("Cadastro realizado com sucesso! Sua análise começou.");
+            // Use window.location to force a full context refresh if navigate is failing
+            window.location.href = "#/estabelecimento";
+          }
+        }
+      } catch (error: any) {
+        toast.error(error.message || "Erro ao fazer cadastro");
+      } finally {
+        setLoading(false);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer cadastro");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-background to-orange-100/30 dark:from-orange-950/20 dark:via-background dark:to-orange-900/20 flex items-center justify-center p-4">
