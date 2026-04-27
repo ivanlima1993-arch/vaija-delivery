@@ -30,6 +30,7 @@ import EstablishmentBankAccount from "./pages/establishment/BankAccount";
 import EstablishmentDeliveryStatements from "./pages/establishment/DeliveryStatements";
 import EstablishmentDrivers from "./pages/establishment/Drivers";
 import EstablishmentDeliveries from "./pages/establishment/Deliveries";
+import EstablishmentWhatsApp from "./pages/establishment/WhatsApp";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEstablishments from "./pages/admin/Establishments";
 import AdminCreateEstablishment from "./pages/admin/CreateEstablishment";
@@ -126,6 +127,7 @@ const App = () => {
                 <Route path="/estabelecimento/extrato-entregas" element={<EstablishmentDeliveryStatements />} />
                 <Route path="/estabelecimento/entregadores" element={<EstablishmentDrivers />} />
                 <Route path="/estabelecimento/entregas" element={<EstablishmentDeliveries />} />
+                <Route path="/estabelecimento/whatsapp" element={<EstablishmentWhatsApp />} />
                 <Route path="/estabelecimento/configuracoes" element={<EstablishmentSettings />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/estabelecimentos" element={<AdminEstablishments />} />

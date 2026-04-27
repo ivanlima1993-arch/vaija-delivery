@@ -42,6 +42,15 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ProviderHeader from "@/components/provider/ProviderHeader";
+import ProviderStats from "@/components/provider/ProviderStats";
+import ProviderAlerts from "@/components/provider/ProviderAlerts";
+import ServiceRequestCard from "@/components/provider/ServiceRequestCard";
+import AcceptedServiceCard from "@/components/provider/AcceptedServiceCard";
+import ChatDrawer from "@/components/provider/ChatDrawer";
+import { Trophy, Zap, Star as StarIcon, TrendingUp, MessageSquare, CheckCircle2, Calendar as CalendarIcon } from "lucide-react";
+
+
 
 const ProviderDashboard = () => {
     const navigate = useNavigate();
@@ -73,6 +82,9 @@ const ProviderDashboard = () => {
     const [isSchedulingOpen, setIsSchedulingOpen] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
     const [scheduleDate, setScheduleDate] = useState("");
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatRequest, setChatRequest] = useState<any>(null);
+
 
     useEffect(() => {
         if (user) {
@@ -501,6 +513,32 @@ const ProviderDashboard = () => {
     const scheduledRequests = requests.filter(r => r.status === 'scheduled');
     const inProgressRequests = requests.filter(r => r.status === 'accepted');
 
+    const handleOpenChat = (req: any) => {
+        setChatRequest(req);
+        setIsChatOpen(true);
+    };
+
+    const handleCompleteService = async (requestId: string) => {
+        try {
+            setProcessing(true);
+            const { error } = await supabase
+                .from("service_requests")
+                .update({ status: 'completed' })
+                .eq("id", requestId);
+
+            if (error) throw error;
+
+            toast.success("Serviço concluído! +50 pontos de experiência ganhos. 🎉");
+            fetchRequests();
+            fetchProviderData();
+        } catch (error: any) {
+            toast.error("Erro ao concluir serviço: " + error.message);
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
@@ -513,187 +551,68 @@ const ProviderDashboard = () => {
         <div className="min-h-screen bg-background flex">
             {/* Main Content */}
             <main className="flex-1 overflow-auto">
-                {/* Header */}
-                <header className="sticky top-0 z-30 bg-card/95 backdrop-blur border-b px-4 py-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Button variant="ghost" size="icon" className="lg:hidden">
-                                <Menu className="w-5 h-5" />
-                            </Button>
-                            <div>
-                                <h1 className="font-bold text-lg">Olá, {providerData?.name?.split(' ')[0]}!</h1>
-                                <div className="flex items-center gap-2">
-                                    {providerData?.is_active ? (
-                                        <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50 gap-1 px-1">
-                                            <ShieldCheck className="w-3 h-3" /> Perfil Verificado
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="text-amber-600 border-amber-600 bg-amber-50 gap-1 px-1">
-                                            <AlertCircle className="w-3 h-3" /> Aguardando Aprovação
-                                        </Badge>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold">{isOnline ? "Online" : "Indisponível"}</span>
-                                <Switch
-                                    checked={isOnline}
-                                    onCheckedChange={toggleOnline}
-                                    className="data-[state=checked]:bg-green-500"
-                                />
-                            </div>
-                            <Button variant="ghost" size="icon" className="relative text-primary">
-                                <Volume2 className="w-5 h-5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="relative">
-                                <Bell className="w-5 h-5" />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-                            </Button>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="text-muted-foreground hover:text-destructive"
-                                onClick={async () => {
-                                    await signOut();
-                                    navigate('/profissional/auth');
-                                }}
-                            >
-                                <LogOut className="w-5 h-5" />
-                            </Button>
-                        </div>
-                    </div>
-                </header>
+                <ProviderHeader 
+                    providerData={providerData}
+                    isOnline={isOnline}
+                    toggleOnline={toggleOnline}
+                    onSignOut={async () => {
+                        await signOut();
+                        navigate('/profissional/auth');
+                    }}
+                    onMenuClick={() => setSidebarOpen(true)}
+                />
 
                 <div className="p-4 lg:p-6 space-y-6">
-                    {!providerData?.is_active && providerData?.wallet_balance >= 15 && (
-                        <Card className="border-none bg-amber-500/10 border-amber-500/20 text-amber-700">
-                            <CardContent className="p-4 flex gap-4 items-center">
-                                <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white shrink-0">
-                                    <AlertCircle className="w-6 h-6" />
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="font-black uppercase text-xs">Atenção ao seu Perfil</p>
-                                    <p className="text-sm font-medium">Seu cadastro está em análise. Você ainda não pode receber novos pedidos, mas pode configurar seu perfil.</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                    <ProviderAlerts 
+                        providerData={providerData}
+                        onDeposit={() => setIsDepositOpen(true)}
+                    />
 
-                    {providerData?.wallet_balance < 15 && (
-                        <Card className="border-none bg-destructive/10 border-destructive/20 text-destructive">
-                            <CardContent className="p-4 flex gap-4 items-center">
-                                <div className="w-12 h-12 bg-destructive rounded-2xl flex items-center justify-center text-white shrink-0">
-                                    <DollarSign className="w-6 h-6" />
-                                </div>
-                                <div className="space-y-1 flex-1">
-                                    <p className="font-black uppercase text-xs">Saldo Insuficiente</p>
-                                    <p className="text-sm font-medium">Você precisa de no mínimo R$ 15,00 para receber novos chamados.</p>
-                                </div>
-                                <Button 
-                                    size="sm" 
-                                    className="bg-destructive hover:bg-destructive/90 text-white font-bold rounded-xl"
-                                    onClick={() => setIsDepositOpen(true)}
-                                >
-                                    RECARREGAR
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* Stats & Wallet */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card className="border-none shadow-soft bg-gradient-to-br from-primary to-primary-foreground text-white relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-500">
-                                <DollarSign className="w-24 h-24" />
+                    {/* Gamification Section - NEW */}
+                    <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card className="border-none shadow-soft bg-gradient-to-br from-amber-500 to-orange-600 text-white col-span-1 md:col-span-2 overflow-hidden relative">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Trophy className="w-24 h-24" />
                             </div>
-                            <CardContent className="pt-6 relative">
-                                <div className="flex flex-col h-full justify-between">
+                            <CardContent className="p-6">
+                                <div className="flex justify-between items-center mb-4">
                                     <div>
-                                        <p className="text-xs font-bold uppercase opacity-80 mb-1">Ganhos Disponíveis</p>
-                                        <p className="text-4xl font-black italic tracking-tighter">
-                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(providerData?.wallet_balance || 0)}
-                                        </p>
+                                        <h2 className="text-xl font-black italic uppercase tracking-tighter">Vai Já Rewards</h2>
+                                        <p className="text-xs font-bold opacity-90">Nível 1: Iniciante</p>
                                     </div>
-                                    <div className="flex gap-2 mt-6">
-                                        <Button 
-                                            variant="secondary" 
-                                            className="flex-1 bg-white text-primary hover:bg-white/90 font-black h-12 rounded-2xl text-sm shadow-xl"
-                                            onClick={() => setIsDepositOpen(true)}
-                                        >
-                                            ADICIONAR SALDO
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="flex-1 bg-transparent border-white/30 text-white hover:bg-white/10 font-black h-12 rounded-2xl text-sm"
-                                            onClick={handleWithdrawalRequest}
-                                            disabled={!providerData?.is_active}
-                                        >
-                                            SAQUE
-                                        </Button>
+                                    <Badge className="bg-white/20 hover:bg-white/30 text-white border-none">
+                                        <Zap className="w-3 h-3 mr-1 fill-white" /> 150 pts
+                                    </Badge>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[10px] font-black uppercase">
+                                        <span>Progresso para Nível 2</span>
+                                        <span>75%</span>
                                     </div>
+                                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                                        <div className="h-full bg-white w-3/4 shadow-[0_0_10px_#fff]" />
+                                    </div>
+                                    <p className="text-[10px] italic opacity-80">* Complete mais 5 serviços para ganhar R$ 10,00 de bônus!</p>
                                 </div>
                             </CardContent>
                         </Card>
-
-                        <div className="grid grid-cols-2 gap-4 col-span-1 md:col-span-1 lg:col-span-2">
-                             <Card className="border-none shadow-soft hover:shadow-lg transition-shadow">
-                                <CardContent className="pt-6">
-                                    <div className="flex flex-col gap-2">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                                            <Briefcase className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-black italic">0</p>
-                                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Serviços Hoje</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                             <Card 
-                                className="border-none shadow-soft hover:shadow-lg transition-all cursor-pointer active:scale-95 group"
-                                onClick={() => toast.info("O detalhamento das avaliações estará disponível em breve!")}
-                            >
-                                <CardContent className="pt-6 text-primary">
-                                    <div className="flex flex-col gap-2">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                                            <Star className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-black italic">{providerData?.rating?.toFixed(1) || "5.0"}</p>
-                                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Avaliação</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        <Card className="border-none shadow-soft bg-card lg:col-span-1">
-                            <CardContent className="pt-6">
-                                <div className="space-y-4">
-                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Ações Rápidas</p>
-                                    <div className="space-y-2">
-                                        <Button 
-                                            variant="ghost" 
-                                            className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98"
-                                            onClick={() => navigate('/carteira')}
-                                        >
-                                            <History className="w-5 h-5" /> Histórico de Ganhos
-                                        </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            className="w-full justify-start font-black text-xs h-11 rounded-xl gap-3 hover:bg-primary/5 hover:text-primary transition-all active:scale-98"
-                                            onClick={() => navigate('/perfil')}
-                                        >
-                                            <Settings className="w-5 h-5" /> Configurações Gerais
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardContent>
+                        
+                        <Card className="border-none shadow-soft flex flex-col justify-center p-6 text-center group cursor-pointer hover:bg-muted/50 transition-all">
+                            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                <TrendingUp className="w-6 h-6" />
+                            </div>
+                            <h3 className="font-black text-sm uppercase italic">Ranking Semanal</h3>
+                            <p className="text-2xl font-black text-primary">#12</p>
+                            <p className="text-[10px] text-muted-foreground font-bold">em sua cidade</p>
                         </Card>
-                    </div>
+                    </section>
+
+                    <ProviderStats 
+                        providerData={providerData}
+                        onDeposit={() => setIsDepositOpen(true)}
+                        onWithdraw={handleWithdrawalRequest}
+                        onNavigate={navigate}
+                    />
 
                     {/* Service Requests */}
                     <section className="space-y-4 pt-4">
@@ -707,82 +626,17 @@ const ProviderDashboard = () => {
                                 <p className="text-center py-8 text-muted-foreground font-medium italic">Nenhuma nova solicitação no momento.</p>
                             )}
                             {pendingRequests.map((req) => (
-                                <motion.div
+                                <ServiceRequestCard 
                                     key={req.id}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                >
-                                    <Card className="border-none shadow-soft overflow-hidden">
-                                        <CardContent className="p-0">
-                                            <div className="p-4 flex justify-between items-start border-b border-border/50">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Badge className='bg-amber-500'>
-                                                            NOVA SOLICITAÇÃO
-                                                        </Badge>
-                                                        <span className="text-xs text-muted-foreground font-bold italic">
-                                                            {new Date(req.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    </div>
-                                                    <h3 className="font-black text-lg">{req.service_type}</h3>
-                                                </div>
-                                                <p className="text-xl font-black text-primary">
-                                                    {req.price ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.price) : "A combinar"}
-                                                </p>
-                                            </div>
-
-                                            <div className="p-4 bg-muted/30 grid grid-cols-2 gap-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                                        <Briefcase className="w-4 h-4" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground">Cliente</p>
-                                                        <p className="text-sm font-bold">{req.customer_full_name || req.customer_name || "Usuário Vai Já"}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                                        <MapPin className="w-4 h-4" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground">Local</p>
-                                                        <p className="text-sm font-bold truncate w-32">{req.address}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 flex flex-col gap-3">
-                                                <div className="flex gap-3">
-                                                    <Button 
-                                                        className="flex-1 bg-primary hover:bg-primary/90 font-black h-14 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-white"
-                                                        onClick={() => handleAcceptService(req.id)}
-                                                    >
-                                                        ACEITAR AGORA
-                                                    </Button>
-                                                    <Button 
-                                                        variant="outline" 
-                                                        className="flex-1 border-primary text-primary hover:bg-primary/5 font-black h-14 rounded-2xl transition-all active:scale-95"
-                                                        onClick={() => {
-                                                            setSelectedRequest(req);
-                                                            setIsSchedulingOpen(true);
-                                                        }}
-                                                    >
-                                                        <CalendarIcon className="w-4 h-4 mr-2" /> AGENDAR
-                                                    </Button>
-                                                </div>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    className="w-full text-destructive font-bold h-10 hover:bg-destructive/5"
-                                                    onClick={() => handleRejectService(req.id)}
-                                                    disabled={processing}
-                                                >
-                                                    RECUSAR CHAMADO
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
+                                    req={req}
+                                    onAccept={handleAcceptService}
+                                    onSchedule={(r) => {
+                                        setSelectedRequest(r);
+                                        setIsSchedulingOpen(true);
+                                    }}
+                                    onReject={handleRejectService}
+                                    processing={processing}
+                                />
                             ))}
                         </div>
                     </section>
@@ -791,47 +645,54 @@ const ProviderDashboard = () => {
                     <section className="space-y-4 pt-4">
                         <h2 className="text-xl font-black italic uppercase tracking-tight flex items-center gap-2">
                             <CalendarIcon className="w-6 h-6 text-primary" />
-                            Minha Agenda
+                            Minha Agenda ({scheduledRequests.length})
                         </h2>
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              {scheduledRequests.length === 0 && (
-                                <p className="text-center py-8 text-muted-foreground font-medium italic">Sua agenda está vazia.</p>
+                                <p className="text-center py-8 text-muted-foreground font-medium italic col-span-full">Sua agenda está vazia.</p>
                             )}
                             {scheduledRequests.map((req) => (
-                                <Card key={req.id} className="border-none shadow-soft overflow-hidden">
-                                     <div className="bg-primary/10 p-3 px-4 flex justify-between items-center border-b border-primary/20">
-                                        <div className="flex items-center gap-2">
-                                            <CalendarIcon className="w-4 h-4 text-primary" />
-                                            <span className="text-sm font-bold text-primary uppercase">
-                                                {new Date(req.scheduled_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                        <Badge className="bg-primary text-white">AGENDADO</Badge>
-                                    </div>
-                                    <CardContent className="p-4">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <div>
-                                                <h3 className="font-black text-lg">{req.service_type}</h3>
-                                                <p className="text-sm text-muted-foreground">{req.customer_name}</p>
-                                            </div>
-                                            <Button variant="secondary" size="icon" className="rounded-xl">
-                                                <MessageSquare className="w-5 h-5" />
-                                            </Button>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                                            <MapPin className="w-4 h-4" />
-                                            <span className="truncate">{req.address}</span>
-                                        </div>
-                                        <Button className="w-full bg-green-600 hover:bg-green-700 font-bold h-12 rounded-xl text-white">
-                                            INICIAR SERVIÇO AGORA
-                                        </Button>
-                                    </CardContent>
-                                </Card>
+                                <AcceptedServiceCard 
+                                    key={req.id}
+                                    req={req}
+                                    status="scheduled"
+                                    onChat={handleOpenChat}
+                                />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Services in Progress */}
+                    <section className="space-y-4 pt-4">
+                        <h2 className="text-xl font-black italic uppercase tracking-tight flex items-center gap-2">
+                            <Zap className="w-6 h-6 text-primary" />
+                            Serviços em Andamento ({inProgressRequests.length})
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             {inProgressRequests.length === 0 && (
+                                <p className="text-center py-8 text-muted-foreground font-medium italic col-span-full">Nenhum serviço em execução.</p>
+                            )}
+                            {inProgressRequests.map((req) => (
+                                <AcceptedServiceCard 
+                                    key={req.id}
+                                    req={req}
+                                    status="accepted"
+                                    onChat={handleOpenChat}
+                                    onComplete={handleCompleteService}
+                                />
                             ))}
                         </div>
                     </section>
                 </div>
+
+                <ChatDrawer 
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                    requestId={chatRequest?.id}
+                    customerName={chatRequest?.customer_full_name || chatRequest?.customer_name || "Cliente"}
+                />
             </main>
+
             {/* Deposit Dialog */}
             <Dialog open={isDepositOpen} onOpenChange={(open) => {
                 if (!open) resetDeposit();

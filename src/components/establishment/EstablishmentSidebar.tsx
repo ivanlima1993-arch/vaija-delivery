@@ -18,6 +18,7 @@ import {
   TruckIcon,
   Users,
   MapPin,
+  MessageCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ const menuItems = [
   { icon: TruckIcon, label: "Extrato de Entregas", path: "/estabelecimento/extrato-entregas" },
   { icon: Users, label: "Entregadores", path: "/estabelecimento/entregadores" },
   { icon: MapPin, label: "Entregas", path: "/estabelecimento/entregas" },
+  { icon: MessageCircle, label: "WhatsApp Chatbot", path: "/estabelecimento/whatsapp" },
   { icon: Settings, label: "Configurações", path: "/estabelecimento/configuracoes" },
 ];
 
