@@ -58,6 +58,17 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   build: {
     outDir: "docs",
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-ui': ['framer-motion', 'lucide-react', 'sonner'],
+          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge']
+        }
+      }
+    }
   },
   resolve: {
     alias: {

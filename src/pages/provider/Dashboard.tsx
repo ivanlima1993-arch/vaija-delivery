@@ -49,6 +49,7 @@ import ServiceRequestCard from "@/components/provider/ServiceRequestCard";
 import AcceptedServiceCard from "@/components/provider/AcceptedServiceCard";
 import ChatDrawer from "@/components/provider/ChatDrawer";
 import { Trophy, Zap, Star as StarIcon, TrendingUp, MessageSquare, CheckCircle2, Calendar as CalendarIcon } from "lucide-react";
+import { useProviderNotifications } from "@/hooks/useProviderNotifications";
 
 
 
@@ -85,6 +86,7 @@ const ProviderDashboard = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatRequest, setChatRequest] = useState<any>(null);
 
+    useProviderNotifications(providerData?.id);
 
     useEffect(() => {
         if (user) {
