@@ -44,6 +44,7 @@ import AdminPromotions from "./pages/admin/Promotions";
 import AdminInvoices from "./pages/admin/Invoices";
 import AdminWithdrawals from "./pages/admin/Withdrawals";
 import AdminServiceProviders from "./pages/admin/ServiceProviders";
+import AdminProspects from "./pages/admin/Prospects";
 import DriverDashboard from "./pages/driver/Dashboard";
 import AvailableOrders from "./pages/driver/AvailableOrders";
 import InRoute from "./pages/driver/InRoute";
@@ -141,6 +142,7 @@ const App = () => {
                 <Route path="/admin/saques" element={<AdminWithdrawals />} />
                 <Route path="/admin/relatorios" element={<AdminReports />} />
                 <Route path="/admin/profissionais" element={<AdminServiceProviders />} />
+                <Route path="/admin/prospeccao" element={<AdminProspects />} />
                 <Route path="/admin/configuracoes" element={<AdminSettings />} />
                 <Route path="/entregador" element={<DriverDashboard />} />
                 <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
