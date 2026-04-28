@@ -95,6 +95,7 @@ const Footer = () => {
           <div>
             <h4 className="font-display font-semibold mb-4">Parceiros</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link to="/parceiros" className="hover:text-primary transition-colors text-primary font-medium flex items-center gap-1"><Zap className="w-3 h-3" /> Seja um Parceiro (Venda Conosco)</Link></li>
               <li><Link to="/estabelecimento/auth" className="hover:text-primary transition-colors">Cadastre seu estabelecimento</Link></li>
               <li><Link to="/entregador/auth" className="hover:text-primary transition-colors">Seja entregador</Link></li>
               <li><Link to="/profissional/auth" className="hover:text-primary transition-colors">Seja um profissional</Link></li>

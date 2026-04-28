@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Building2, UserPlus, Search, Pencil, Trash2, Phone, Calendar, MessageSquare } from "lucide-react";
+import { Users, Building2, UserPlus, Search, Pencil, Trash2, Phone, Calendar, MessageSquare, MessageCircle } from "lucide-react";
 
 export default function AdminProspects() {
   const [prospects, setProspects] = useState<any[]>([]);
@@ -144,6 +144,27 @@ export default function AdminProspects() {
     p.contact_info?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleWhatsApp = (prospect: any) => {
+    if (!prospect.contact_info) {
+      toast.error("Nenhum telefone registrado para este lead.");
+      return;
+    }
+    
+    // Clean phone number (remove non-digits)
+    const phoneLimpo = prospect.contact_info.replace(/\D/g, "");
+    
+    if (phoneLimpo.length < 10) {
+      toast.error("Número de telefone parece inválido.");
+      return;
+    }
+
+    const isBusiness = prospect.type === 'business';
+    const message = `Olá ${prospect.name}! Somos do Vai Já Delivery. Vimos que você tem interesse em ser nosso parceiro como ${isBusiness ? 'estabelecimento' : 'profissional'}. Como podemos ajudar?`;
+    
+    const url = `https://wa.me/55${phoneLimpo}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
+
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'Novo': return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
@@ -239,10 +260,19 @@ export default function AdminProspects() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(prospect)}>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950/30"
+                      onClick={() => handleWhatsApp(prospect)}
+                      title="Chamar no WhatsApp"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(prospect)} title="Editar Lead">
                       <Pencil className="w-4 h-4 text-blue-500" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(prospect.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(prospect.id)} title="Excluir Lead">
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </TableCell>

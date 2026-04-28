@@ -67,6 +67,7 @@ import Wallet from "./pages/Wallet";
 import Services from "./pages/Services";
 import ProviderDashboard from "./pages/provider/Dashboard";
 import ProviderAuth from "./pages/auth/ProviderAuth";
+import Partners from "./pages/Partners";
 
 const queryClient = new QueryClient();
 
@@ -159,6 +160,7 @@ const App = () => {
                 <Route path="/termos-estabelecimento" element={<EstablishmentTerms />} />
                 <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
                 <Route path="/sobre-nos" element={<AboutUs />} />
+                <Route path="/parceiros" element={<Partners />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>
