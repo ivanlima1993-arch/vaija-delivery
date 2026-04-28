@@ -1,8 +1,46 @@
 import { Zap, Instagram, Facebook, Mail, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 
+interface CityLinks {
+  instagram_url?: string;
+  facebook_url?: string;
+}
+
 const Footer = () => {
+  const [cityLinks, setCityLinks] = useState<CityLinks>({});
+
+  useEffect(() => {
+    const fetchCityLinks = async () => {
+      // Pega a cidade selecionada do localStorage (padrão da seleção do usuário)
+      const selectedCityId = localStorage.getItem("selectedCityId");
+
+      if (!selectedCityId) {
+        // Se não tem cidade, busca a primeira cidade ativa
+        const { data } = await supabase
+          .from("cities")
+          .select("instagram_url, facebook_url")
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+        if (data) setCityLinks(data);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("cities")
+        .select("instagram_url, facebook_url")
+        .eq("id", selectedCityId)
+        .maybeSingle();
+
+      if (data) setCityLinks(data);
+    };
+
+    fetchCityLinks();
+  }, []);
+
   return (
     <footer className="bg-secondary text-secondary-foreground mt-12">
       <div className="container py-12">
@@ -10,9 +48,9 @@ const Footer = () => {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link to="/" className="inline-block mb-4">
-              <img 
-                src={logo} 
-                alt="Vai Já Delivery" 
+              <img
+                src={logo}
+                alt="Vai Já Delivery"
                 className="h-20 w-auto object-contain"
               />
             </Link>
@@ -20,12 +58,36 @@ const Footer = () => {
               Pediu, chegou. Vai Já! Os melhores estabelecimentos da sua cidade com entrega rápida.
             </p>
             <div className="flex gap-3">
-              <a href="#" className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center hover:bg-primary transition-colors">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center hover:bg-primary transition-colors">
-                <Facebook className="w-4 h-4" />
-              </a>
+              {cityLinks.instagram_url ? (
+                <a
+                  href={cityLinks.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center hover:bg-pink-500 transition-colors"
+                  title="Instagram"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+              ) : (
+                <span className="w-9 h-9 rounded-full bg-muted/10 flex items-center justify-center opacity-30 cursor-not-allowed" title="Instagram não configurado">
+                  <Instagram className="w-4 h-4" />
+                </span>
+              )}
+              {cityLinks.facebook_url ? (
+                <a
+                  href={cityLinks.facebook_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-muted/20 flex items-center justify-center hover:bg-blue-600 transition-colors"
+                  title="Facebook"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+              ) : (
+                <span className="w-9 h-9 rounded-full bg-muted/10 flex items-center justify-center opacity-30 cursor-not-allowed" title="Facebook não configurado">
+                  <Facebook className="w-4 h-4" />
+                </span>
+              )}
             </div>
           </div>
 

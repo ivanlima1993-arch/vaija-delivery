@@ -47,7 +47,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, MapPin, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, MapPin, Building2, Instagram, Facebook } from "lucide-react";
 
 interface City {
   id: string;
@@ -55,6 +55,8 @@ interface City {
   state: string;
   is_active: boolean;
   created_at: string;
+  instagram_url?: string;
+  facebook_url?: string;
 }
 
 interface Neighborhood {
@@ -85,7 +87,7 @@ const Regions = () => {
   // City form state
   const [cityDialogOpen, setCityDialogOpen] = useState(false);
   const [editingCity, setEditingCity] = useState<City | null>(null);
-  const [cityForm, setCityForm] = useState({ name: "", state: "", is_active: true });
+  const [cityForm, setCityForm] = useState({ name: "", state: "", is_active: true, instagram_url: "", facebook_url: "" });
 
   // Neighborhood form state
   const [neighborhoodDialogOpen, setNeighborhoodDialogOpen] = useState(false);
@@ -176,7 +178,7 @@ const Regions = () => {
       }
       setCityDialogOpen(false);
       setEditingCity(null);
-      setCityForm({ name: "", state: "", is_active: true });
+      setCityForm({ name: "", state: "", is_active: true, instagram_url: "", facebook_url: "" });
       fetchData();
     } catch (error: any) {
       toast({ title: "Erro ao salvar cidade", description: error.message, variant: "destructive" });
@@ -185,7 +187,7 @@ const Regions = () => {
 
   const handleEditCity = (city: City) => {
     setEditingCity(city);
-    setCityForm({ name: city.name, state: city.state, is_active: city.is_active });
+    setCityForm({ name: city.name, state: city.state, is_active: city.is_active, instagram_url: city.instagram_url || "", facebook_url: city.facebook_url || "" });
     setCityDialogOpen(true);
   };
 
@@ -319,7 +321,7 @@ const Regions = () => {
               setCityDialogOpen(open);
               if (!open) {
                 setEditingCity(null);
-                setCityForm({ name: "", state: "", is_active: true });
+                setCityForm({ name: "", state: "", is_active: true, instagram_url: "", facebook_url: "" });
               }
             }}>
               <DialogTrigger asChild>
@@ -366,6 +368,29 @@ const Regions = () => {
                     />
                     <Label>Cidade ativa</Label>
                   </div>
+
+                  <div className="border-t pt-4 space-y-3">
+                    <p className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                      <Instagram className="w-4 h-4" /> Redes Sociais da Cidade
+                    </p>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2"><Instagram className="w-3 h-3 text-pink-500" /> Instagram</Label>
+                      <Input
+                        value={cityForm.instagram_url}
+                        onChange={(e) => setCityForm({ ...cityForm, instagram_url: e.target.value })}
+                        placeholder="https://instagram.com/vaijadelivery_cidade"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2"><Facebook className="w-3 h-3 text-blue-600" /> Facebook</Label>
+                      <Input
+                        value={cityForm.facebook_url}
+                        onChange={(e) => setCityForm({ ...cityForm, facebook_url: e.target.value })}
+                        placeholder="https://facebook.com/vaijadelivery.cidade"
+                      />
+                    </div>
+                  </div>
+
                   <Button onClick={handleSaveCity} className="w-full">
                     {editingCity ? "Salvar Alterações" : "Cadastrar Cidade"}
                   </Button>
@@ -445,7 +470,7 @@ const Regions = () => {
                             ) : (
                               <ChevronRight className="h-4 w-4" />
                             )}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium">{city.name}</span>
                               <span className="text-muted-foreground">- {city.state}</span>
@@ -457,6 +482,16 @@ const Regions = () => {
                               <span className="text-xs text-muted-foreground">
                                 ({getNeighborhoodsForCity(city.id).length} bairros)
                               </span>
+                              {city.instagram_url && (
+                                <span className="text-xs text-pink-500 flex items-center gap-1">
+                                  <Instagram className="w-3 h-3" /> IG
+                                </span>
+                              )}
+                              {city.facebook_url && (
+                                <span className="text-xs text-blue-600 flex items-center gap-1">
+                                  <Facebook className="w-3 h-3" /> FB
+                                </span>
+                              )}
                             </div>
                           </CollapsibleTrigger>
                           <div className="flex items-center gap-2">
