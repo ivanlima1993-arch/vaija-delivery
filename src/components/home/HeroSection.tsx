@@ -43,11 +43,11 @@ const HeroSection = () => {
               className="space-y-4"
             >
               <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight leading-[1.1]">
-                Sua comida favorita, <br />
-                <span className="text-gradient">num piscar de olhos.</span>
+                Tudo da sua cidade <br />
+                <span className="text-gradient">em um único app.</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed">
-                Descubra os melhores sabores da sua cidade com a entrega mais rápida e segura do Brasil.
+                De delivery de comida a serviços profissionais e imóveis. Encontre tudo o que você precisa no Vai Já.
               </p>
             </motion.div>
 
@@ -67,7 +67,7 @@ const HeroSection = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Qual seu desejo de hoje?"
+                  placeholder="O que você está procurando hoje?"
                   className="w-full h-16 md:h-20 pl-16 pr-40 rounded-3xl bg-white shadow-card border-none text-lg focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/60"
                 />
                 <button
