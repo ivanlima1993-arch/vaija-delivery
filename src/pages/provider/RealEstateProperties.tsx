@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building, Plus, MapPin, DollarSign, Bed, Bath, Car, ArrowLeft, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Building, Plus, MapPin, DollarSign, Bed, Bath, Car, ArrowLeft, Loader2, Image as ImageIcon, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -190,19 +190,32 @@ const RealEstateProperties = () => {
         <div className="min-h-screen bg-[#fafafa] pb-20">
             {/* Header */}
             <div className="bg-emerald-700 text-white p-6 shadow-md rounded-b-[2rem] sticky top-0 z-10">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-white hover:bg-emerald-600 rounded-full"
+                            onClick={() => navigate("/")}
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </Button>
+                        <div>
+                            <h1 className="text-2xl font-black italic tracking-tight uppercase">Portal do Corretor</h1>
+                            <p className="text-emerald-100 text-sm">Gerencie seus anúncios de imóveis</p>
+                        </div>
+                    </div>
                     <Button 
                         variant="ghost" 
                         size="icon" 
                         className="text-white hover:bg-emerald-600 rounded-full"
-                        onClick={() => navigate("/profissional")}
+                        onClick={async () => {
+                            await supabase.auth.signOut();
+                            navigate("/");
+                        }}
                     >
-                        <ArrowLeft className="w-6 h-6" />
+                        <LogOut className="w-5 h-5" />
                     </Button>
-                    <div>
-                        <h1 className="text-2xl font-black italic tracking-tight">Meus Imóveis</h1>
-                        <p className="text-emerald-100 text-sm">Gerencie sua carteira de imóveis</p>
-                    </div>
                 </div>
                 <div className="flex gap-2">
                     <Button 

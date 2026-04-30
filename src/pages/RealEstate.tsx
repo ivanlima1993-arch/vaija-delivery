@@ -122,9 +122,19 @@ const RealEstate = () => {
             <div className="bg-gradient-to-r from-emerald-700 to-teal-900 text-white pt-32 pb-20 relative overflow-hidden">
                 <div className="container relative z-10">
                     <div className="max-w-2xl">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full backdrop-blur-md border border-white/30 text-xs font-bold uppercase tracking-widest mb-6">
-                            <Sparkles className="w-4 h-4" />
-                            Novidade: Vai Já Imóveis
+                        <div className="flex flex-wrap items-center gap-4 mb-6">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full backdrop-blur-md border border-white/30 text-xs font-bold uppercase tracking-widest">
+                                <Sparkles className="w-4 h-4" />
+                                Novidade: Vai Já Imóveis
+                            </div>
+                            <Button 
+                                variant="ghost" 
+                                className="text-white hover:bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest border border-white/10"
+                                onClick={() => navigate("/profissional/imoveis")}
+                            >
+                                <Building className="w-4 h-4 mr-2" />
+                                Portal do Corretor
+                            </Button>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
                             Encontre o imóvel perfeito para você
@@ -183,6 +193,12 @@ const RealEstate = () => {
                         <p className="text-gray-500 max-w-md mx-auto mb-8">
                             Tente ajustar sua busca ou volte em breve para ver as novidades.
                         </p>
+                        <Button 
+                            className="bg-emerald-600 hover:bg-emerald-700 rounded-xl h-12 px-8 font-bold text-white"
+                            onClick={() => navigate("/profissional/imoveis")}
+                        >
+                            Sou Corretor: Quero Anunciar
+                        </Button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

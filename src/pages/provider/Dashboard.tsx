@@ -610,20 +610,6 @@ const ProviderDashboard = () => {
                         </Card>
                     </section>
 
-                    {/* Atalhos Rápidos */}
-                    <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <Button 
-                            variant="outline" 
-                            className="h-24 flex flex-col items-center justify-center gap-2 border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 transition-colors shadow-sm rounded-2xl group"
-                            onClick={() => navigate('/profissional/imoveis')}
-                        >
-                            <div className="bg-emerald-100 p-2 rounded-full group-hover:scale-110 transition-transform">
-                                <Building className="w-6 h-6 text-emerald-600" />
-                            </div>
-                            <span className="font-bold text-emerald-800">Meus Imóveis</span>
-                        </Button>
-                    </section>
-
                     <ProviderStats 
                         providerData={providerData}
                         onDeposit={() => setIsDepositOpen(true)}
