@@ -17,6 +17,13 @@ const Auth = () => {
   const initialMode = searchParams.get("mode") as AuthMode || "login";
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
+
+  useEffect(() => {
+    // Detect password recovery mode from Supabase redirect
+    if (window.location.href.includes("type=recovery") || window.location.hash.includes("type=recovery")) {
+      setMode("update-password");
+    }
+  }, []);
   const [loading, setLoading] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(false);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
@@ -150,7 +157,7 @@ const Auth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
-        redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
+        redirectTo: `https://vaijadelivery.com.br/#/auth?mode=update-password`,
       });
 
       if (error) throw error;

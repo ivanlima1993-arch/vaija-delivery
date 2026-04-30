@@ -179,7 +179,7 @@ const DriverAuth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
-        redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
+        redirectTo: `https://vaijadelivery.com.br/#/auth?mode=update-password`,
       });
 
       if (error) throw error;
