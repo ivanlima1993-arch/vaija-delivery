@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Bike, Mail, Lock, User, Phone, ArrowLeft, FileText, MapPin, Calendar, Camera } from "lucide-react";
 
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot-password";
 
 const DriverAuth = () => {
   const navigate = useNavigate();
@@ -168,9 +168,26 @@ const DriverAuth = () => {
         toast.success("Cadastro realizado! Sua conta está em análise para aprovação.");
         navigate("/entregador");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+      setMode("login");
     } catch (error: any) {
-      console.error("Registration error:", error);
-      toast.error(error.message || "Erro ao fazer cadastro");
+      toast.error(error.message || "Erro ao enviar e-mail de recuperação");
     } finally {
       setLoading(false);
     }
@@ -194,13 +211,17 @@ const DriverAuth = () => {
             Portal do Entregador
           </h1>
           <p className="text-muted-foreground">
-            {mode === "login" ? "Acesse sua conta" : "Cadastre-se como entregador"}
+            {mode === "login" ? "Acesse sua conta" : mode === "register" ? "Cadastre-se como entregador" : "Recuperar senha"}
           </p>
         </div>
 
         {/* Card */}
         <div className="bg-card rounded-2xl shadow-xl p-6 border border-emerald-200/50 dark:border-emerald-800/30">
-          <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
+          <form onSubmit={
+            mode === "login" ? handleLogin : 
+            mode === "forgot-password" ? handleForgotPassword : 
+            handleRegister
+          }>
             <div className="space-y-4">
               {mode === "register" && (
                 <>
@@ -437,23 +458,25 @@ const DriverAuth = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="password" className="flex items-center gap-2 mb-2">
-                  <Lock className="w-4 h-4 text-emerald-500" />
-                  Senha
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  minLength={6}
-                  className="h-12 focus-visible:ring-emerald-500"
-                />
-              </div>
+              {mode !== "forgot-password" && (
+                <div>
+                  <Label htmlFor="password" className="flex items-center gap-2 mb-2">
+                    <Lock className="w-4 h-4 text-emerald-500" />
+                    Senha
+                  </Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                    className="h-12 focus-visible:ring-emerald-500"
+                  />
+                </div>
+              )}
 
               <Button
                 type="submit"
@@ -461,8 +484,23 @@ const DriverAuth = () => {
                 className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white"
                 disabled={loading}
               >
-                {loading ? "Carregando..." : mode === "login" ? "Entrar" : "Cadastrar"}
+                {loading ? "Carregando..." : 
+                 mode === "login" ? "Entrar" : 
+                 mode === "forgot-password" ? "Enviar E-mail" :
+                 "Cadastrar"}
               </Button>
+
+              {mode === "login" && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot-password")}
+                    className="text-xs text-muted-foreground hover:text-emerald-600 transition-colors"
+                  >
+                    Esqueceu sua senha?
+                  </button>
+                </div>
+              )}
             </div>
           </form>
 

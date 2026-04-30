@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { Store, Mail, Lock, User, Phone, ArrowLeft, FileText } from "lucide-react";
 import { ESTABLISHMENT_CATEGORIES } from "@/constants/categories";
 
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot-password";
 
 const EstablishmentAuth = () => {
   const navigate = useNavigate();
@@ -117,12 +117,30 @@ const EstablishmentAuth = () => {
             window.location.href = "#/estabelecimento";
           }
         }
-      } catch (error: any) {
-        toast.error(error.message || "Erro ao fazer cadastro");
       } finally {
         setLoading(false);
       }
     };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+      setMode("login");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao enviar e-mail de recuperação");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-background to-orange-100/30 dark:from-orange-950/20 dark:via-background dark:to-orange-900/20 flex items-center justify-center p-4">
@@ -142,13 +160,17 @@ const EstablishmentAuth = () => {
             Portal do Estabelecimento
           </h1>
           <p className="text-muted-foreground">
-            {mode === "login" ? "Acesse sua conta" : "Cadastre seu estabelecimento"}
+            {mode === "login" ? "Acesse sua conta" : mode === "register" ? "Cadastre seu estabelecimento" : "Recuperar senha"}
           </p>
         </div>
 
         {/* Card */}
         <div className="bg-card rounded-2xl shadow-xl p-6 border border-orange-200/50 dark:border-orange-800/30">
-          <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
+          <form onSubmit={
+            mode === "login" ? handleLogin : 
+            mode === "forgot-password" ? handleForgotPassword : 
+            handleRegister
+          }>
             <div className="space-y-4">
               {mode === "register" && (
                 <>
@@ -259,23 +281,25 @@ const EstablishmentAuth = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="password" className="flex items-center gap-2 mb-2">
-                  <Lock className="w-4 h-4 text-orange-500" />
-                  Senha
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  minLength={6}
-                  className="h-12 focus-visible:ring-orange-500"
-                />
-              </div>
+              {mode !== "forgot-password" && (
+                <div>
+                  <Label htmlFor="password" className="flex items-center gap-2 mb-2">
+                    <Lock className="w-4 h-4 text-orange-500" />
+                    Senha
+                  </Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                    className="h-12 focus-visible:ring-orange-500"
+                  />
+                </div>
+              )}
 
               <Button
                 type="submit"
@@ -283,9 +307,24 @@ const EstablishmentAuth = () => {
                 className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                 disabled={loading}
               >
-                {loading ? "Carregando..." : mode === "login" ? "Entrar" : "Cadastrar"}
+                {loading ? "Carregando..." : 
+                 mode === "login" ? "Entrar" : 
+                 mode === "forgot-password" ? "Enviar E-mail" :
+                 "Cadastrar"}
               </Button>
               
+              {mode === "login" && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot-password")}
+                    className="text-xs text-muted-foreground hover:text-orange-600 transition-colors"
+                  >
+                    Esqueceu sua senha?
+                  </button>
+                </div>
+              )}
+
               {mode === "register" && (
                 <p className="text-[10px] text-center text-muted-foreground mt-2">
                   Ao cadastrar, você concorda com nossos{" "}

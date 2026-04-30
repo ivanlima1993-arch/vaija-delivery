@@ -61,7 +61,7 @@ const ProviderAuth = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [authMode, setAuthMode] = useState<"login" | "register">("login");
+    const [authMode, setAuthMode] = useState<"login" | "register" | "forgot-password">("login");
     const [loginCpf, setLoginCpf] = useState("");
     const [loginPassword, setLoginPassword] = useState("");
 
@@ -221,9 +221,43 @@ const ProviderAuth = () => {
 
             toast.success("Login realizado com sucesso!");
             navigate("/profissional");
+    } finally {
+        setLoading(false);
+    }
+    };
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            // Find email by CPF first to make it easier for the provider
+            const { data: provider, error: fetchError } = await supabase
+                .from("service_providers")
+                .select("email")
+                .eq("cpf", normalizeCpf(loginCpf))
+                .maybeSingle();
+
+            if (fetchError) throw fetchError;
+            
+            const emailToUse = provider?.email || formData.email;
+
+            if (!emailToUse) {
+                toast.error("Informe seu CPF ou E-mail para recuperar a senha.");
+                setLoading(false);
+                return;
+            }
+
+            const { error } = await supabase.auth.resetPasswordForEmail(emailToUse, {
+                redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
+            });
+
+            if (error) throw error;
+
+            toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+            setAuthMode("login");
         } catch (error: any) {
-            console.error("Erro no login:", error);
-            toast.error("Erro ao entrar: " + (error.message || "Senha incorreta"));
+            toast.error(error.message || "Erro ao enviar e-mail de recuperação");
         } finally {
             setLoading(false);
         }
@@ -282,13 +316,15 @@ const ProviderAuth = () => {
                             <Wrench className="w-8 h-8" />
                         </div>
                         <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">
-                            {authMode === "login" ? "Login do Profissional" : "Seja um Profissional"} <br />
+                            {authMode === "login" ? "Login do Profissional" : authMode === "register" ? "Seja um Profissional" : "Recuperar Senha"} <br />
                             <span className="text-primary italic">Vai Já Serviços</span>
                         </h1>
                         <p className="text-muted-foreground font-medium max-w-md mx-auto">
                             {authMode === "login" 
                                 ? "Acesse sua conta para gerenciar seus serviços e ganhos." 
-                                : "Aumente sua clientela e receba solicitações de serviços direto no seu celular."}
+                                : authMode === "register"
+                                ? "Aumente sua clientela e receba solicitações de serviços direto no seu celular."
+                                : "Informe seus dados para receber o link de recuperação."}
                         </p>
                     </div>
 
@@ -322,8 +358,12 @@ const ProviderAuth = () => {
                         ))}
                     </div>
 
-                    <form onSubmit={authMode === "login" ? handleLogin : handleRegister} className="bg-card p-6 md:p-8 rounded-[2rem] shadow-soft border border-border/50 space-y-6">
-                        {authMode === "login" ? (
+                    <form onSubmit={
+                        authMode === "login" ? handleLogin : 
+                        authMode === "forgot-password" ? handleForgotPassword :
+                        handleRegister
+                    } className="bg-card p-6 md:p-8 rounded-[2rem] shadow-soft border border-border/50 space-y-6">
+                        {authMode === "login" || authMode === "forgot-password" ? (
                             <div className="space-y-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="login_cpf" className="font-bold flex items-center gap-2">
@@ -338,20 +378,22 @@ const ProviderAuth = () => {
                                         required
                                     />
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="login_pass" className="font-bold flex items-center gap-2">
-                                        <Lock className="w-4 h-4 text-primary" /> Sua Senha
-                                    </Label>
-                                    <Input 
-                                        id="login_pass"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        className="h-12 rounded-xl"
-                                        value={loginPassword}
-                                        onChange={(e) => setLoginPassword(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                {authMode === "login" && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="login_pass" className="font-bold flex items-center gap-2">
+                                            <Lock className="w-4 h-4 text-primary" /> Sua Senha
+                                        </Label>
+                                        <Input 
+                                            id="login_pass"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            className="h-12 rounded-xl"
+                                            value={loginPassword}
+                                            onChange={(e) => setLoginPassword(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -567,10 +609,22 @@ const ProviderAuth = () => {
                             {loading ? (
                                 <div className="flex items-center gap-3">
                                     <Loader2 className="w-6 h-6 animate-spin" />
-                                    <span>{authMode === "login" ? "ENTRANDO..." : "ENVIANDO..."}</span>
+                                    <span>{authMode === "login" ? "ENTRANDO..." : authMode === "forgot-password" ? "ENVIANDO..." : "ENVIANDO..."}</span>
                                 </div>
-                            ) : (authMode === "login" ? "ENTRAR AGORA" : "CADASTRAR E COMEÇAR")}
+                            ) : (authMode === "login" ? "ENTRAR AGORA" : authMode === "forgot-password" ? "RECUPERAR AGORA" : "CADASTRAR E COMEÇAR")}
                         </Button>
+
+                        {authMode === "login" && (
+                            <div className="text-center">
+                                <button
+                                    type="button"
+                                    onClick={() => setAuthMode("forgot-password")}
+                                    className="text-xs text-muted-foreground hover:text-primary transition-colors font-bold"
+                                >
+                                    Esqueceu sua senha?
+                                </button>
+                            </div>
+                        )}
 
                         <p className="text-center text-xs text-muted-foreground font-medium">
                             Ao se cadastrar, você concorda com nossos <Link to="/termos-de-uso" className="underline">Termos de Uso</Link>.

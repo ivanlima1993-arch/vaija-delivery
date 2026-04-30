@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Mail, Lock, User, Phone, Store, ArrowLeft, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
 
-type AuthMode = "login" | "register" | "register-establishment";
+type AuthMode = "login" | "register" | "register-establishment" | "forgot-password" | "update-password";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -139,8 +139,47 @@ const Auth = () => {
         toast.success("Cadastro realizado com sucesso!");
         navigate("/");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+      setMode("login");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer cadastro");
+      toast.error(error.message || "Erro ao enviar e-mail de recuperação");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: formData.password,
+      });
+
+      if (error) throw error;
+
+      toast.success("Senha atualizada com sucesso!");
+      setMode("login");
+      navigate("/auth?mode=login");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao atualizar senha");
     } finally {
       setLoading(false);
     }
@@ -218,6 +257,8 @@ const Auth = () => {
             {mode === "login" && "Entre na sua conta"}
             {mode === "register" && "Crie sua conta"}
             {mode === "register-establishment" && "Cadastre seu estabelecimento"}
+            {mode === "forgot-password" && "Recuperar senha"}
+            {mode === "update-password" && "Defina sua nova senha"}
           </p>
         </div>
 
@@ -226,7 +267,12 @@ const Auth = () => {
           <ApprovalTimer createdAt={createdAt} />
         ) : (
           <div className="bg-card rounded-2xl shadow-xl p-6 border border-border">
-            <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
+            <form onSubmit={
+              mode === "login" ? handleLogin : 
+              mode === "forgot-password" ? handleForgotPassword : 
+              mode === "update-password" ? handleUpdatePassword :
+              handleRegister
+            }>
               <div className="space-y-4">
                 {mode !== "login" && (
                   <div>
@@ -301,35 +347,53 @@ const Auth = () => {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="password" className="flex items-center gap-2 mb-2">
-                    <Lock className="w-4 h-4 text-primary" />
-                    Senha
-                  </Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    minLength={6}
-                    className="h-12"
-                  />
-                </div>
+                {(mode !== "forgot-password" || mode === "update-password") && (
+                  <div>
+                    <Label htmlFor="password" className="flex items-center gap-2 mb-2">
+                      <Lock className="w-4 h-4 text-primary" />
+                      {mode === "update-password" ? "Nova Senha" : "Senha"}
+                    </Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      minLength={6}
+                      className="h-12"
+                    />
+                  </div>
+                )}
 
-                <Button
-                  type="submit"
-                  variant="hero"
-                  size="lg"
-                  className="w-full h-12"
-                  disabled={loading}
-                >
-                  {loading ? "Carregando..." : mode === "login" ? "Entrar" : "Cadastrar"}
-                </Button>
-              </div>
-            </form>
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    size="lg"
+                    className="w-full h-12"
+                    disabled={loading}
+                  >
+                    {loading ? "Carregando..." : 
+                     mode === "login" ? "Entrar" : 
+                     mode === "forgot-password" ? "Enviar E-mail" :
+                     mode === "update-password" ? "Atualizar Senha" :
+                     "Cadastrar"}
+                  </Button>
+                </div>
+              </form>
+
+              {mode === "login" && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot-password")}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Esqueceu sua senha?
+                  </button>
+                </div>
+              )}
 
             {/* Mode Switchers */}
             <div className="mt-6 space-y-3">
