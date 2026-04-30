@@ -88,6 +88,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       path: "/admin/profissionais",
     },
     {
+      icon: Building,
+      label: "Corretores",
+      path: "/admin/corretores",
+    },
+    {
       icon: Users,
       label: "Prospecção (CRM)",
       path: "/admin/prospeccao",

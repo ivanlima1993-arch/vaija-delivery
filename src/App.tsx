@@ -44,6 +44,7 @@ import AdminPromotions from "./pages/admin/Promotions";
 import AdminInvoices from "./pages/admin/Invoices";
 import AdminWithdrawals from "./pages/admin/Withdrawals";
 import AdminServiceProviders from "./pages/admin/ServiceProviders";
+import AdminRealtors from "./pages/admin/Realtors";
 import AdminProspects from "./pages/admin/Prospects";
 import DriverDashboard from "./pages/driver/Dashboard";
 import AvailableOrders from "./pages/driver/AvailableOrders";
@@ -71,6 +72,7 @@ import Partners from "./pages/Partners";
 import RealEstate from "./pages/RealEstate";
 import RealEstateProperties from "./pages/provider/RealEstateProperties";
 import RealtorAuth from "./pages/auth/RealtorAuth";
+import PropertyDetails from "./pages/PropertyDetails";
 
 const queryClient = new QueryClient();
 
@@ -146,6 +148,7 @@ const App = () => {
                 <Route path="/admin/saques" element={<AdminWithdrawals />} />
                 <Route path="/admin/relatorios" element={<AdminReports />} />
                 <Route path="/admin/profissionais" element={<AdminServiceProviders />} />
+                <Route path="/admin/corretores" element={<AdminRealtors />} />
                 <Route path="/admin/prospeccao" element={<AdminProspects />} />
                 <Route path="/admin/configuracoes" element={<AdminSettings />} />
                 <Route path="/entregador" element={<DriverDashboard />} />
@@ -167,6 +170,7 @@ const App = () => {
                 <Route path="/sobre-nos" element={<AboutUs />} />
                 <Route path="/parceiros" element={<Partners />} />
                 <Route path="/imoveis" element={<RealEstate />} />
+                <Route path="/imoveis/:id" element={<PropertyDetails />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>
