@@ -103,10 +103,10 @@ const RestaurantSection = () => {
               Seleção Premium
             </Badge>
             <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight leading-none">
-              Restaurantes em Destaque
+              Comerciantes em Destaque
             </h2>
             <p className="text-muted-foreground max-w-md">
-              Os estabelecimentos mais amados e bem avaliados da sua região.
+              Os melhores estabelecimentos e lojistas da sua região.
             </p>
           </div>
 
@@ -157,7 +157,7 @@ const RestaurantSection = () => {
               <Search className="w-10 h-10 text-muted-foreground/30" />
             </div>
             <h3 className="text-xl font-black mb-2">Ops! Nada por aqui.</h3>
-            <p className="text-muted-foreground mb-8">Não encontramos restaurantes com este filtro na sua região.</p>
+            <p className="text-muted-foreground mb-8">Não encontramos comerciantes com este filtro na sua região.</p>
             <Button variant="outline" onClick={() => setActiveFilter("all")}>Limpar filtros</Button>
           </div>
         ) : (
@@ -175,7 +175,7 @@ const RestaurantSection = () => {
         <div className="mt-12 text-center md:hidden">
           <Link to="/restaurantes">
             <Button className="w-full h-14 rounded-2xl font-black gradient-primary shadow-glow">
-              VER TODOS OS RESTAURANTES
+              VER TODOS OS COMERCIANTES
             </Button>
           </Link>
         </div>
