@@ -68,6 +68,8 @@ import Services from "./pages/Services";
 import ProviderDashboard from "./pages/provider/Dashboard";
 import ProviderAuth from "./pages/auth/ProviderAuth";
 import Partners from "./pages/Partners";
+import RealEstate from "./pages/RealEstate";
+import RealEstateProperties from "./pages/provider/RealEstateProperties";
 
 const queryClient = new QueryClient();
 
@@ -155,12 +157,14 @@ const App = () => {
                 <Route path="/servicos" element={<Services />} />
                 <Route path="/profissional" element={<ProviderDashboard />} />
                 <Route path="/profissional/auth" element={<ProviderAuth />} />
+                <Route path="/profissional/imoveis" element={<RealEstateProperties />} />
                 <Route path="/instalar" element={<Install />} />
                 <Route path="/termos-de-uso" element={<TermsOfUse />} />
                 <Route path="/termos-estabelecimento" element={<EstablishmentTerms />} />
                 <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
                 <Route path="/sobre-nos" element={<AboutUs />} />
                 <Route path="/parceiros" element={<Partners />} />
+                <Route path="/imoveis" element={<RealEstate />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>

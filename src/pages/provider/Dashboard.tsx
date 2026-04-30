@@ -23,7 +23,8 @@ import {
     QrCode,
     Copy,
     Check,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    Building
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -607,6 +608,20 @@ const ProviderDashboard = () => {
                             <p className="text-2xl font-black text-primary">#12</p>
                             <p className="text-[10px] text-muted-foreground font-bold">em sua cidade</p>
                         </Card>
+                    </section>
+
+                    {/* Atalhos Rápidos */}
+                    <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Button 
+                            variant="outline" 
+                            className="h-24 flex flex-col items-center justify-center gap-2 border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 transition-colors shadow-sm rounded-2xl group"
+                            onClick={() => navigate('/profissional/imoveis')}
+                        >
+                            <div className="bg-emerald-100 p-2 rounded-full group-hover:scale-110 transition-transform">
+                                <Building className="w-6 h-6 text-emerald-600" />
+                            </div>
+                            <span className="font-bold text-emerald-800">Meus Imóveis</span>
+                        </Button>
                     </section>
 
                     <ProviderStats 
