@@ -99,7 +99,7 @@ const Footer = () => {
               <li><Link to="/estabelecimento/auth" className="hover:text-primary transition-colors">Cadastre seu estabelecimento</Link></li>
               <li><Link to="/entregador/auth" className="hover:text-primary transition-colors">Seja entregador</Link></li>
               <li><Link to="/profissional/auth" className="hover:text-primary transition-colors">Seja um profissional</Link></li>
-              <li><Link to="/profissional/imoveis" className="hover:text-primary transition-colors font-bold text-emerald-600">Portal do Corretor</Link></li>
+              <li><Link to="/corretor/auth" className="hover:text-primary transition-colors font-bold text-emerald-600">Portal do Corretor</Link></li>
             </ul>
           </div>
 

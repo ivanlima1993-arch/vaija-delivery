@@ -51,10 +51,25 @@ const RealEstateProperties = () => {
     });
 
     useEffect(() => {
-        if (user) {
+        if (!user) return;
+        
+        const checkApproval = async () => {
+            const { data, error } = await supabase
+                .from("real_estate_realtors")
+                .select("status")
+                .eq("user_id", user.id)
+                .maybeSingle();
+            
+            if (error || !data || data.status !== 'approved') {
+                navigate("/corretor/auth");
+                return;
+            }
+            
             fetchProperties();
-        }
-    }, [user]);
+        };
+
+        checkApproval();
+    }, [user, navigate]);
 
     const fetchProperties = async () => {
         try {

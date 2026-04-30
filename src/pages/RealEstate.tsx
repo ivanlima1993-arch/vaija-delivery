@@ -130,7 +130,7 @@ const RealEstate = () => {
                             <Button 
                                 variant="ghost" 
                                 className="text-white hover:bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest border border-white/10"
-                                onClick={() => navigate("/profissional/imoveis")}
+                                onClick={() => navigate("/corretor/auth")}
                             >
                                 <Building className="w-4 h-4 mr-2" />
                                 Portal do Corretor
@@ -195,7 +195,7 @@ const RealEstate = () => {
                         </p>
                         <Button 
                             className="bg-emerald-600 hover:bg-emerald-700 rounded-xl h-12 px-8 font-bold text-white"
-                            onClick={() => navigate("/profissional/imoveis")}
+                            onClick={() => navigate("/corretor/auth")}
                         >
                             Sou Corretor: Quero Anunciar
                         </Button>
