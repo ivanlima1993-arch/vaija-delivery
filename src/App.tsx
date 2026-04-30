@@ -59,6 +59,7 @@ import TermsOfUse from "./pages/TermsOfUse";
 import EstablishmentTerms from "./pages/EstablishmentTerms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AboutUs from "./pages/AboutUs";
+import RealtorTerms from "./pages/RealtorTerms";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
 import { ConditionalSupportButton } from "./components/ConditionalSupportButton";
 
@@ -171,6 +172,7 @@ const App = () => {
                 <Route path="/parceiros" element={<Partners />} />
                 <Route path="/imoveis" element={<RealEstate />} />
                 <Route path="/imoveis/:id" element={<PropertyDetails />} />
+                <Route path="/termos-corretor" element={<RealtorTerms />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>

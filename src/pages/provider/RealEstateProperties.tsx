@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { 
     Building, Plus, MapPin, DollarSign, Bed, Bath, Car, 
     ArrowLeft, Loader2, Image as ImageIcon, X, LogOut, 
-    MessageSquare, User, Calendar, Trash2, ExternalLink
+    MessageSquare, User, Calendar, Trash2, ExternalLink,
+    Sparkles, Info, Lightbulb, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -269,6 +270,36 @@ const RealEstateProperties = () => {
             </div>
 
             <main className="container py-8">
+                {/* Dicas / Instruções Rápidas */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                    <Card className="rounded-[1.5rem] border-none shadow-soft bg-emerald-50/50 p-6 flex items-start gap-4">
+                        <div className="bg-emerald-600 p-2 rounded-xl text-white">
+                            <ImageIcon className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-emerald-900 text-sm mb-1 uppercase tracking-tight italic">Fotos de Qualidade</h4>
+                            <p className="text-xs text-emerald-700/80 font-medium">Anúncios com mais de 5 fotos de alta resolução convertem 3x mais.</p>
+                        </div>
+                    </Card>
+                    <Card className="rounded-[1.5rem] border-none shadow-soft bg-blue-50/50 p-6 flex items-start gap-4">
+                        <div className="bg-blue-600 p-2 rounded-xl text-white">
+                            <MessageCircle className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-blue-900 text-sm mb-1 uppercase tracking-tight italic">Responda Rápido</h4>
+                            <p className="text-xs text-blue-700/80 font-medium">Leads atendidos nos primeiros 15 minutos têm 50% mais chance de venda.</p>
+                        </div>
+                    </Card>
+                    <Card className="rounded-[1.5rem] border-none shadow-soft bg-amber-50/50 p-6 flex items-start gap-4">
+                        <div className="bg-amber-600 p-2 rounded-xl text-white">
+                            <Sparkles className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-amber-900 text-sm mb-1 uppercase tracking-tight italic">Descrição Completa</h4>
+                            <p className="text-xs text-amber-700/80 font-medium">Detalhe condomínio, sol da manhã e pontos próximos para evitar dúvidas.</p>
+                        </div>
+                    </Card>
+                </div>
                 {activeTab === "properties" ? (
                     <>
                         <div className="flex justify-between items-center mb-8">

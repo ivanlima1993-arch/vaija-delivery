@@ -20,6 +20,11 @@ import {
   ChevronRight,
   Bell,
   XCircle,
+  Zap,
+  Star,
+  CheckCircle2,
+  Shield,
+  Image as ImageIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import DriverSidebar from "@/components/driver/DriverSidebar";
@@ -584,6 +589,37 @@ const DriverDashboard = () => {
                 </Button>
               </div>
             </motion.div>
+          </div>
+
+          {/* Dicas para Entregadores - NOVO */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="rounded-[1.5rem] border-none shadow-soft bg-emerald-50/50 p-6 flex items-start gap-4">
+              <div className="bg-emerald-600 p-2 rounded-xl text-white">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-emerald-900 text-sm mb-1 uppercase tracking-tight italic">Mais Ganhos</h4>
+                <p className="text-xs text-emerald-700/80 font-medium">Ficar online em horários de pico (11h-14h e 18h-21h) garante 2x mais pedidos.</p>
+              </div>
+            </Card>
+            <Card className="rounded-[1.5rem] border-none shadow-soft bg-blue-50/50 p-6 flex items-start gap-4">
+              <div className="bg-blue-600 p-2 rounded-xl text-white">
+                <Star className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-blue-900 text-sm mb-1 uppercase tracking-tight italic">Nota Máxima</h4>
+                <p className="text-xs text-blue-700/80 font-medium">Um "bom dia" e o uso da mochila térmica correta garantem as melhores avaliações.</p>
+              </div>
+            </Card>
+            <Card className="rounded-[1.5rem] border-none shadow-soft bg-amber-50/50 p-6 flex items-start gap-4">
+              <div className="bg-amber-600 p-2 rounded-xl text-white">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-amber-900 text-sm mb-1 uppercase tracking-tight italic">Segurança Primeiro</h4>
+                <p className="text-xs text-amber-700/80 font-medium">Sua segurança é nossa prioridade. Respeite as leis de trânsito em todas as rotas.</p>
+              </div>
+            </Card>
           </div>
         </main>
       </div>

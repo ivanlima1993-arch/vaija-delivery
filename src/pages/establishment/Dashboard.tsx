@@ -24,6 +24,11 @@ import {
   Printer,
   CreditCard,
   Wallet,
+  Image as ImageIcon,
+  Zap,
+  TrendingUp,
+  History,
+  CheckCircle2,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -538,6 +543,37 @@ const EstablishmentDashboard = () => {
                 </CardContent>
               </Card>
             </motion.div>
+          </div>
+
+          {/* Dicas de Crescimento - NOVO */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="rounded-[1.5rem] border-none shadow-soft bg-emerald-50/50 p-6 flex items-start gap-4">
+              <div className="bg-emerald-600 p-2 rounded-xl text-white">
+                <ImageIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-emerald-900 text-sm mb-1 uppercase tracking-tight italic">Fotos Vendem</h4>
+                <p className="text-xs text-emerald-700/80 font-medium">Cardápios com fotos reais vendem até 70% mais do que descrições puras.</p>
+              </div>
+            </Card>
+            <Card className="rounded-[1.5rem] border-none shadow-soft bg-blue-50/50 p-6 flex items-start gap-4">
+              <div className="bg-blue-600 p-2 rounded-xl text-white">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-blue-900 text-sm mb-1 uppercase tracking-tight italic">Tempo de Preparo</h4>
+                <p className="text-xs text-blue-700/80 font-medium">Manter o tempo de preparo estável melhora seu ranking na busca do app.</p>
+              </div>
+            </Card>
+            <Card className="rounded-[1.5rem] border-none shadow-soft bg-amber-50/50 p-6 flex items-start gap-4">
+              <div className="bg-amber-600 p-2 rounded-xl text-white">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-amber-900 text-sm mb-1 uppercase tracking-tight italic">Crie Promoções</h4>
+                <p className="text-xs text-amber-700/80 font-medium">Estabelecimentos com descontos ativos atraem 3x mais novos clientes.</p>
+              </div>
+            </Card>
           </div>
 
           {/* Quick Actions */}

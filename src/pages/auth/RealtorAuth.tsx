@@ -235,7 +235,15 @@ const RealtorAuth = () => {
 
                     <div className="mt-8 flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl text-emerald-800 text-xs font-medium">
                         <CheckCircle2 className="w-8 h-8 shrink-0 opacity-50" />
-                        <p>Ao se cadastrar, você concorda em seguir as normas do conselho de corretores e os termos de uso da plataforma.</p>
+                        <p>
+                            Ao se cadastrar, você concorda em seguir as normas do conselho de corretores e os 
+                            <button 
+                                onClick={() => navigate("/termos-corretor")}
+                                className="font-bold underline ml-1 hover:text-emerald-600 transition-colors"
+                            >
+                                Termos de Uso
+                            </button> da plataforma.
+                        </p>
                     </div>
                 </CardContent>
             </Card>
