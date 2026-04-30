@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { DISPLAY_CATEGORIES } from "@/constants/categories";
 
-// Show first 8 categories on homepage
-const categories = DISPLAY_CATEGORIES.slice(0, 8);
+// Show first 12 categories on homepage
+const categories = DISPLAY_CATEGORIES.slice(0, 12);
 
 const CategorySection = () => {
   return (
@@ -25,7 +25,7 @@ const CategorySection = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
           {categories.map((category, index) => (
             <motion.div
               key={category.id}
