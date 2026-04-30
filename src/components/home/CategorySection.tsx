@@ -26,28 +26,35 @@ const CategorySection = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
-          {categories.map((category, index) => (
-            <motion.div
-              key={category.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <Link to={`/categorias/${category.id}`}>
-                <motion.button
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full h-full flex flex-col items-center gap-3 p-5 rounded-[32px] bg-card border-none shadow-soft hover:shadow-elevated transition-all group"
-                >
-                  <div className={`w-16 h-16 rounded-3xl ${category.color} flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform group-hover:shadow-glow`}>
-                    <category.icon className="w-8 h-8 text-inherit" />
-                  </div>
-                  <span className="text-sm font-black text-center">{category.name}</span>
-                </motion.button>
-              </Link>
-            </motion.div>
-          ))}
+          {categories.map((category, index) => {
+            const categoryLink = 
+              category.id === 'real-estate' ? '/imoveis' : 
+              category.id === 'professionals' ? '/servicos' : 
+              `/categorias/${category.id}`;
+              
+            return (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+              >
+                <Link to={categoryLink}>
+                  <motion.button
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full h-full flex flex-col items-center gap-3 p-5 rounded-[32px] bg-card border-none shadow-soft hover:shadow-elevated transition-all group"
+                  >
+                    <div className={`w-16 h-16 rounded-3xl ${category.color} flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform group-hover:shadow-glow`}>
+                      <category.icon className="w-8 h-8 text-inherit" />
+                    </div>
+                    <span className="text-sm font-black text-center">{category.name}</span>
+                  </motion.button>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

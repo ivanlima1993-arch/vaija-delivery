@@ -67,24 +67,31 @@ const Categories = () => {
             )}
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {categories.map((category, index) => (
-                <motion.div
-                  key={category.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Link
-                    to={`/categorias/${category.id}`}
-                    className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-card shadow-soft hover:shadow-card transition-all hover:-translate-y-1"
+              {categories.map((category, index) => {
+                const categoryLink = 
+                  category.id === 'real-estate' ? '/imoveis' : 
+                  category.id === 'professionals' ? '/servicos' : 
+                  `/categorias/${category.id}`;
+
+                return (
+                  <motion.div
+                    key={category.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    <div className={`w-16 h-16 rounded-xl ${category.color} flex items-center justify-center`}>
-                      <category.icon className="w-8 h-8" />
-                    </div>
-                    <span className="font-medium text-center">{category.name}</span>
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link
+                      to={categoryLink}
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-card shadow-soft hover:shadow-card transition-all hover:-translate-y-1"
+                    >
+                      <div className={`w-16 h-16 rounded-xl ${category.color} flex items-center justify-center`}>
+                        <category.icon className="w-8 h-8" />
+                      </div>
+                      <span className="font-medium text-center">{category.name}</span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         </main>
