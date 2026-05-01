@@ -243,8 +243,12 @@ const EstablishmentOrders = () => {
                   <tr>
                     <td style="vertical-align: top; width: 30px;">${item.quantity}x</td>
                     <td style="vertical-align: top;">
-                      ${item.product_name}
-                      ${item.notes ? `<br/><small><i>- ${item.notes}</i></small>` : ""}
+                      <strong>${item.product_name}</strong>
+                      ${(item as any).options && (item as any).options.length > 0
+          ? `<br/>` + (item as any).options.map((opt: any) => `<small>+ ${opt.name}</small>`).join("<br/>")
+          : ""
+        }
+                      ${item.notes ? `<br/><small><i>Obs: ${item.notes}</i></small>` : ""}
                     </td>
                     <td style="vertical-align: top; text-align: right;">R$ {((Number(item.subtotal) || 0) / (item.quantity || 1)).toFixed(2)}</td>
                   </tr>
@@ -476,6 +480,11 @@ const EstablishmentOrders = () => {
                             <div key={item.id} className="flex justify-between text-sm">
                               <span>
                                 {item.quantity}x {item.product_name}
+                                {(item as any).options && (item as any).options.length > 0 && (
+                                  <span className="text-[10px] block text-muted-foreground">
+                                    {(item as any).options.map((o: any) => o.name).join(", ")}
+                                  </span>
+                                )}
                               </span>
                               <span className="text-muted-foreground">
                                 R$ {Number(item.subtotal || 0).toFixed(2)}
@@ -611,8 +620,15 @@ const EstablishmentOrders = () => {
                           <span className="font-medium">
                             {item.quantity}x {item.product_name}
                           </span>
+                          {(item as any).options && (item as any).options.length > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {(item as any).options.map((opt: any, i: number) => (
+                                <p key={i} className="text-[10px] text-primary font-medium">+ {opt.name}</p>
+                              ))}
+                            </div>
+                          )}
                           {item.notes && (
-                            <p className="text-xs text-muted-foreground">{item.notes}</p>
+                            <p className="text-xs text-muted-foreground italic mt-1">Obs: {item.notes}</p>
                           )}
                         </div>
                         <span className="font-medium">

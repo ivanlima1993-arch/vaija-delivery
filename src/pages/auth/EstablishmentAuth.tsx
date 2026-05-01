@@ -128,7 +128,7 @@ const EstablishmentAuth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
-        redirectTo: `https://vaijadelivery.com.br/#/auth?mode=update-password`,
+        redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
       });
 
       if (error) throw error;

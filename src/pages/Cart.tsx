@@ -105,8 +105,9 @@ const Cart = () => {
       product_name: item.name,
       product_price: item.price,
       quantity: item.quantity,
-      subtotal: item.price * item.quantity,
+      subtotal: (item.price + (item.options?.reduce((sum, opt) => sum + opt.price, 0) || 0)) * item.quantity,
       notes: item.notes || null,
+      options: item.options || [],
     }));
 
     const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
@@ -334,14 +335,35 @@ const Cart = () => {
                   <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
                   <div className="flex-1">
                     <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-primary font-display font-bold mt-1">R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}</p>
+                    {item.options && item.options.length > 0 && (
+                      <div className="mt-1 space-y-0.5">
+                        {item.options.map((opt, i) => (
+                          <p key={i} className="text-[10px] text-muted-foreground">
+                            + {opt.name} {opt.price > 0 && `(R$ ${opt.price.toFixed(2)})`}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-primary font-display font-bold mt-1">
+                      R$ {((item.price + (item.options?.reduce((sum, opt) => sum + opt.price, 0) || 0)) * item.quantity).toFixed(2).replace(".", ",")}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="w-8 h-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="w-8 h-8" 
+                      onClick={() => updateQuantity(item.id, item.quantity - 1, JSON.stringify(item.options?.sort((a, b) => a.id.localeCompare(b.id)) || []))}
+                    >
                       {item.quantity === 1 ? <Trash2 className="w-4 h-4 text-destructive" /> : <Minus className="w-4 h-4" />}
                     </Button>
                     <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="w-8 h-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="w-8 h-8" 
+                      onClick={() => updateQuantity(item.id, item.quantity + 1, JSON.stringify(item.options?.sort((a, b) => a.id.localeCompare(b.id)) || []))}
+                    >
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>

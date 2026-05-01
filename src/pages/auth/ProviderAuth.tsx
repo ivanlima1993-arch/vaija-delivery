@@ -249,7 +249,7 @@ const ProviderAuth = () => {
             }
 
             const { error } = await supabase.auth.resetPasswordForEmail(emailToUse, {
-                redirectTo: `https://vaijadelivery.com.br/#/auth?mode=update-password`,
+                redirectTo: `${window.location.origin}/#/auth?mode=update-password`,
             });
 
             if (error) throw error;

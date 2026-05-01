@@ -39,6 +39,10 @@ const Restaurant = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showHours, setShowHours] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productOptions, setProductOptions] = useState<any[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
+  const [showProductModal, setShowProductModal] = useState(false);
 
   const itemCount = items.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
 
@@ -105,6 +109,83 @@ const Restaurant = () => {
     }
   };
 
+  const fetchProductDetails = async (productId: string) => {
+    try {
+      const { data: groups, error } = await supabase
+        .from("product_option_groups")
+        .select(`
+          *,
+          product_options (*)
+        `)
+        .eq("product_id", productId)
+        .order("sort_order");
+
+      if (error) throw error;
+      setProductOptions(groups || []);
+      setSelectedOptions([]);
+    } catch (error) {
+      console.error("Erro ao carregar opcionais:", error);
+    }
+  };
+
+  const handleProductClick = async (product: Product) => {
+    setSelectedProduct(product);
+    await fetchProductDetails(product.id);
+    setShowProductModal(true);
+  };
+
+  const handleConfirmAdd = () => {
+    if (!selectedProduct || !id) return;
+
+    // Check required options
+    for (const group of productOptions) {
+      const selectedInGroup = selectedOptions.filter(opt => opt.groupId === group.id);
+      if (group.is_required && selectedInGroup.length < group.min_options) {
+        toast.error(`Por favor, selecione pelo menos ${group.min_options} em "${group.name}"`);
+        return;
+      }
+    }
+
+    addItem({
+      id: selectedProduct.id,
+      name: selectedProduct.name,
+      price: Number(selectedProduct.price),
+      image: selectedProduct.image_url || "",
+      establishmentId: id,
+      options: selectedOptions.map(opt => ({
+        id: opt.id,
+        name: opt.name,
+        price: opt.price
+      }))
+    });
+
+    toast.success(`${selectedProduct.name} adicionado ao carrinho!`, {
+      position: "bottom-center",
+    });
+    setShowProductModal(false);
+  };
+
+  const toggleOption = (group: any, option: any) => {
+    setSelectedOptions(prev => {
+      const isSelected = prev.find(o => o.id === option.id);
+      const selectedInGroup = prev.filter(o => o.groupId === group.id);
+
+      if (isSelected) {
+        return prev.filter(o => o.id !== option.id);
+      }
+
+      if (group.max_options === 1) {
+        return [...prev.filter(o => o.groupId !== group.id), { ...option, groupId: group.id }];
+      }
+
+      if (selectedInGroup.length < group.max_options) {
+        return [...prev, { ...option, groupId: group.id }];
+      }
+
+      return prev;
+    });
+  };
+
   const handleAddItem = (product: Product) => {
     if (!id) return;
 
@@ -119,16 +200,7 @@ const Restaurant = () => {
       return;
     }
 
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: Number(product.price),
-      image: product.image_url || "",
-      establishmentId: id,
-    });
-    toast.success(`${product.name} adicionado ao carrinho!`, {
-      position: "bottom-center",
-    });
+    handleProductClick(product);
   };
 
   const getOpeningHours = (): OpeningHours | null => {
@@ -340,11 +412,12 @@ const Restaurant = () => {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === category.id
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${selectedCategory === category.id
                       ? "gradient-primary text-primary-foreground shadow-glow"
                       : "bg-muted text-muted-foreground hover:bg-accent"
                     }`}
                 >
+                  {(category as any).icon && <span>{(category as any).icon}</span>}
                   {category.name}
                 </button>
               ))}
@@ -374,6 +447,16 @@ const Restaurant = () => {
                     {product.is_featured && (
                       <span className="px-2 py-0.5 text-[10px] font-bold gradient-primary text-primary-foreground rounded-full">
                         TOP
+                      </span>
+                    )}
+                    {(product as any).label_type === "best_seller" && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
+                        MAIS VENDIDO
+                      </span>
+                    )}
+                    {(product as any).label_type === "new" && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-full">
+                        NOVO
                       </span>
                     )}
                   </div>
@@ -446,6 +529,92 @@ const Restaurant = () => {
               </Link>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Product Details Modal */}
+      <AnimatePresence>
+        {showProductModal && selectedProduct && (
+          <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              className="bg-card w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className="relative h-48 shrink-0">
+                {selectedProduct.image_url ? (
+                  <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <Store className="w-12 h-12 text-muted-foreground opacity-20" />
+                  </div>
+                )}
+                <Button 
+                  variant="secondary" 
+                  size="icon" 
+                  className="absolute top-4 right-4 rounded-full"
+                  onClick={() => setShowProductModal(false)}
+                >
+                  <Plus className="w-5 h-5 rotate-45" />
+                </Button>
+              </div>
+
+              <div className="p-6 overflow-y-auto">
+                <h2 className="text-2xl font-bold mb-2">{selectedProduct.name}</h2>
+                <p className="text-muted-foreground text-sm mb-4">{selectedProduct.description}</p>
+                
+                <div className="space-y-6">
+                  {productOptions.map((group) => (
+                    <div key={group.id} className="space-y-3">
+                      <div className="flex items-center justify-between bg-muted/30 p-3 rounded-xl">
+                        <div>
+                          <h4 className="font-bold">{group.name}</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase">
+                            {group.is_required ? `Obrigatório • Selecione ${group.min_options}` : `Opcional • Máximo ${group.max_options}`}
+                          </p>
+                        </div>
+                        {group.is_required && (
+                          <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-1 rounded">OBRIGATÓRIO</span>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {group.product_options?.map((option: any) => {
+                          const isSelected = selectedOptions.find(o => o.id === option.id);
+                          return (
+                            <button
+                              key={option.id}
+                              disabled={!option.is_available}
+                              onClick={() => toggleOption(group, option)}
+                              className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
+                                isSelected ? "border-primary bg-primary/5" : "border-border/50 bg-card hover:border-border"
+                              } ${!option.is_available ? "opacity-50 grayscale cursor-not-allowed" : ""}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
+                                  {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
+                                </div>
+                                <span className="font-medium">{option.name}</span>
+                              </div>
+                              {option.price > 0 && (
+                                <span className="text-sm font-bold text-primary">+ R$ {Number(option.price).toFixed(2).replace(".", ",")}</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 bg-card border-t shrink-0">
+                <Button variant="hero" size="lg" className="w-full h-14 rounded-2xl text-lg font-bold" onClick={handleConfirmAdd}>
+                  Adicionar • R$ {(Number(selectedProduct.price) + selectedOptions.reduce((sum, opt) => sum + Number(opt.price), 0)).toFixed(2).replace(".", ",")}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

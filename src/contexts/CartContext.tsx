@@ -2,6 +2,12 @@ import { createContext, useContext, useState, ReactNode, useEffect } from "react
 
 const CART_STORAGE_KEY = "vaija-cart";
 
+export interface CartOption {
+  id: string;
+  name: string;
+  price: number;
+}
+
 export interface CartItem {
   id: string;
   name: string;
@@ -10,6 +16,7 @@ export interface CartItem {
   image: string;
   notes?: string;
   establishmentId?: string;
+  options?: CartOption[];
 }
 
 interface CartContextType {
@@ -54,10 +61,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addItem = (item: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const itemKey = JSON.stringify(item.options?.sort((a, b) => a.id.localeCompare(b.id)) || []);
+      const existing = prev.find((i) => 
+        i.id === item.id && 
+        JSON.stringify(i.options?.sort((a, b) => a.id.localeCompare(b.id)) || []) === itemKey
+      );
+      
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          (i.id === item.id && 
+           JSON.stringify(i.options?.sort((a, b) => a.id.localeCompare(b.id)) || []) === itemKey) 
+            ? { ...i, quantity: i.quantity + 1 } 
+            : i
         );
       }
       return [...prev, { ...item, quantity: 1 }];
@@ -68,19 +83,32 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number, optionsJson?: string) => {
     if (quantity <= 0) {
-      removeItem(id);
+      setItems((prev) => prev.filter((i) => {
+        if (i.id !== id) return true;
+        if (!optionsJson) return false;
+        return JSON.stringify(i.options?.sort((a, b) => a.id.localeCompare(b.id)) || []) !== optionsJson;
+      }));
       return;
     }
     setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity } : i))
+      prev.map((i) => {
+        const iOptionsJson = JSON.stringify(i.options?.sort((a, b) => a.id.localeCompare(b.id)) || []);
+        if (i.id === id && (!optionsJson || iOptionsJson === optionsJson)) {
+          return { ...i, quantity };
+        }
+        return i;
+      })
     );
   };
 
   const clearCart = () => setItems([]);
 
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = items.reduce((sum, item) => {
+    const optionsTotal = item.options?.reduce((optSum, opt) => optSum + opt.price, 0) || 0;
+    return sum + (item.price + optionsTotal) * item.quantity;
+  }, 0);
 
   // Get establishment ID from first item (all items should be from same establishment)
   const establishmentId = items.length > 0 ? items[0].establishmentId || null : null;

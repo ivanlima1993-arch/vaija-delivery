@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import ImageUpload from "@/components/admin/ImageUpload";
+import ProductOptionsEditor from "@/components/establishment/ProductOptionsEditor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -52,12 +53,21 @@ const EstablishmentMenu = () => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [selectedProductForOptions, setSelectedProductForOptions] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
   // Form states
-  const [categoryForm, setCategoryForm] = useState({ name: "", description: "", sort_order: 0 });
+  const [categoryForm, setCategoryForm] = useState({ 
+    name: "", 
+    description: "", 
+    sort_order: 0,
+    icon: "",
+    available_from: "",
+    available_until: ""
+  });
   const [productForm, setProductForm] = useState({
     name: "",
     description: "",
@@ -69,6 +79,9 @@ const EstablishmentMenu = () => {
     is_featured: false,
     preparation_time: "",
     sort_order: 0,
+    stock_quantity: "",
+    label_type: "",
+    sku: "",
   });
 
   useEffect(() => {
@@ -134,6 +147,9 @@ const EstablishmentMenu = () => {
             name: categoryForm.name,
             description: categoryForm.description,
             sort_order: categoryForm.sort_order,
+            icon: categoryForm.icon,
+            available_from: categoryForm.available_from || null,
+            available_until: categoryForm.available_until || null,
           })
           .eq("id", editingCategory.id);
         toast.success("Categoria atualizada!");
@@ -143,6 +159,9 @@ const EstablishmentMenu = () => {
           name: categoryForm.name,
           description: categoryForm.description,
           sort_order: categories.length,
+          icon: categoryForm.icon,
+          available_from: categoryForm.available_from || null,
+          available_until: categoryForm.available_until || null,
         });
         toast.success("Categoria criada!");
       }
@@ -218,6 +237,9 @@ const EstablishmentMenu = () => {
         is_featured: productForm.is_featured,
         preparation_time: productForm.preparation_time ? parseInt(productForm.preparation_time) : null,
         sort_order: productForm.sort_order,
+        stock_quantity: productForm.stock_quantity ? parseInt(productForm.stock_quantity) : null,
+        label_type: productForm.label_type || null,
+        sku: productForm.sku || null,
       };
 
       if (editingProduct) {
@@ -293,7 +315,10 @@ const EstablishmentMenu = () => {
     setCategoryForm({
       name: category.name,
       description: category.description || "",
-      sort_order: category.sort_order || 0
+      sort_order: category.sort_order || 0,
+      icon: (category as any).icon || "",
+      available_from: (category as any).available_from || "",
+      available_until: (category as any).available_until || "",
     });
     setShowCategoryModal(true);
   };
@@ -311,6 +336,9 @@ const EstablishmentMenu = () => {
       is_featured: product.is_featured ?? false,
       preparation_time: product.preparation_time ? String(product.preparation_time) : "",
       sort_order: product.sort_order || 0,
+      stock_quantity: (product as any).stock_quantity ? String((product as any).stock_quantity) : "",
+      label_type: (product as any).label_type || "",
+      sku: (product as any).sku || "",
     });
     setShowProductModal(true);
   };
@@ -758,15 +786,39 @@ const EstablishmentMenu = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="categoryDesc">Descrição (opcional)</Label>
-                  <Textarea
-                    id="categoryDesc"
-                    value={categoryForm.description}
+                  <Label htmlFor="categoryIcon">Ícone (Emoji ou Lucide Icon)</Label>
+                  <Input
+                    id="categoryIcon"
+                    value={categoryForm.icon}
                     onChange={(e) =>
-                      setCategoryForm({ ...categoryForm, description: e.target.value })
+                      setCategoryForm({ ...categoryForm, icon: e.target.value })
                     }
-                    placeholder="Descrição da categoria"
+                    placeholder="Ex: 🍕, 🍔, 🥤 ou pizza, hamburger"
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="from">Disponível de:</Label>
+                    <Input
+                      id="from"
+                      type="time"
+                      value={categoryForm.available_from}
+                      onChange={(e) =>
+                        setCategoryForm({ ...categoryForm, available_from: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="until">Até:</Label>
+                    <Input
+                      id="until"
+                      type="time"
+                      value={categoryForm.available_until}
+                      onChange={(e) =>
+                        setCategoryForm({ ...categoryForm, available_until: e.target.value })
+                      }
+                    />
+                  </div>
                 </div>
                 <Button onClick={handleSaveCategory} className="w-full">
                   Salvar Categoria
@@ -854,6 +906,44 @@ const EstablishmentMenu = () => {
                     />
                   </div>
                   
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sku">SKU / Código</Label>
+                      <Input
+                        id="sku"
+                        value={productForm.sku}
+                        onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                        placeholder="Ex: PROD-001"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stock">Estoque</Label>
+                      <Input
+                        id="stock"
+                        type="number"
+                        value={productForm.stock_quantity}
+                        onChange={(e) => setProductForm({ ...productForm, stock_quantity: e.target.value })}
+                        placeholder="Ex: 100"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="label">Selo de Destaque</Label>
+                    <select
+                      id="label"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={productForm.label_type}
+                      onChange={(e) => setProductForm({ ...productForm, label_type: e.target.value })}
+                    >
+                      <option value="">Nenhum</option>
+                      <option value="best_seller">Mais Vendido</option>
+                      <option value="new">Lançamento</option>
+                      <option value="promo">Promoção</option>
+                      <option value="limited">Edição Limitada</option>
+                    </select>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="productCategory">Categoria</Label>
                     <select
@@ -940,6 +1030,39 @@ const EstablishmentMenu = () => {
                   {editingProduct ? "Salvar Alterações" : "Criar Produto"}
                 </Button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Options Management Modal */}
+      <AnimatePresence>
+        {showOptionsModal && selectedProductForOptions && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setShowOptionsModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border rounded-3xl p-6 w-full max-w-3xl my-8 shadow-2xl relative"
+            >
+              <button
+                onClick={() => setShowOptionsModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              <ProductOptionsEditor 
+                productId={selectedProductForOptions} 
+                onClose={() => setShowOptionsModal(false)} 
+              />
             </motion.div>
           </motion.div>
         )}
