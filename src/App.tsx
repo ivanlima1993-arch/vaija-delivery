@@ -74,6 +74,7 @@ import RealEstate from "./pages/RealEstate";
 import RealEstateProperties from "./pages/provider/RealEstateProperties";
 import RealtorAuth from "./pages/auth/RealtorAuth";
 import PropertyDetails from "./pages/PropertyDetails";
+import Help from "./pages/Help";
 
 const queryClient = new QueryClient();
 
@@ -165,6 +166,7 @@ const App = () => {
                 <Route path="/corretor/auth" element={<RealtorAuth />} />
                 <Route path="/profissional/imoveis" element={<RealEstateProperties />} />
                 <Route path="/instalar" element={<Install />} />
+                <Route path="/ajuda" element={<Help />} />
                 <Route path="/termos-de-uso" element={<TermsOfUse />} />
                 <Route path="/termos-estabelecimento" element={<EstablishmentTerms />} />
                 <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import DriverSidebar from "@/components/driver/DriverSidebar";
 import DriverTrackingMap from "@/components/tracking/DriverTrackingMap";
+import ChatButton from "@/components/chat/ChatButton";
 import {
   Dialog,
   DialogContent,
@@ -219,6 +220,16 @@ const InRoute = () => {
           </div>
         </header>
 
+        {/* Floating Chat Button for Driver */}
+        {order && (
+          <ChatButton
+            orderId={order.id}
+            participantId={order.customer_id || ""}
+            participantName={order.customer_name}
+            variant="floating"
+          />
+        )}
+
         <div className="p-4 lg:p-6 max-w-2xl mx-auto space-y-4">
           {/* Live Tracking Map */}
           <motion.div
@@ -360,19 +371,23 @@ const InRoute = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => callCustomer(order.customer_phone || "")}
-                  >
                     <Phone className="w-4 h-4 mr-2" />
                     Ligar
                   </Button>
+                  <ChatButton
+                    orderId={order.id}
+                    participantId={order.customer_id || ""}
+                    participantName={order.customer_name}
+                    label="Chat com Cliente"
+                    variant="outline"
+                  />
                   <Button
                     variant="outline"
+                    className="col-span-2"
                     onClick={() => openInMaps(order.delivery_address || "")}
                   >
                     <Navigation className="w-4 h-4 mr-2" />
-                    GPS
+                    Abrir no GPS
                   </Button>
                 </div>
               </CardContent>

@@ -27,6 +27,7 @@ import {
   Wallet,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
+import { ChatButton } from "@/components/chat/ChatButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
@@ -434,6 +435,12 @@ const EstablishmentOrders = () => {
                               <StatusIcon className="w-3 h-3 mr-1" />
                               {StatusConfig.label}
                             </Badge>
+                            <ChatButton
+                              orderId={order.id}
+                              receiverId={order.customer_id}
+                              receiverName={order.customer_name}
+                              variant="static"
+                            />
                             <Button
                               variant="ghost"
                               size="icon"
@@ -553,6 +560,12 @@ const EstablishmentOrders = () => {
                     Pedido #{selectedOrder.order_number}
                   </h2>
                   <div className="flex items-center gap-2">
+                    <ChatButton
+                      orderId={selectedOrder.id}
+                      receiverId={selectedOrder.customer_id}
+                      receiverName={selectedOrder.customer_name}
+                      variant="static"
+                    />
                     <Button
                       variant="outline"
                       size="icon"

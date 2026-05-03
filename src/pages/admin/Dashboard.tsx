@@ -20,6 +20,18 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import type { Database } from "@/integrations/supabase/types";
 
 type Establishment = Database["public"]["Tables"]["establishments"]["Row"];
@@ -39,6 +51,7 @@ const AdminDashboard = () => {
     totalRevenue: 0,
     todayRevenue: 0,
   });
+  const [chartData, setChartData] = useState<any[]>([]);
   const [recentEstablishments, setRecentEstablishments] = useState<Establishment[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +113,30 @@ const AdminDashboard = () => {
         totalRevenue,
         todayRevenue,
       });
+
+      // Prepare chart data (last 7 days)
+      const last7Days = [...Array(7)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        return d.toLocaleDateString("pt-BR", { weekday: "short" });
+      }).reverse();
+
+      const dailyData = [...Array(7)].map((_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        const dateString = date.toDateString();
+        
+        const dayOrders = orders?.filter(o => new Date(o.created_at).toDateString() === dateString) || [];
+        const revenue = dayOrders.reduce((sum, o) => sum + Number(o.total), 0);
+        
+        return {
+          name: date.toLocaleDateString("pt-BR", { weekday: "short" }),
+          pedidos: dayOrders.length,
+          receita: revenue,
+        };
+      });
+
+      setChartData(dailyData);
 
       setRecentEstablishments(establishments?.slice(0, 5) || []);
       setRecentOrders(orders?.slice(0, 5) || []);
@@ -257,18 +294,87 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-yellow-500/50 bg-yellow-500/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pendentes Aprovação</p>
-                    <p className="text-2xl font-bold text-yellow-600">
-                      {stats.pendingEstablishments}
-                    </p>
-                  </div>
-                  <Clock className="w-8 h-8 text-yellow-600 opacity-50" />
-                </div>
-              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <CardHeader className="px-0 pt-0">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  Receita (Últimos 7 dias)
+                </CardTitle>
+              </CardHeader>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: "#64748b" }}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: "#64748b" }}
+                      tickFormatter={(value) => `R$${value}`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" }}
+                      formatter={(value: any) => [`R$ ${Number(value).toFixed(2)}`, "Receita"]}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="receita" 
+                      stroke="#8b5cf6" 
+                      strokeWidth={3}
+                      fillOpacity={1} 
+                      fill="url(#colorRev)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <CardHeader className="px-0 pt-0">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4 text-primary" />
+                  Volume de Pedidos
+                </CardTitle>
+              </CardHeader>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: "#64748b" }}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: "#64748b" }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" }}
+                      cursor={{ fill: "rgba(139, 92, 246, 0.05)" }}
+                    />
+                    <Bar dataKey="pedidos" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={30} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </Card>
           </div>
 

@@ -6,6 +6,7 @@ import RestaurantCard from "@/components/home/RestaurantCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAddress } from "@/contexts/AddressContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import FilterBar, { type FilterOptions } from "@/components/home/FilterBar";
 
 interface Establishment {
   id: string;
@@ -23,6 +24,12 @@ const Restaurants = () => {
   const { selectedCityId, selectedCityName, isLoading: isCityLoading } = useAddress();
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterOptions>({
+    freeDelivery: false,
+    bestRated: false,
+    fastDelivery: false,
+    priceRange: null,
+  });
 
   useEffect(() => {
     const fetchEstablishments = async () => {
@@ -62,16 +69,24 @@ const Restaurants = () => {
     return `R$ ${fee.toFixed(2).replace(".", ",")}`;
   };
 
-  const mappedRestaurants = establishments.map((est) => ({
-    id: est.id,
-    name: est.name,
-    image: est.cover_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&h=300&fit=crop",
-    category: est.category,
-    rating: est.rating || 0,
-    deliveryTime: formatDeliveryTime(est.min_delivery_time, est.max_delivery_time),
-    deliveryFee: formatDeliveryFee(est.delivery_fee),
-    isOpen: est.is_open ?? false,
-  }));
+  const filteredRestaurants = establishments
+    .filter((est) => {
+      if (filters.freeDelivery && Number(est.delivery_fee) > 0) return false;
+      if (filters.bestRated && (est.rating || 0) < 4.5) return false;
+      if (filters.fastDelivery && (est.max_delivery_time || 45) > 30) return false;
+      // Price range logic could be added here if establishment has price_level field
+      return true;
+    })
+    .map((est) => ({
+      id: est.id,
+      name: est.name,
+      image: est.cover_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&h=300&fit=crop",
+      category: est.category,
+      rating: est.rating || 0,
+      deliveryTime: formatDeliveryTime(est.min_delivery_time, est.max_delivery_time),
+      deliveryFee: formatDeliveryFee(est.delivery_fee),
+      isOpen: est.is_open ?? false,
+    }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,10 +101,12 @@ const Restaurants = () => {
             <p className="text-muted-foreground">
               {isLoading || isCityLoading 
                 ? "Carregando..." 
-                : `${mappedRestaurants.length} estabelecimentos disponíveis${selectedCityName ? ` em ${selectedCityName}` : ""}`
+                : `${filteredRestaurants.length} estabelecimentos disponíveis${selectedCityName ? ` em ${selectedCityName}` : ""}`
               }
             </p>
           </div>
+
+          <FilterBar filters={filters} onChange={setFilters} />
 
           {isLoading || isCityLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
@@ -104,14 +121,19 @@ const Restaurants = () => {
                 </div>
               ))}
             </div>
-          ) : mappedRestaurants.length === 0 ? (
+          ) : filteredRestaurants.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhum restaurante encontrado na sua cidade.</p>
-              <p className="text-sm text-muted-foreground mt-1">Selecione outra cidade para ver mais opções.</p>
+              <p className="text-muted-foreground">Nenhum restaurante encontrado com estes filtros na sua cidade.</p>
+              <Button 
+                variant="link" 
+                onClick={() => setFilters({ freeDelivery: false, bestRated: false, fastDelivery: false, priceRange: null })}
+              >
+                Limpar todos os filtros
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {mappedRestaurants.map((restaurant, index) => (
+              {filteredRestaurants.map((restaurant, index) => (
                 <RestaurantCard
                   key={restaurant.id}
                   restaurant={restaurant}
@@ -119,7 +141,7 @@ const Restaurants = () => {
                 />
               ))}
             </div>
-          )}
+          )
         </motion.div>
       </main>
       <Footer />

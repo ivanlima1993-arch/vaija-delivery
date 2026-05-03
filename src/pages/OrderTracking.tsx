@@ -8,6 +8,7 @@ import { useCustomerOrderNotification } from "@/hooks/useCustomerOrderNotificati
 import DriverTrackingMap from "@/components/tracking/DriverTrackingMap";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
 import { StarRating } from "@/components/reviews/StarRating";
+import ChatButton from "@/components/chat/ChatButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -210,6 +211,16 @@ const OrderTracking = () => {
         </div>
       </header>
 
+      {/* Floating Chat Button */}
+      {!isDelivered && order.status !== "cancelled" && (
+        <ChatButton
+          orderId={order.id}
+          participantId={isDelivering && order.driver_id ? order.driver_id : (establishment?.owner_id || "")}
+          participantName={isDelivering && order.driver_id ? "Entregador" : (establishment?.name || "Estabelecimento")}
+          variant="floating"
+        />
+      )}
+
       <div className="container py-6 space-y-6">
         {/* Live Map (only when out for delivery) */}
         {isDelivering && (
@@ -318,6 +329,17 @@ const OrderTracking = () => {
                     <p className="text-sm text-muted-foreground">{establishment.address}</p>
                   </div>
                 </div>
+                {!isDelivered && !isDelivering && (
+                  <div className="mt-4">
+                    <ChatButton
+                      orderId={order.id}
+                      participantId={establishment.owner_id}
+                      participantName={establishment.name}
+                      label="Chat com a Loja"
+                      variant="outline"
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
