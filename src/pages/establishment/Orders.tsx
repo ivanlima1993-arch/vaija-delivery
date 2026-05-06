@@ -27,7 +27,7 @@ import {
   Wallet,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
-import { ChatButton } from "@/components/chat/ChatButton";
+import ChatButton from "@/components/chat/ChatButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];

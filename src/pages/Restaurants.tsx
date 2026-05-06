@@ -6,6 +6,7 @@ import RestaurantCard from "@/components/home/RestaurantCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAddress } from "@/contexts/AddressContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import FilterBar, { type FilterOptions } from "@/components/home/FilterBar";
 
 interface Establishment {
@@ -141,7 +142,7 @@ const Restaurants = () => {
                 />
               ))}
             </div>
-          )
+          )}
         </motion.div>
       </main>
       <Footer />

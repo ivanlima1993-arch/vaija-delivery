@@ -293,8 +293,6 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-
-            </Card>
           </div>
 
           {/* Charts Section */}

@@ -371,6 +371,10 @@ const InRoute = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => order.customer_phone && callCustomer(order.customer_phone)}
+                  >
                     <Phone className="w-4 h-4 mr-2" />
                     Ligar
                   </Button>
