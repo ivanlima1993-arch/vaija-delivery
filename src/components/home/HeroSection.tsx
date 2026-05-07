@@ -36,26 +36,40 @@ const HeroSection = () => {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="space-y-4"
-            >
+            <div className="space-y-6">
               <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight leading-[1.1]">
-                Tudo da sua cidade <br />
-                <span className="text-gradient">em um único app.</span>
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+                  className="block"
+                >
+                  Tudo da sua cidade
+                </motion.span>
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+                  className="block text-gradient mt-2"
+                >
+                  em um único app.
+                </motion.span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+                className="text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed"
+              >
                 De delivery de comida a serviços profissionais e imóveis. Encontre tudo o que você precisa no Vai Já.
-              </p>
-            </motion.div>
+              </motion.p>
+            </div>
 
             {/* Search Bar */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.7, type: "spring", bounce: 0.4 }}
               className="relative max-w-xl group"
             >
               <form onSubmit={handleSearch} className="relative z-10">
@@ -82,9 +96,9 @@ const HeroSection = () => {
 
             {/* Feature Badges */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.9, ease: "easeOut" }}
               className="flex flex-wrap items-center gap-6 pt-4"
             >
               {[
