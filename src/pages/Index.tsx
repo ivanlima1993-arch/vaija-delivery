@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Wrench, Sparkles, ArrowRight, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
 import HeroSection from "@/components/home/HeroSection";
 import CategorySection from "@/components/home/CategorySection";
@@ -11,18 +12,39 @@ import Footer from "@/components/layout/Footer";
 const Index = () => {
   const navigate = useNavigate();
 
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 40 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafa]">
       <Header />
       <main className="pb-20">
         <HeroSection />
         <div className="space-y-4 md:space-y-0">
-          <CategorySection />
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={fadeInUp}
+          >
+            <CategorySection />
+          </motion.div>
 
           {/* Nova Seção de Serviços */}
-          <section className="container py-8">
-            <div
-              className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl cursor-pointer group hover:scale-[1.01] transition-transform"
+          <motion.section 
+            className="container py-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={fadeInUp}
+          >
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl cursor-pointer group"
               onClick={() => navigate("/servicos")}
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -55,13 +77,22 @@ const Index = () => {
               {/* Background Shapes */}
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-[80px]" />
               <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-400/20 rounded-full blur-[80px]" />
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* Nova Seção de Imóveis */}
-          <section className="container py-4">
-            <div
-              className="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl cursor-pointer group hover:scale-[1.01] transition-transform"
+          <motion.section 
+            className="container py-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={fadeInUp}
+          >
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="bg-gradient-to-r from-emerald-600 to-teal-800 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl cursor-pointer group"
               onClick={() => navigate("/imoveis")}
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -94,11 +125,26 @@ const Index = () => {
               {/* Background Shapes */}
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-[80px]" />
               <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-emerald-400/20 rounded-full blur-[80px]" />
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
-          <PromoSection />
-          <RestaurantSection />
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={fadeInUp}
+          >
+            <PromoSection />
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={fadeInUp}
+          >
+            <RestaurantSection />
+          </motion.div>
         </div>
       </main>
       <Footer />
