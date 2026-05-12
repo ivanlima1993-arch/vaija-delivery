@@ -59,11 +59,27 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
       const orderCustomerId = order.customer_id;
       const currentUserId = user.id;
       
+      if (!orderCustomerId) {
+        throw new Error("Este pedido não possui um cliente associado.");
+      }
+
       // O participant_id no banco deve ser sempre a outra parte (Loja ou Entregador)
       // se o usuário atual for o cliente. Se o usuário atual NÃO for o cliente, 
       // então o usuário atual é o participante.
       const targetParticipantId = currentUserId === orderCustomerId ? participantId : currentUserId;
       
+      console.log("DEBUG Chat IDs:", {
+        orderId,
+        currentUserId,
+        orderCustomerId,
+        targetParticipantId,
+        originalParticipantIdProp: participantId
+      });
+
+      if (!targetParticipantId) {
+        throw new Error("ID do participante não identificado.");
+      }
+
       // Find or create room
       let { data: room, error } = await supabase
         .from("chat_rooms")
@@ -73,7 +89,13 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
         .eq("participant_id", targetParticipantId)
         .maybeSingle();
 
+      if (error) {
+        console.error("Error searching room:", error);
+        throw error;
+      }
+
       if (!room) {
+        console.log("Creating new chat room...");
         const { data: newRoom, error: createError } = await supabase
           .from("chat_rooms")
           .insert({
@@ -84,16 +106,26 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
           .select()
           .single();
         
-        if (createError) throw createError;
+        if (createError) {
+          console.error("Error creating room:", createError);
+          throw createError;
+        }
         room = newRoom;
       }
 
       setRoomId(room.id);
       fetchMessages(room.id);
       subscribeToMessages(room.id);
-    } catch (error) {
-      console.error("Chat init error:", error);
-      toast.error("Erro ao iniciar chat");
+    } catch (error: any) {
+      console.error("Chat init error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        orderId,
+        participantId
+      });
+      toast.error(`Erro ao iniciar chat: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }

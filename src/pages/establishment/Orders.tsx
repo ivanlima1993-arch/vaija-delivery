@@ -437,7 +437,7 @@ const EstablishmentOrders = () => {
                             </Badge>
                             <ChatButton
                               orderId={order.id}
-                              participantId={order.customer_id}
+                              participantId={order.customer_id || ""}
                               participantName={order.customer_name}
                               variant="outline"
                             />
@@ -562,7 +562,7 @@ const EstablishmentOrders = () => {
                   <div className="flex items-center gap-2">
                     <ChatButton
                       orderId={selectedOrder.id}
-                      participantId={selectedOrder.customer_id}
+                      participantId={selectedOrder.customer_id || ""}
                       participantName={selectedOrder.customer_name}
                       variant="outline"
                     />
