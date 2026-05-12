@@ -526,6 +526,7 @@ export type Database = {
           id: string
           notes: string | null
           order_id: string
+          options: Json | null
           product_id: string | null
           product_name: string
           product_price: number
@@ -536,6 +537,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          options?: Json | null
           order_id: string
           product_id?: string | null
           product_name: string
@@ -547,6 +549,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          options?: Json | null
           order_id?: string
           product_id?: string | null
           product_name?: string

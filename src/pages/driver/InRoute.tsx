@@ -416,11 +416,18 @@ const InRoute = () => {
                   {orderItems.map((item) => (
                     <div
                       key={item.id}
-                      className="flex justify-between items-center p-2 bg-muted/30 rounded-lg"
+                      className="flex flex-col p-2 bg-muted/30 rounded-lg"
                     >
-                      <span>
+                      <span className="font-medium">
                         {item.quantity}x {item.product_name}
                       </span>
+                      {item.options && (item.options as any).length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {(item.options as any).map((opt: any, i: number) => (
+                            <p key={i} className="text-[10px] text-muted-foreground">+ {opt.name}</p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

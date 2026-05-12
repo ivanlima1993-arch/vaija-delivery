@@ -384,9 +384,18 @@ const OrderTracking = () => {
                     key={item.id}
                     className="flex justify-between items-center py-2 border-b border-border last:border-0"
                   >
-                    <span>
-                      {item.quantity}x {item.product_name}
-                    </span>
+                    <div>
+                      <span className="font-medium">
+                        {item.quantity}x {item.product_name}
+                      </span>
+                      {item.options && (item.options as any).length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {(item.options as any).map((opt: any, i: number) => (
+                            <p key={i} className="text-[10px] text-muted-foreground">+ {opt.name}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <span className="font-medium">
                       R$ {(Number(item.subtotal) || 0).toFixed(2)}
                     </span>
