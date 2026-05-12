@@ -993,6 +993,70 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_rooms: {
+        Row: {
+          id: string
+          order_id: string
+          customer_id: string
+          participant_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          customer_id: string
+          participant_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          customer_id?: string
+          participant_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rooms_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      chat_messages: {
+        Row: {
+          id: string
+          room_id: string
+          sender_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          room_id: string
+          sender_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          room_id?: string
+          sender_id?: string
+          content?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

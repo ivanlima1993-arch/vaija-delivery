@@ -20,15 +20,21 @@ const ChatButton = ({ orderId, participantId, participantName, participantAvatar
     <>
       {variant === "floating" ? (
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
           className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-2xl z-[90] animate-bounce-slow"
         >
           <MessageSquare className="w-6 h-6" />
         </Button>
       ) : (
         <Button
-          variant={variant}
-          onClick={() => setIsOpen(true)}
+          variant={variant as any}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
           className="gap-2"
         >
           <MessageSquare className="w-4 h-4" />

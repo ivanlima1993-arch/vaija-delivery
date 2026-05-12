@@ -50,31 +50,36 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
       // Fetch order details to get correct IDs
       const { data: order, error: orderError } = await supabase
         .from("orders")
-        .select("customer_id, establishment_id, establishments(owner_id)")
+        .select("customer_id, establishment_id")
         .eq("id", orderId)
         .single();
       
       if (orderError) throw orderError;
 
       const orderCustomerId = order.customer_id;
-      // If we are chatting with establishment, participant is owner_id. 
-      // If we are chatting with driver, participant is driver_id (already passed via props).
+      const currentUserId = user.id;
+      
+      // O participant_id no banco deve ser sempre a outra parte (Loja ou Entregador)
+      // se o usuário atual for o cliente. Se o usuário atual NÃO for o cliente, 
+      // então o usuário atual é o participante.
+      const targetParticipantId = currentUserId === orderCustomerId ? participantId : currentUserId;
       
       // Find or create room
       let { data: room, error } = await supabase
-        .from("chat_rooms" as any)
+        .from("chat_rooms")
         .select("id")
         .eq("order_id", orderId)
-        .eq("participant_id", participantId)
+        .eq("customer_id", orderCustomerId)
+        .eq("participant_id", targetParticipantId)
         .maybeSingle();
 
       if (!room) {
         const { data: newRoom, error: createError } = await supabase
-          .from("chat_rooms" as any)
+          .from("chat_rooms")
           .insert({
             order_id: orderId,
             customer_id: orderCustomerId,
-            participant_id: participantId,
+            participant_id: targetParticipantId,
           })
           .select()
           .single();
@@ -96,12 +101,12 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
 
   const fetchMessages = async (rid: string) => {
     const { data } = await supabase
-      .from("chat_messages" as any)
+      .from("chat_messages")
       .select("*")
       .eq("room_id", rid)
       .order("created_at", { ascending: true });
     
-    if (data) setMessages(data);
+    if (data) setMessages(data as Message[]);
   };
 
   const subscribeToMessages = (rid: string) => {
@@ -133,7 +138,7 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
     const content = newMessage.trim();
     setNewMessage("");
 
-    const { error } = await supabase.from("chat_messages" as any).insert({
+    const { error } = await supabase.from("chat_messages").insert({
       room_id: roomId,
       sender_id: user.id,
       content,
