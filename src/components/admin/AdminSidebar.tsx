@@ -17,6 +17,7 @@ import {
   FileText,
   Banknote,
   Wrench,
+  Building,
 } from "lucide-react";
 
 interface AdminSidebarProps {
