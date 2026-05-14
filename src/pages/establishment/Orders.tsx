@@ -613,7 +613,7 @@ const EstablishmentOrders = () => {
             >
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold">
+                  <h2 className="text-xl font-bold text-gray-900">
                     Pedido #{selectedOrder.order_number}
                   </h2>
                   <div className="flex items-center gap-2">
@@ -644,15 +644,15 @@ const EstablishmentOrders = () => {
                 <div className="bg-muted/50 rounded-xl p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-primary" />
-                    <span className="font-medium">{selectedOrder.customer_name}</span>
+                    <span className="font-medium text-gray-900">{selectedOrder.customer_name}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-primary" />
-                    <span>{selectedOrder.customer_phone}</span>
+                    <span className="text-gray-700">{selectedOrder.customer_phone}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-primary mt-0.5" />
-                    <span>{selectedOrder.delivery_address}</span>
+                    <span className="text-gray-700">{selectedOrder.delivery_address}</span>
                   </div>
 
                   <div className="pt-2 border-t mt-2">
@@ -679,7 +679,7 @@ const EstablishmentOrders = () => {
 
                 {/* Items */}
                 <div>
-                  <h3 className="font-semibold mb-2">Itens do Pedido</h3>
+                  <h3 className="font-semibold mb-2 text-gray-900">Itens do Pedido</h3>
                   <div className="space-y-2">
                     {(orderItems[selectedOrder.id] || []).map((item) => (
                       <div
@@ -687,7 +687,7 @@ const EstablishmentOrders = () => {
                         className="flex justify-between items-center bg-muted/30 rounded-lg p-3"
                       >
                         <div>
-                          <span className="font-medium">
+                          <span className="font-bold text-gray-900">
                             {item.quantity}x {item.product_name}
                           </span>
                           {(item as any).options && (item as any).options.length > 0 && (
@@ -698,10 +698,10 @@ const EstablishmentOrders = () => {
                             </div>
                           )}
                           {item.notes && (
-                            <p className="text-xs text-muted-foreground italic mt-1">Obs: {item.notes}</p>
+                            <p className="text-xs text-gray-500 italic mt-1">Obs: {item.notes}</p>
                           )}
                         </div>
-                        <span className="font-medium">
+                        <span className="font-bold text-gray-900">
                           R$ {(Number(item.subtotal) || 0).toFixed(2)}
                         </span>
                       </div>
@@ -721,11 +721,11 @@ const EstablishmentOrders = () => {
 
                 {/* Totals */}
                 <div className="border-t pt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm text-gray-600">
                     <span>Subtotal</span>
                     <span>R$ {(Number(selectedOrder?.subtotal) || 0).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm text-gray-600">
                     <span>Taxa de entrega</span>
                     <span>R$ {(Number(selectedOrder?.delivery_fee) || 0).toFixed(2)}</span>
                   </div>
