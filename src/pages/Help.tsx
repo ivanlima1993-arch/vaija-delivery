@@ -14,44 +14,58 @@ const faqs = [
     icon: <BookOpen className="w-5 h-5" />,
     questions: [
       {
-        q: "Como acompanho meu pedido?",
-        a: "Após finalizar seu pedido, você será redirecionado para a tela de acompanhamento. Você também pode acessar seus pedidos ativos através do menu do seu perfil."
+        q: "Qual o prazo para o restaurante confirmar meu pedido?",
+        a: "O estabelecimento tem até 30 minutos para confirmar seu pedido. Caso esse prazo seja ultrapassado, o sistema cancela o pedido automaticamente por segurança e o valor é estornado (em casos de pagamento online)."
       },
       {
-        q: "Qual o prazo médio de entrega?",
-        a: "O prazo varia conforme o estabelecimento e sua localização, geralmente entre 30 e 50 minutos. Você pode ver a estimativa na página de cada restaurante."
+        q: "Posso cancelar um pedido que acabei de fazer?",
+        a: "Sim. Se o estabelecimento ainda não confirmou o pedido, a opção de cancelamento ficará disponível para você no app após 10 minutos de espera."
       },
       {
-        q: "Como cancelo um pedido?",
-        a: "Pedidos só podem ser cancelados se ainda não tiverem sido confirmados pelo estabelecimento. Entre em contato diretamente com a loja via chat ou telefone para solicitar o cancelamento."
+        q: "Como acompanho a entrega?",
+        a: "Na tela 'Acompanhar Pedido', você verá o status em tempo real. Quando o entregador estiver em rota, um mapa aparecerá para você seguir o trajeto até sua casa."
+      },
+      {
+        q: "O que fazer se meu pedido vier errado?",
+        a: "Você deve abrir o chat direto com o estabelecimento através do botão flutuante na tela do pedido ou entrar em contato pelos canais de suporte da loja."
       }
     ]
   },
   {
-    category: "Pagamentos",
+    category: "Serviços e Imóveis",
+    icon: <ExternalLink className="w-5 h-5" />,
+    questions: [
+      {
+        q: "Como contrato um profissional de serviços?",
+        a: "Acesse a aba 'Serviços', escolha a categoria desejada, analise o perfil e as avaliações do profissional e inicie um chat direto para solicitar um orçamento."
+      },
+      {
+        q: "Como funciona a compra/aluguel de imóveis?",
+        a: "Você pode navegar pelos imóveis disponíveis, ver fotos e detalhes. Caso tenha interesse, clique em 'Falar com Corretor' para iniciar uma conversa direta via chat ou WhatsApp."
+      }
+    ]
+  },
+  {
+    category: "Pagamentos e Carteira",
     icon: <CreditCard className="w-5 h-5" />,
     questions: [
       {
-        q: "Quais formas de pagamento são aceitas?",
-        a: "Aceitamos PIX, Cartão de Crédito Online (via Asaas), Saldo da Carteira Digital e pagamento na entrega (Cartão ou Dinheiro), dependendo da disponibilidade de cada estabelecimento."
+        q: "Quais as formas de pagamento?",
+        a: "Aceitamos PIX, Cartões de Crédito Online, Dinheiro e Cartão na Entrega. Algumas lojas podem oferecer cashback que vai direto para sua Carteira Digital no app."
       },
       {
-        q: "O pagamento online é seguro?",
-        a: "Sim! Utilizamos a infraestrutura do Asaas, um dos maiores processadores de pagamento do Brasil, garantindo criptografia de ponta a ponta em todas as transações."
+        q: "Como uso meu saldo da Carteira?",
+        a: "No momento do checkout, se você tiver saldo disponível, poderá selecioná-lo como forma de pagamento total ou parcial do seu pedido."
       }
     ]
   },
   {
-    category: "Conta e Segurança",
+    category: "Segurança",
     icon: <ShieldCheck className="w-5 h-5" />,
     questions: [
       {
-        q: "Como altero minha senha?",
-        a: "Acesse seu perfil, vá em configurações e selecione a opção de alterar senha. Se esqueceu sua senha, use a opção 'Esqueci minha senha' na tela de login."
-      },
-      {
-        q: "Como protegem meus dados?",
-        a: "Seguimos rigorosamente a LGPD. Seus dados são utilizados apenas para processar seus pedidos e melhorar sua experiência na plataforma."
+        q: "Meus dados estão seguros?",
+        a: "Sim, utilizamos criptografia de ponta a ponta e processadores de pagamento certificados (Asaas/Supabase). Seus dados seguem as normas da LGPD."
       }
     ]
   }
