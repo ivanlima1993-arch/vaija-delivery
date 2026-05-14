@@ -64,6 +64,8 @@ const OrderTracking = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     "Notification" in window && Notification.permission === "granted"
   );
+  const [elapsedMinutes, setElapsedMinutes] = useState(0);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const { data: existingReview, refetch: refetchReview } = useOrderReview(orderId);
 
@@ -84,7 +86,62 @@ const OrderTracking = () => {
     if (orderId && user) {
       fetchOrder();
     }
-  }, [orderId, user, authLoading]);
+
+    // Timer to update elapsed time every minute
+    const timer = setInterval(() => {
+      if (order?.created_at) {
+        const created = new Date(order.created_at).getTime();
+        const now = new Date().getTime();
+        const diff = Math.floor((now - created) / 1000 / 60);
+        setElapsedMinutes(diff);
+      }
+    }, 10000); // Check every 10 seconds for more precision
+
+    return () => clearInterval(timer);
+  }, [orderId, user, authLoading, order?.created_at]);
+
+  // Logic for auto-cancellation after 30 minutes
+  useEffect(() => {
+    if (order?.status === 'pending' && elapsedMinutes >= 30) {
+      handleAutoCancel();
+    }
+  }, [elapsedMinutes, order?.status]);
+
+  const handleAutoCancel = async () => {
+    if (!order || order.status !== 'pending') return;
+    
+    console.log("Auto-cancelling order due to timeout (30min)");
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: 'cancelled' })
+        .eq("id", order.id);
+      
+      if (error) throw error;
+      setOrder({ ...order, status: 'cancelled' });
+    } catch (error) {
+      console.error("Error auto-cancelling order:", error);
+    }
+  };
+
+  const handleCustomerCancel = async () => {
+    if (!order || order.status !== 'pending' || elapsedMinutes < 10) return;
+    
+    setIsCancelling(true);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: 'cancelled' })
+        .eq("id", order.id);
+      
+      if (error) throw error;
+      setOrder({ ...order, status: 'cancelled' });
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const fetchOrder = async () => {
     try {
@@ -297,7 +354,72 @@ const OrderTracking = () => {
           </Card>
         </motion.div>
 
-        {/* Establishment Info */}
+        {/* Alerts and Actions */}
+        {order.status === 'pending' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+          >
+            <Card className="border-yellow-200 bg-yellow-50/50">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center shrink-0">
+                    <Clock className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-yellow-800 text-sm">Aguardando Confirmação</h3>
+                    <p className="text-xs text-yellow-700 leading-relaxed">
+                      O estabelecimento tem até 30 minutos para confirmar seu pedido. 
+                      Já se passaram <strong>{elapsedMinutes} minutos</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                {elapsedMinutes >= 10 ? (
+                  <Button 
+                    variant="destructive" 
+                    className="w-full h-11 rounded-xl font-bold shadow-lg"
+                    onClick={handleCustomerCancel}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Package className="w-4 h-4 mr-2" />
+                    )}
+                    CANCELAR PEDIDO AGORA
+                  </Button>
+                ) : (
+                  <p className="text-[10px] text-center text-yellow-600 font-medium">
+                    A opção de cancelamento ficará disponível em {10 - elapsedMinutes} min
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {order.status === 'cancelled' && elapsedMinutes >= 30 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <BellOff className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-red-800 text-sm">Pedido Cancelado Automaticamente</h3>
+                  <p className="text-xs text-red-700">
+                    O estabelecimento não confirmou o pedido dentro do prazo de 30 minutos.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
         {establishment && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

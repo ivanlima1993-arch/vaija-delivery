@@ -56,6 +56,7 @@ const EstablishmentOrders = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
 
   // Real-time order notifications
   const { playNotificationSound, stopSoundForOrder } = useOrderNotification({
@@ -87,7 +88,30 @@ const EstablishmentOrders = () => {
     if (user) {
       fetchEstablishmentAndOrders();
     }
-  }, [user, authLoading, isEstablishment, navigate]);
+
+    // Timer to update elapsed times and check for auto-cancellation
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const newElapsed: Record<string, number> = {};
+      
+      orders.forEach(order => {
+        if (order.status === 'pending') {
+          const created = new Date(order.created_at).getTime();
+          const diff = Math.floor((now - created) / 1000 / 60);
+          newElapsed[order.id] = diff;
+
+          // Auto-cancel if 30 minutes passed
+          if (diff >= 30) {
+            updateOrderStatus(order.id, 'cancelled');
+          }
+        }
+      });
+      
+      setElapsedTimes(newElapsed);
+    }, 10000);
+
+    return () => clearInterval(timer);
+  }, [user, authLoading, isEstablishment, navigate, orders]);
 
   const fetchEstablishmentAndOrders = async () => {
     try {
@@ -464,6 +488,21 @@ const EstablishmentOrders = () => {
                           <Clock className="w-4 h-4" />
                           {new Date(order.created_at).toLocaleString("pt-BR")}
                         </div>
+
+                        {order.status === 'pending' && (
+                          <div className={`flex items-center gap-2 p-2 rounded-xl border animate-pulse ${
+                            (elapsedTimes[order.id] || 0) >= 25 
+                              ? "bg-red-50 border-red-200 text-red-700" 
+                              : "bg-yellow-50 border-yellow-200 text-yellow-700"
+                          }`}>
+                            <Clock className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-wider">
+                              {(elapsedTimes[order.id] || 0) >= 30 
+                                ? "Cancelando..." 
+                                : `Cancela em ${30 - (elapsedTimes[order.id] || 0)} min`}
+                            </span>
+                          </div>
+                        )}
 
                         <div className="flex items-center gap-2 py-1">
                           <Badge variant="secondary" className="bg-muted text-foreground flex gap-1 items-center">
