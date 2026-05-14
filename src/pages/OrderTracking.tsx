@@ -9,6 +9,7 @@ import DriverTrackingMap from "@/components/tracking/DriverTrackingMap";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
 import { StarRating } from "@/components/reviews/StarRating";
 import ChatButton from "@/components/chat/ChatButton";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -114,11 +115,21 @@ const OrderTracking = () => {
     try {
       const { error } = await supabase
         .from("orders")
-        .update({ status: 'cancelled' })
+        .update({ 
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: 'Cancelamento automático (timeout 30min)'
+        })
         .eq("id", order.id);
       
       if (error) throw error;
-      setOrder({ ...order, status: 'cancelled' });
+      setOrder({ 
+        ...order, 
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: 'Cancelamento automático (timeout 30min)'
+      });
+      toast.error("Pedido cancelado automaticamente por falta de confirmação.");
     } catch (error) {
       console.error("Error auto-cancelling order:", error);
     }
@@ -131,13 +142,26 @@ const OrderTracking = () => {
     try {
       const { error } = await supabase
         .from("orders")
-        .update({ status: 'cancelled' })
+        .update({ 
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: 'Cancelado pelo cliente após 10 minutos'
+        })
         .eq("id", order.id);
       
       if (error) throw error;
-      setOrder({ ...order, status: 'cancelled' });
-    } catch (error) {
+      
+      setOrder({ 
+        ...order, 
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: 'Cancelado pelo cliente após 10 minutos'
+      });
+      
+      toast.success("Pedido cancelado com sucesso.");
+    } catch (error: any) {
       console.error("Error cancelling order:", error);
+      toast.error("Erro ao cancelar pedido: " + (error.message || "Tente novamente"));
     } finally {
       setIsCancelling(false);
     }

@@ -184,7 +184,11 @@ export const useGlobalOrderNotifications = () => {
             console.log(`Global Hook: Auto-cancelling order ${order.id} due to timeout`);
             await supabase
               .from("orders")
-              .update({ status: 'cancelled' })
+              .update({ 
+                status: 'cancelled',
+                cancelled_at: new Date().toISOString(),
+                cancellation_reason: 'Cancelamento automático (timeout 30min - Vigia Global)'
+              })
               .eq("id", order.id);
             // We don't need to manually update state here, the REALTIME subscription will catch it
           } else {

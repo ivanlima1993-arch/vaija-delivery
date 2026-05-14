@@ -119,9 +119,18 @@ const Profile = () => {
           console.log(`Profile Page: Auto-cancelling order ${order.id}`);
           await supabase
             .from("orders")
-            .update({ status: 'cancelled' })
+            .update({ 
+              status: 'cancelled',
+              cancelled_at: new Date().toISOString(),
+              cancellation_reason: 'Cancelamento automático (timeout 30min - Perfil)'
+            })
             .eq("id", order.id);
-          return { ...order, status: 'cancelled' as OrderStatus };
+          return { 
+            ...order, 
+            status: 'cancelled' as OrderStatus,
+            cancelled_at: new Date().toISOString(),
+            cancellation_reason: 'Cancelamento automático (timeout 30min - Perfil)'
+          };
         }
         return order;
       }));
