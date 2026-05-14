@@ -33,18 +33,18 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
   const [roomId, setRoomId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initializingRef = useRef(false);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-    
     if (user && orderId && participantId) {
-      initChat().then(cleanup => {
-        if (cleanup) unsubscribe = cleanup;
-      });
+      initChat();
     }
 
     return () => {
-      if (unsubscribe) unsubscribe();
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
     };
   }, [user, orderId, participantId]);
 
@@ -60,6 +60,12 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
     try {
       initializingRef.current = true;
       setLoading(true);
+
+      // Limpar inscrição anterior se existir
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
 
       // Fetch order details to get correct IDs
       const { data: order, error: orderError } = await supabase
@@ -77,23 +83,12 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
         throw new Error("Este pedido não possui um cliente associado.");
       }
 
-      // O participant_id no banco deve ser sempre a outra parte (Loja ou Entregador)
-      // se o usuário atual for o cliente. Se o usuário atual NÃO for o cliente, 
-      // então o usuário atual é o participante.
       const targetParticipantId = currentUserId === orderCustomerId ? participantId : currentUserId;
       
       if (!targetParticipantId) {
-        // Se ainda não temos o ID do participante, apenas retornamos e esperamos a próxima atualização da prop
         initializingRef.current = false;
         return;
       }
-
-      console.log("DEBUG Chat IDs:", {
-        orderId,
-        currentUserId,
-        orderCustomerId,
-        targetParticipantId
-      });
 
       // Find or create room
       let { data: room, error } = await supabase
@@ -104,13 +99,9 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
         .eq("participant_id", targetParticipantId)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error searching room:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (!room) {
-        console.log("Creating new chat room...");
         const { data: newRoom, error: createError } = await supabase
           .from("chat_rooms")
           .insert({
@@ -122,7 +113,6 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
           .single();
         
         if (createError) {
-          // Se o erro for de unicidade, tentamos buscar novamente pois outro processo pode ter criado
           if (createError.code === '23505') {
              const { data: retryRoom } = await supabase
                 .from("chat_rooms")
@@ -131,10 +121,7 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
                 .eq("participant_id", targetParticipantId)
                 .single();
              room = retryRoom;
-          } else {
-            console.error("Error creating room:", createError);
-            throw createError;
-          }
+          } else throw createError;
         } else {
           room = newRoom;
         }
@@ -142,13 +129,11 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
 
       if (room) {
         setRoomId(room.id);
-        fetchMessages(room.id);
-        const unsubscribe = subscribeToMessages(room.id);
-        return unsubscribe;
+        await fetchMessages(room.id);
+        unsubscribeRef.current = await subscribeToMessages(room.id);
       }
     } catch (error: any) {
-      console.error("Chat init error details:", error);
-      // Não mostramos erro se for apenas falta de dados iniciais
+      console.error("Chat init error:", error);
       if (error.message !== "ID do participante não identificado.") {
         toast.error(`Erro ao iniciar chat: ${error.message || 'Erro desconhecido'}`);
       }
@@ -168,15 +153,9 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
     if (data) setMessages(data as Message[]);
   };
 
-  const subscribeToMessages = (rid: string) => {
-    const channelName = `room-${rid}`;
+  const subscribeToMessages = async (rid: string) => {
+    const channelName = `room-${rid}-${Math.random().toString(36).slice(2, 9)}`;
     
-    // Remover canal existente se houver para evitar erro de "callback after subscribe"
-    const existingChannel = supabase.getChannels().find(c => c.name === channelName);
-    if (existingChannel) {
-      supabase.removeChannel(existingChannel);
-    }
-
     const channel = supabase
       .channel(channelName)
       .on(
@@ -191,14 +170,9 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
           setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`Subscribed to chat room: ${rid}`);
-        }
-      });
+      .subscribe();
 
     return () => {
-      console.log(`Unsubscribing from chat room: ${rid}`);
       supabase.removeChannel(channel);
     };
   };
