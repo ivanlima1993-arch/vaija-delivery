@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, MessageCircle, Mail, Phone, ExternalLink, ChevronDown, Headset, BookOpen, ShieldCheck, CreditCard } from "lucide-react";
+import { ArrowLeft, Search, MessageCircle, Mail, Phone, ExternalLink, ChevronDown, Headset, BookOpen, ShieldCheck, CreditCard, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -124,44 +124,53 @@ const Help = () => {
       <div className="container py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Contact Cards */}
         <div className="lg:col-span-1 space-y-4">
-          <h3 className="font-bold text-lg mb-4">Canais de Atendimento</h3>
+          <h3 className="font-bold text-lg mb-4 text-white">Canais de Atendimento</h3>
           
-          <Card className="border-none shadow-soft bg-green-500/5 hover:bg-green-500/10 transition-colors cursor-pointer">
+          <Card 
+            className="border-none shadow-soft bg-green-500/5 hover:bg-green-500/10 transition-colors cursor-pointer"
+            onClick={() => window.open("https://wa.me/5579988320546", "_blank")}
+          >
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-green-500 flex items-center justify-center text-white">
                 <MessageCircle className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-bold">WhatsApp</p>
-                <p className="text-xs text-muted-foreground">Atendimento humano via chat</p>
+                <p className="font-bold text-gray-900">WhatsApp</p>
+                <p className="text-xs text-gray-500">(79) 98832-0546</p>
               </div>
-              <ExternalLink className="w-4 h-4 ml-auto text-muted-foreground" />
+              <ExternalLink className="w-4 h-4 ml-auto text-gray-400" />
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-soft bg-blue-500/5 hover:bg-blue-500/10 transition-colors cursor-pointer">
+          <Card 
+            className="border-none shadow-soft bg-pink-500/5 hover:bg-pink-500/10 transition-colors cursor-pointer"
+            onClick={() => window.open("https://instagram.com/vaijadelivery", "_blank")}
+          >
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center text-white">
-                <Headset className="w-6 h-6" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 flex items-center justify-center text-white">
+                <Instagram className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-bold">Chat Interno</p>
-                <p className="text-xs text-muted-foreground">Fale direto pelo aplicativo</p>
+                <p className="font-bold text-gray-900">Instagram</p>
+                <p className="text-xs text-gray-500">Siga @vaijadelivery</p>
               </div>
-              <ExternalLink className="w-4 h-4 ml-auto text-muted-foreground" />
+              <ExternalLink className="w-4 h-4 ml-auto text-gray-400" />
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-soft bg-orange-500/5 hover:bg-orange-500/10 transition-colors cursor-pointer">
+          <Card 
+            className="border-none shadow-soft bg-orange-500/5 hover:bg-orange-500/10 transition-colors cursor-pointer"
+            onClick={() => window.location.href = "mailto:vaijadeliveryoficial@gmail.com"}
+          >
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center text-white">
                 <Mail className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-bold">E-mail</p>
-                <p className="text-xs text-muted-foreground">suporte@vaijadelivery.com</p>
+                <p className="font-bold text-gray-900">E-mail</p>
+                <p className="text-xs text-gray-500">vaijadeliveryoficial@gmail.com</p>
               </div>
-              <ExternalLink className="w-4 h-4 ml-auto text-muted-foreground" />
+              <ExternalLink className="w-4 h-4 ml-auto text-gray-400" />
             </CardContent>
           </Card>
 
@@ -184,13 +193,15 @@ const Help = () => {
 
         {/* FAQs */}
         <div className="lg:col-span-2">
-          <h3 className="font-bold text-lg mb-6">Perguntas Frequentes</h3>
+          <h3 className="font-bold text-lg mb-6 text-white">Perguntas Frequentes</h3>
           <div className="space-y-8">
             {faqs.map((cat, idx) => (
               <div key={idx}>
                 <div className="flex items-center gap-2 mb-4 text-primary">
                   {cat.icon}
-                  <h4 className="font-bold uppercase tracking-widest text-xs">{cat.category}</h4>
+                  <h4 className="font-black uppercase tracking-widest text-xs text-white">
+                    {cat.category}
+                  </h4>
                 </div>
                 <Accordion type="single" collapsible className="w-full space-y-2">
                   {cat.questions.map((q, qIdx) => (
@@ -199,10 +210,10 @@ const Help = () => {
                       value={`item-${idx}-${qIdx}`}
                       className="border rounded-2xl px-4 bg-card"
                     >
-                      <AccordionTrigger className="hover:no-underline font-medium text-left">
+                      <AccordionTrigger className="hover:no-underline font-bold text-left text-gray-900">
                         {q.q}
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground leading-relaxed">
+                      <AccordionContent className="text-gray-600 leading-relaxed font-medium">
                         {q.a}
                       </AccordionContent>
                     </AccordionItem>
