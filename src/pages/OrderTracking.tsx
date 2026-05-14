@@ -336,9 +336,9 @@ const OrderTracking = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card>
+          <Card className="bg-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Status do Pedido</CardTitle>
+              <CardTitle className="text-base text-gray-900">Status do Pedido</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -360,7 +360,7 @@ const OrderTracking = () => {
                         <Icon className={`w-5 h-5 ${isCompleted ? "text-white" : "text-muted-foreground"}`} />
                       </div>
                       <div className="flex-1">
-                        <p className={`font-medium ${isCompleted ? "" : "text-muted-foreground"}`}>
+                        <p className={`font-bold ${isCompleted ? "text-gray-900" : "text-gray-400"}`}>
                           {config.label}
                         </p>
                         {isCurrent && (
@@ -452,7 +452,7 @@ const OrderTracking = () => {
           >
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
+                <CardTitle className="text-base flex items-center gap-2 text-gray-900">
                   <Store className="w-4 h-4" />
                   Estabelecimento
                 </CardTitle>
@@ -471,8 +471,8 @@ const OrderTracking = () => {
                     </div>
                   )}
                   <div>
-                    <p className="font-bold">{establishment.name}</p>
-                    <p className="text-sm text-muted-foreground">{establishment.address}</p>
+                    <p className="font-bold text-gray-900">{establishment.name}</p>
+                    <p className="text-sm text-gray-500">{establishment.address}</p>
                   </div>
                 </div>
                 {!isDelivered && !isDelivering && (
@@ -499,13 +499,13 @@ const OrderTracking = () => {
         >
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="text-base flex items-center gap-2 text-gray-900">
                 <MapPin className="w-4 h-4" />
                 Endereço de Entrega
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p>{order.delivery_address}</p>
+              <p className="text-gray-700 font-medium">{order.delivery_address}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -518,7 +518,7 @@ const OrderTracking = () => {
         >
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="text-base flex items-center gap-2 text-gray-900">
                 <Package className="w-4 h-4" />
                 Itens do Pedido
               </CardTitle>
@@ -531,33 +531,33 @@ const OrderTracking = () => {
                     className="flex justify-between items-center py-2 border-b border-border last:border-0"
                   >
                     <div>
-                      <span className="font-medium">
+                      <span className="font-bold text-gray-900">
                         {item.quantity}x {item.product_name}
                       </span>
                       {item.options && (item.options as any).length > 0 && (
                         <div className="mt-1 space-y-0.5">
                           {(item.options as any).map((opt: any, i: number) => (
-                            <p key={i} className="text-[10px] text-muted-foreground">+ {opt.name}</p>
+                            <p key={i} className="text-[10px] text-gray-500">+ {opt.name}</p>
                           ))}
                         </div>
                       )}
                     </div>
-                    <span className="font-medium">
+                    <span className="font-bold text-gray-900">
                       R$ {(Number(item.subtotal) || 0).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="mt-4 pt-4 border-t border-border space-y-2">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal</span>
                   <span>R$ {(Number(order?.subtotal) || 0).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm text-gray-600">
                   <span>Taxa de entrega</span>
                   <span>R$ {(Number(order?.delivery_fee) || 0).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between font-black text-xl text-primary">
                   <span>Total</span>
                   <span>R$ {(Number(order?.total) || 0).toFixed(2)}</span>
                 </div>
@@ -575,7 +575,7 @@ const OrderTracking = () => {
           >
             <Card className="border-primary/20">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
+                <CardTitle className="text-base flex items-center gap-2 text-gray-900">
                   <Star className="w-4 h-4 text-yellow-500" />
                   Avaliação
                 </CardTitle>
