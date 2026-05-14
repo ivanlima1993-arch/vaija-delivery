@@ -140,8 +140,26 @@ const EstablishmentOrders = () => {
       .order("created_at", { ascending: false });
 
     if (data) {
+      const now = new Date().getTime();
+      const updatedData = await Promise.all(data.map(async (o) => {
+        if (!o) return o;
+        
+        const created = new Date(o.created_at).getTime();
+        const diff = Math.floor((now - created) / 1000 / 60);
+
+        if (o.status === 'pending' && diff >= 30) {
+          console.log(`Establishment Orders: Auto-cancelling order ${o.id}`);
+          await supabase
+            .from("orders")
+            .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+            .eq("id", o.id);
+          return { ...o, status: 'cancelled' as OrderStatus };
+        }
+        return o;
+      }));
+
       // Filter: offline payments OR paid online payments
-      const visibleOrders = data.filter(o => {
+      const visibleOrders = updatedData.filter(o => {
         if (!o) return false;
         const isOnline = o.payment_method === 'pix' || o.payment_method === 'credit_card';
         const isPaid = o.payment_status === 'paid';

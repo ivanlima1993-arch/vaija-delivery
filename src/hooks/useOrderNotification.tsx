@@ -24,6 +24,7 @@ export const useOrderNotification = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPlayingRef = useRef(false);
+  const toastsRef = useRef<Map<string, string | number>>(new Map());
 
   // Initialize audio context
   useEffect(() => {
@@ -144,6 +145,13 @@ export const useOrderNotification = ({
       newSet.delete(orderId);
       return newSet;
     });
+    
+    // Also dismiss any toast related to this order
+    const toastId = toastsRef.current.get(orderId);
+    if (toastId) {
+      toast.dismiss(toastId);
+      toastsRef.current.delete(orderId);
+    }
   }, []);
 
   // Stop all sounds
@@ -173,13 +181,13 @@ export const useOrderNotification = ({
     const orderNumber = order.order_number || '---';
     const orderTotal = Number(order.total || 0).toFixed(2);
 
-    // Show toast with custom styling
-    toast.success(
+    const toastId = toastVariant(
       <div
         className="flex items-center gap-4 w-full cursor-pointer p-1"
         onClick={() => {
           navigate("/estabelecimento/pedidos");
-          toast.dismiss();
+          toast.dismiss(toastsRef.current.get(order.id));
+          toastsRef.current.delete(order.id);
         }}
       >
         <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center relative overflow-hidden group">
@@ -205,6 +213,8 @@ export const useOrderNotification = ({
         className: "border-2 border-primary bg-card/95 backdrop-blur-sm shadow-2xl rounded-2xl p-4 min-w-[340px] hover:scale-[1.02] transition-transform",
       }
     );
+
+    toastsRef.current.set(order.id, toastId);
 
     // Use ServiceWorker for notifications to avoid "Illegal constructor" on mobile
     if ("serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
