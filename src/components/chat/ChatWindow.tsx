@@ -169,8 +169,16 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
   };
 
   const subscribeToMessages = (rid: string) => {
+    const channelName = `room-${rid}`;
+    
+    // Remover canal existente se houver para evitar erro de "callback after subscribe"
+    const existingChannel = supabase.getChannels().find(c => c.name === channelName);
+    if (existingChannel) {
+      supabase.removeChannel(existingChannel);
+    }
+
     const channel = supabase
-      .channel(`room-${rid}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -183,9 +191,14 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
           setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Subscribed to chat room: ${rid}`);
+        }
+      });
 
     return () => {
+      console.log(`Unsubscribing from chat room: ${rid}`);
       supabase.removeChannel(channel);
     };
   };
