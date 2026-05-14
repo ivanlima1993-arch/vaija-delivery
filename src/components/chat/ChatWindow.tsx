@@ -32,12 +32,21 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
   const [loading, setLoading] = useState(true);
   const [roomId, setRoomId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const initializingRef = useRef(false);
 
   useEffect(() => {
-    if (user) {
-      initChat();
+    let unsubscribe: (() => void) | undefined;
+    
+    if (user && orderId && participantId) {
+      initChat().then(cleanup => {
+        if (cleanup) unsubscribe = cleanup;
+      });
     }
-  }, [user, orderId]);
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [user, orderId, participantId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -46,7 +55,12 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
   }, [messages]);
 
   const initChat = async () => {
+    if (initializingRef.current || roomId) return;
+    
     try {
+      initializingRef.current = true;
+      setLoading(true);
+
       // Fetch order details to get correct IDs
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -68,17 +82,18 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
       // então o usuário atual é o participante.
       const targetParticipantId = currentUserId === orderCustomerId ? participantId : currentUserId;
       
+      if (!targetParticipantId) {
+        // Se ainda não temos o ID do participante, apenas retornamos e esperamos a próxima atualização da prop
+        initializingRef.current = false;
+        return;
+      }
+
       console.log("DEBUG Chat IDs:", {
         orderId,
         currentUserId,
         orderCustomerId,
-        targetParticipantId,
-        originalParticipantIdProp: participantId
+        targetParticipantId
       });
-
-      if (!targetParticipantId) {
-        throw new Error("ID do participante não identificado.");
-      }
 
       // Find or create room
       let { data: room, error } = await supabase
@@ -107,26 +122,38 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
           .single();
         
         if (createError) {
-          console.error("Error creating room:", createError);
-          throw createError;
+          // Se o erro for de unicidade, tentamos buscar novamente pois outro processo pode ter criado
+          if (createError.code === '23505') {
+             const { data: retryRoom } = await supabase
+                .from("chat_rooms")
+                .select("id")
+                .eq("order_id", orderId)
+                .eq("participant_id", targetParticipantId)
+                .single();
+             room = retryRoom;
+          } else {
+            console.error("Error creating room:", createError);
+            throw createError;
+          }
+        } else {
+          room = newRoom;
         }
-        room = newRoom;
       }
 
-      setRoomId(room.id);
-      fetchMessages(room.id);
-      subscribeToMessages(room.id);
+      if (room) {
+        setRoomId(room.id);
+        fetchMessages(room.id);
+        const unsubscribe = subscribeToMessages(room.id);
+        return unsubscribe;
+      }
     } catch (error: any) {
-      console.error("Chat init error details:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        orderId,
-        participantId
-      });
-      toast.error(`Erro ao iniciar chat: ${error.message || 'Erro desconhecido'}`);
+      console.error("Chat init error details:", error);
+      // Não mostramos erro se for apenas falta de dados iniciais
+      if (error.message !== "ID do participante não identificado.") {
+        toast.error(`Erro ao iniciar chat: ${error.message || 'Erro desconhecido'}`);
+      }
     } finally {
+      initializingRef.current = false;
       setLoading(false);
     }
   };
