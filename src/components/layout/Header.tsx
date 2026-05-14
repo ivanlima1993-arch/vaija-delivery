@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, User, Menu, X, Search, LogOut, Wallet } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Search, LogOut, Wallet, Headset } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
@@ -176,6 +176,12 @@ const Header = () => {
                       Minha Carteira
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/ajuda" className="cursor-pointer">
+                      <Headset className="w-4 h-4 mr-2" />
+                      Central de Ajuda
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                     <LogOut className="w-4 h-4 mr-2" />
@@ -256,6 +262,12 @@ const Header = () => {
                       <Button variant="outline" className="w-full mb-2">
                         <User className="w-4 h-4 mr-2" />
                         Meu Perfil
+                      </Button>
+                    </Link>
+                    <Link to="/ajuda" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full mb-2">
+                        <Headset className="w-4 h-4 mr-2" />
+                        Central de Ajuda
                       </Button>
                     </Link>
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
