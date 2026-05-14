@@ -61,6 +61,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AboutUs from "./pages/AboutUs";
 import RealtorTerms from "./pages/RealtorTerms";
 import { GlobalOrderNotifications } from "./components/GlobalOrderNotifications";
+import { GlobalChatNotifications } from "./components/GlobalChatNotifications";
 import { ConditionalSupportButton } from "./components/ConditionalSupportButton";
 
 import Restaurant from "./pages/Restaurant";
@@ -108,6 +109,7 @@ const App = () => {
             <Sonner />
             <HashRouter>
               <GlobalOrderNotifications />
+              <GlobalChatNotifications />
               <ConditionalSupportButton />
               <Routes>
                 <Route path="/" element={<Index />} />
