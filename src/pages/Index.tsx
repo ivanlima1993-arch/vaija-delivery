@@ -18,7 +18,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa]">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="pb-20">
         <HeroSection />

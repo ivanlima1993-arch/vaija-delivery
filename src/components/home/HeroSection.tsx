@@ -15,7 +15,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#fff9f5] min-h-[500px] md:min-h-[600px] flex items-center">
+    <section className="relative overflow-hidden bg-background min-h-[500px] md:min-h-[600px] flex items-center">
       {/* Abstract Background Design */}
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary rounded-full blur-[120px]" />
