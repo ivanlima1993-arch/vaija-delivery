@@ -109,7 +109,24 @@ const Profile = () => {
         .limit(10);
 
       if (error) throw error;
-      setOrders(data || []);
+      
+      const now = new Date().getTime();
+      const updatedData = await Promise.all((data || []).map(async (order) => {
+        const created = new Date(order.created_at).getTime();
+        const diff = Math.floor((now - created) / 1000 / 60);
+
+        if (order.status === 'pending' && diff >= 30) {
+          console.log(`Profile Page: Auto-cancelling order ${order.id}`);
+          await supabase
+            .from("orders")
+            .update({ status: 'cancelled' })
+            .eq("id", order.id);
+          return { ...order, status: 'cancelled' as OrderStatus };
+        }
+        return order;
+      }));
+
+      setOrders(updatedData);
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {

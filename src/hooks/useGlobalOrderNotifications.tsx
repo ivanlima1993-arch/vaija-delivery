@@ -169,19 +169,38 @@ export const useGlobalOrderNotifications = () => {
     const fetchActiveOrders = async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id, status")
+        .select("id, status, created_at")
         .eq("customer_id", user.id)
         .not("status", "in", '("delivered","cancelled")');
 
       if (data) {
-        data.forEach((order) => {
-          activeOrdersRef.current.set(order.id, order.status);
+        const now = new Date().getTime();
+        data.forEach(async (order) => {
+          // Check for 30min auto-cancel while fetching
+          const created = new Date(order.created_at).getTime();
+          const diff = Math.floor((now - created) / 1000 / 60);
+
+          if (order.status === 'pending' && diff >= 30) {
+            console.log(`Global Hook: Auto-cancelling order ${order.id} due to timeout`);
+            await supabase
+              .from("orders")
+              .update({ status: 'cancelled' })
+              .eq("id", order.id);
+            // We don't need to manually update state here, the REALTIME subscription will catch it
+          } else {
+            activeOrdersRef.current.set(order.id, order.status);
+          }
         });
       }
       isInitializedRef.current = true;
     };
 
     fetchActiveOrders();
+
+    // Periodically check for timeouts every minute
+    const timeoutCheck = setInterval(() => {
+      fetchActiveOrders();
+    }, 60000);
 
     // Subscribe to all orders for this customer
     const channel = supabase
@@ -236,6 +255,7 @@ export const useGlobalOrderNotifications = () => {
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(timeoutCheck);
     };
   }, [user, showNotification]);
 
