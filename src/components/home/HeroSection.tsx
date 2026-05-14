@@ -15,11 +15,11 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-background min-h-[500px] md:min-h-[600px] flex items-center">
+    <section className="relative overflow-hidden min-h-[500px] md:min-h-[600px] flex items-center">
       {/* Abstract Background Design */}
-      <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-orange-400 rounded-full blur-[100px]" />
+      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-white/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-white/10 rounded-full blur-[100px]" />
       </div>
 
       <div className="container relative z-10 py-12">
@@ -30,14 +30,14 @@ const HeroSection = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20 backdrop-blur-sm">
-                <Zap className="w-4 h-4 fill-primary" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-white text-sm font-bold border border-white/30 backdrop-blur-sm">
+                <Zap className="w-4 h-4 fill-white" />
                 <span>EXPRESS DELIVERY • 20 MIN</span>
               </div>
             </motion.div>
 
             <div className="space-y-6">
-              <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight leading-[1.1]">
+              <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight leading-[1.1] text-white">
                 <motion.span
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -50,7 +50,7 @@ const HeroSection = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-                  className="block text-gradient mt-2"
+                  className="block mt-2 text-white/90"
                 >
                   em um único app.
                 </motion.span>
@@ -59,7 +59,7 @@ const HeroSection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-                className="text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed"
+                className="text-lg md:text-xl text-white/80 max-w-lg leading-relaxed"
               >
                 De delivery de comida a serviços profissionais e imóveis. Encontre tudo o que você precisa no Vai Já.
               </motion.p>
@@ -102,14 +102,14 @@ const HeroSection = () => {
               className="flex flex-wrap items-center gap-6 pt-4"
             >
               {[
-                { icon: Clock, label: "Entrega em 20 min", color: "text-orange-600", bg: "bg-orange-100" },
-                { icon: Shield, label: "Pagamento 100% Seguro", color: "text-blue-600", bg: "bg-blue-100" },
+                { icon: Clock, label: "Entrega em 20 min", color: "text-orange-600", bg: "bg-white" },
+                { icon: Shield, label: "Pagamento 100% Seguro", color: "text-blue-600", bg: "bg-white" },
               ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-white">
+                <div key={i} className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-soft">
                   <div className={`w-8 h-8 rounded-full ${feature.bg} flex items-center justify-center`}>
                     <feature.icon className={`w-4 h-4 ${feature.color}`} />
                   </div>
-                  <span className="text-sm font-bold text-muted-foreground">{feature.label}</span>
+                  <span className="text-sm font-bold text-gray-700">{feature.label}</span>
                 </div>
               ))}
             </motion.div>

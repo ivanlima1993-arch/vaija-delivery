@@ -140,11 +140,11 @@ const PromoSection = () => {
   }
 
   return (
-    <section className="py-12 overflow-hidden bg-[#fafafa]">
+    <section className="py-12 overflow-hidden bg-transparent">
       <div className="container">
-        <div className="mb-8">
+        <div className="mb-8 text-white">
           <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight">Especial para você</h2>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">Aproveite as melhores ofertas do dia</p>
+          <p className="text-white/70 mt-1 text-sm md:text-base">Aproveite as melhores ofertas do dia</p>
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 md:grid md:grid-cols-3 md:mx-0 md:px-0">

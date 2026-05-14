@@ -7,16 +7,16 @@ const categories = DISPLAY_CATEGORIES.slice(0, 12);
 
 const CategorySection = () => {
   return (
-    <section className="py-12 bg-white">
+    <section className="py-12 bg-transparent">
       <div className="container">
         <div className="flex items-end justify-between mb-8">
-          <div>
+          <div className="text-white">
             <h2 className="font-display text-3xl font-black tracking-tight">O que você busca?</h2>
-            <p className="text-muted-foreground mt-1">Navegue pelas melhores opções da sua região</p>
+            <p className="text-white/70 mt-1">Navegue pelas melhores opções da sua região</p>
           </div>
           <Link
             to="/categorias"
-            className="group flex items-center gap-1 text-sm font-bold text-primary hover:opacity-80 transition-opacity"
+            className="group flex items-center gap-1 text-sm font-bold text-white hover:opacity-80 transition-opacity"
           >
             Ver tudo
             <motion.span animate={{ x: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>

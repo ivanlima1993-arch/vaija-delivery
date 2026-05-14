@@ -95,24 +95,24 @@ const RestaurantSection = () => {
   }));
 
   return (
-    <section className="py-16 bg-[#fafafa]">
+    <section className="py-16 bg-transparent">
       <div className="container">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="space-y-2">
-            <Badge className="bg-primary/10 text-primary border-primary/20 font-black text-[10px] px-3 py-1 uppercase tracking-widest">
+            <Badge className="bg-white/20 text-white border-white/30 font-black text-[10px] px-3 py-1 uppercase tracking-widest backdrop-blur-sm">
               Seleção Premium
             </Badge>
-            <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight leading-none">
+            <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight leading-none text-white">
               Comerciantes em Destaque
             </h2>
-            <p className="text-muted-foreground max-w-md">
+            <p className="text-white/80 max-w-md">
               Os melhores estabelecimentos e lojistas da sua região.
             </p>
           </div>
 
           <Link
             to="/restaurantes"
-            className="hidden md:flex items-center gap-2 font-black text-sm text-primary group"
+            className="hidden md:flex items-center gap-2 font-black text-sm text-white group"
           >
             Ver catálogo completo
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
