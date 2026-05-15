@@ -79,6 +79,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       path: "/admin/usuarios",
     },
     {
+      icon: Store,
+      label: "Franqueados",
+      path: "/admin/franqueados",
+    },
+    {
       icon: BarChart3,
       label: "Relatórios",
       path: "/admin/relatorios",

@@ -44,7 +44,7 @@ const CategorySection = () => {
                   <motion.button
                     whileHover={{ y: -8, scale: 1.02 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full h-full flex flex-col items-center gap-3 p-5 rounded-[32px] bg-card border-none shadow-soft hover:shadow-elevated transition-all group"
+                    className="w-full h-full flex flex-col items-center gap-3 p-5 rounded-[32px] bg-card text-card-foreground border-none shadow-soft hover:shadow-elevated transition-all group"
                   >
                     <div className={`w-16 h-16 rounded-3xl ${category.color} flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform group-hover:shadow-glow`}>
                       <category.icon className="w-8 h-8 text-inherit" />

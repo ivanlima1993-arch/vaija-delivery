@@ -46,6 +46,7 @@ import AdminWithdrawals from "./pages/admin/Withdrawals";
 import AdminServiceProviders from "./pages/admin/ServiceProviders";
 import AdminRealtors from "./pages/admin/Realtors";
 import AdminProspects from "./pages/admin/Prospects";
+import AdminFranchisees from "./pages/admin/Franchisees";
 import DriverDashboard from "./pages/driver/Dashboard";
 import AvailableOrders from "./pages/driver/AvailableOrders";
 import InRoute from "./pages/driver/InRoute";
@@ -76,6 +77,8 @@ import RealEstateProperties from "./pages/provider/RealEstateProperties";
 import RealtorAuth from "./pages/auth/RealtorAuth";
 import PropertyDetails from "./pages/PropertyDetails";
 import Help from "./pages/Help";
+import FranchiseeLanding from "./pages/FranchiseeLanding";
+import FranchiseeDashboard from "./pages/franchisee/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -145,6 +148,7 @@ const App = () => {
                 <Route path="/admin/estabelecimentos/novo" element={<AdminCreateEstablishment />} />
                 <Route path="/admin/estabelecimentos/:id/editar" element={<AdminEditEstablishment />} />
                 <Route path="/admin/usuarios" element={<AdminUsers />} />
+                <Route path="/admin/franqueados" element={<AdminFranchisees />} />
                 <Route path="/admin/regioes" element={<AdminRegions />} />
                 <Route path="/admin/cupons" element={<AdminCoupons />} />
                 <Route path="/admin/promocoes" element={<AdminPromotions />} />
@@ -177,6 +181,8 @@ const App = () => {
                 <Route path="/imoveis" element={<RealEstate />} />
                 <Route path="/imoveis/:id" element={<PropertyDetails />} />
                 <Route path="/termos-corretor" element={<RealtorTerms />} />
+                <Route path="/seja-franqueado" element={<FranchiseeLanding />} />
+                <Route path="/franqueado" element={<FranchiseeDashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>
