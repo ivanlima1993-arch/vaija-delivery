@@ -117,9 +117,9 @@ const AdminFranchisees = () => {
       if (!selectedUser || !selectedCity || !commissionRate) {
         throw new Error("Preencha todos os campos");
       }
-      await supabase.from("user_roles").insert({ user_id: selectedUser, role: "franchisee" as any }).catch((e: any) => {
-        if (e.code !== "23505") console.error(e);
-      });
+      const { error: roleError } = await supabase.from("user_roles").insert({ user_id: selectedUser, role: "franchisee" as any });
+      if (roleError && roleError.code !== "23505") console.error(roleError);
+
       const { error: fError } = await supabase.from("franchisees").insert({
         user_id: selectedUser,
         commission_rate: parseFloat(commissionRate),
