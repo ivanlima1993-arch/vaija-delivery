@@ -1,12 +1,60 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, TrendingUp, Users, CheckCircle, ArrowRight } from "lucide-react";
+import { MapPin, TrendingUp, Users, CheckCircle, ArrowRight, Loader2, Send } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const FranchiseeLanding = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    city: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.full_name || !formData.email || !formData.phone || !formData.city) {
+      toast.error("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("franchise_leads")
+        .insert([{
+          full_name: formData.full_name,
+          email: formData.email,
+          phone: formData.phone,
+          city: formData.city,
+          status: "Novo",
+        }]);
+
+      if (error) throw error;
+
+      setSubmitted(true);
+      toast.success("Solicitação enviada com sucesso! Em breve entraremos em contato.");
+      setFormData({ full_name: "", email: "", phone: "", city: "" });
+    } catch (err: any) {
+      console.error("Erro ao enviar formulário:", err);
+      toast.error("Erro ao enviar sua solicitação. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -115,35 +163,100 @@ const FranchiseeLanding = () => {
         <section id="form" className="py-20">
           <div className="container max-w-3xl">
             <div className="bg-card rounded-[40px] shadow-xl border border-border p-8 md:p-12">
-              <div className="text-center mb-10">
-                <h2 className="text-3xl font-black font-display mb-4">Demonstre Interesse</h2>
-                <p className="text-muted-foreground">Preencha os dados abaixo e nossa equipe entrará em contato para apresentar o plano de negócios completo.</p>
-              </div>
+              {submitted ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-8"
+                >
+                  <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-10 h-10 text-success" />
+                  </div>
+                  <h2 className="text-3xl font-black font-display mb-4">Solicitação Enviada!</h2>
+                  <p className="text-muted-foreground text-lg mb-8">
+                    Recebemos sua solicitação com sucesso. Nossa equipe entrará em contato em breve para apresentar o plano de negócios completo.
+                  </p>
+                  <Button variant="outline" onClick={() => setSubmitted(false)}>
+                    Enviar outra solicitação
+                  </Button>
+                </motion.div>
+              ) : (
+                <>
+                  <div className="text-center mb-10">
+                    <h2 className="text-3xl font-black font-display mb-4">Demonstre Interesse</h2>
+                    <p className="text-muted-foreground">Preencha os dados abaixo e nossa equipe entrará em contato para apresentar o plano de negócios completo.</p>
+                  </div>
 
-              <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Formulário enviado com sucesso! Em breve entraremos em contato.'); }}>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Nome Completo</label>
-                    <Input placeholder="Seu nome" className="h-12" required />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">E-mail</label>
-                    <Input type="email" placeholder="seu@email.com" className="h-12" required />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Telefone / WhatsApp</label>
-                    <Input placeholder="(00) 00000-0000" className="h-12" required />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Cidade de Interesse</label>
-                    <Input placeholder="Ex: Aracaju - SE" className="h-12" required />
-                  </div>
-                </div>
-                
-                <Button type="submit" size="lg" className="w-full h-14 text-lg mt-4">
-                  Enviar Solicitação
-                </Button>
-              </form>
+                  <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Nome Completo</label>
+                        <Input
+                          name="full_name"
+                          placeholder="Seu nome"
+                          className="h-12"
+                          required
+                          value={formData.full_name}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">E-mail</label>
+                        <Input
+                          name="email"
+                          type="email"
+                          placeholder="seu@email.com"
+                          className="h-12"
+                          required
+                          value={formData.email}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Telefone / WhatsApp</label>
+                        <Input
+                          name="phone"
+                          placeholder="(00) 00000-0000"
+                          className="h-12"
+                          required
+                          value={formData.phone}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Cidade de Interesse</label>
+                        <Input
+                          name="city"
+                          placeholder="Ex: Aracaju - SE"
+                          className="h-12"
+                          required
+                          value={formData.city}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full h-14 text-lg mt-4 gap-2"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-5 h-5" />
+                          Enviar Solicitação
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         </section>
