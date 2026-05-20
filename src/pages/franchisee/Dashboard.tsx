@@ -424,7 +424,7 @@ const FranchiseeDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => setShowCouponDialog(true)}>
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => setCouponDialogOpen(true)}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
