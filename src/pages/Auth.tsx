@@ -86,6 +86,8 @@ const Auth = () => {
         navigate("/admin");
       } else if (roles?.some((r) => r.role === "driver")) {
         navigate("/entregador");
+      } else if (roles?.some((r) => r.role === "franchisee")) {
+        navigate("/franqueado");
       } else {
         navigate("/");
       }
