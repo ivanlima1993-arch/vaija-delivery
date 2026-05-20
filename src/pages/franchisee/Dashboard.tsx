@@ -16,7 +16,12 @@ import {
   MessageCircle, 
   Trash2, 
   Loader2,
-  Calendar as CalendarIcon
+  Pencil,
+  Calendar as CalendarIcon,
+  Package,
+  Home,
+  Wrench,
+  ShieldCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -404,6 +409,87 @@ const FranchiseeDashboard = () => {
           </Card>
         </div>
 
+        {/* Action Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-primary hover:bg-primary/95 text-white cursor-pointer transition-all shadow-lg shadow-primary/20 group" onClick={() => navigate("/franqueado/pedidos")}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Package className="w-6 h-6" />
+                </div>
+                <TrendingUp className="w-4 h-4 text-white/60 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Pedidos Regionais</h3>
+              <p className="text-white/70 text-sm">Gerencie todos os pedidos da sua região em tempo real.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => setShowCouponDialog(true)}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <Tag className="w-6 h-6" />
+                </div>
+                <Plus className="w-4 h-4 text-muted-foreground group-hover:rotate-90 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Criar Cupom</h3>
+              <p className="text-muted-foreground text-sm">Gere cupons de desconto para alavancar suas cidades.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => navigate("/franqueado/promocoes")}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                  <Bell className="w-6 h-6" />
+                </div>
+                <Plus className="w-4 h-4 text-muted-foreground group-hover:rotate-90 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Marketing & Banners</h3>
+              <p className="text-muted-foreground text-sm">Configure banners promocionais regionalizados.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => setLeadDialogOpen(true)}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
+                  <Users className="w-6 h-6" />
+                </div>
+                <Plus className="w-4 h-4 text-muted-foreground group-hover:rotate-90 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Novo Lead (CRM)</h3>
+              <p className="text-muted-foreground text-sm">Capture novos parceiros e gerencie sua expansão.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => navigate("/franqueado/corretores")}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <TrendingUp className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Gestão de Corretores</h3>
+              <p className="text-muted-foreground text-sm">Aprovação e controle regional de corretores.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => navigate("/franqueado/servicos")}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-rose-500/10 rounded-lg text-rose-600">
+                  <Wrench className="w-6 h-6" />
+                </div>
+                <TrendingUp className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Gestão de Serviços</h3>
+              <p className="text-muted-foreground text-sm">Controle de profissionais e serviços locais.</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-muted p-1 gap-1">
             <TabsTrigger value="overview" className="gap-2">
@@ -488,9 +574,14 @@ const FranchiseeDashboard = () => {
                   <CardTitle>Restaurantes e Parceiros</CardTitle>
                   <CardDescription>Cidades: {cityNames.join(", ")}</CardDescription>
                 </div>
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Buscar parceiro..." className="pl-9" />
+                <div className="flex gap-4 items-center">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input placeholder="Buscar parceiro..." className="pl-9" />
+                  </div>
+                  <Button className="gap-2" onClick={() => navigate("/franqueado/estabelecimentos/novo")}>
+                    <Plus className="w-4 h-4" /> Novo Parceiro
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -532,11 +623,30 @@ const FranchiseeDashboard = () => {
                           </TableCell>
                           <TableCell className="font-medium">R$ {estOrdersTotal.toFixed(2)}</TableCell>
                           <TableCell className="text-right space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-primary hover:text-primary hover:bg-primary/5"
+                              onClick={() => navigate(`/franqueado/cardapio/${est.id}`)}
+                              title="Gerenciar Cardápio"
+                            >
+                              <Menu className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-primary hover:text-primary hover:bg-primary/5"
+                              onClick={() => navigate(`/franqueado/estabelecimentos/${est.id}/editar`)}
+                              title="Editar Estabelecimento"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
                              <Button 
                               variant="ghost" 
                               size="icon" 
                               className="text-green-500 hover:text-green-600 hover:bg-green-50"
                               onClick={() => handleWhatsApp(est.phone || "", est.name)}
+                              title="Contato WhatsApp"
                             >
                               <MessageCircle className="w-4 h-4" />
                             </Button>
@@ -546,7 +656,7 @@ const FranchiseeDashboard = () => {
                               className="text-xs"
                               onClick={() => handleToggleEst(est.id, est.is_open)}
                             >
-                              {est.is_open ? "Fechar Loja" : "Abrir Loja"}
+                              {est.is_open ? "Fechar" : "Abrir"}
                             </Button>
                           </TableCell>
                         </TableRow>

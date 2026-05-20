@@ -79,25 +79,29 @@ import PropertyDetails from "./pages/PropertyDetails";
 import Help from "./pages/Help";
 import FranchiseeLanding from "./pages/FranchiseeLanding";
 import FranchiseeDashboard from "./pages/franchisee/Dashboard";
+import CreateFranchiseeEstablishment from "./pages/franchisee/establishments/Create";
+import EditFranchiseeEstablishment from "./pages/franchisee/establishments/Edit";
+import ManageFranchiseeMenu from "./pages/franchisee/ManageMenu";
+import ManageFranchiseeOrders from "./pages/franchisee/ManageOrders";
+import ManageFranchiseePromotions from "./pages/franchisee/ManagePromotions";
+import ManageFranchiseeRealtors from "./pages/franchisee/ManageRealtors";
+import ManageFranchiseeServices from "./pages/franchisee/ManageServiceProviders";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     // Check if splash was already shown in this session
     const splashShown = sessionStorage.getItem("splashShown");
     if (splashShown) {
       setShowSplash(false);
-      setIsReady(true);
     }
   }, []);
 
   const handleSplashComplete = () => {
     sessionStorage.setItem("splashShown", "true");
-    setIsReady(true);
   };
 
   return (
@@ -183,6 +187,13 @@ const App = () => {
                 <Route path="/termos-corretor" element={<RealtorTerms />} />
                 <Route path="/seja-franqueado" element={<FranchiseeLanding />} />
                 <Route path="/franqueado" element={<FranchiseeDashboard />} />
+                <Route path="/franqueado/estabelecimentos/novo" element={<CreateFranchiseeEstablishment />} />
+                <Route path="/franqueado/estabelecimentos/:id/editar" element={<EditFranchiseeEstablishment />} />
+                <Route path="/franqueado/cardapio/:establishmentId" element={<ManageFranchiseeMenu />} />
+                <Route path="/franqueado/pedidos" element={<ManageFranchiseeOrders />} />
+                <Route path="/franqueado/promocoes" element={<ManageFranchiseePromotions />} />
+                <Route path="/franqueado/corretores" element={<ManageFranchiseeRealtors />} />
+                <Route path="/franqueado/servicos" element={<ManageFranchiseeServices />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>
