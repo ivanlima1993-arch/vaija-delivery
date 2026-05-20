@@ -16,7 +16,7 @@ import {
   MessageCircle, 
   Trash2, 
   Loader2,
-  Calendar
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,17 +42,72 @@ import {
 } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { NewCouponDialog } from "@/components/franchisee/NewCouponDialog";
+import { NewLeadDialog } from "@/components/franchisee/NewLeadDialog";
 
 const FranchiseeDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
+  const [couponDialogOpen, setCouponDialogOpen] = useState(false);
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   // Analytics State
   const [dateRange, setDateRange] = useState({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date())
   });
+
+  // Auth Protection
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "franchisee")
+        .single();
+
+      if (!roles) {
+        toast.error("Acesso negado: Você não tem permissão de franqueado.");
+        navigate("/");
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  // Real-time Subscriptions
+  useEffect(() => {
+    const channel = supabase
+      .channel('franchisee-dashboard-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["franchisee-orders"] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'establishments' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["franchisee-establishments"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // ─── Queries ───────────────────────────────────────────────────────────────
 
@@ -187,7 +242,6 @@ const FranchiseeDashboard = () => {
         .eq("id", id);
       if (error) throw error;
       toast.success("Status atualizado!");
-      queryClient.invalidateQueries({ queryKey: ["franchisee-establishments"] });
     } catch (e) {
       toast.error("Erro ao atualizar status");
     }
@@ -197,6 +251,16 @@ const FranchiseeDashboard = () => {
     const cleanPhone = phone.replace(/\D/g, "");
     const msg = `Olá ${name}! Somos da equipe Vai Já Delivery. Como podemos ajudar hoje?`;
     window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logout realizado com sucesso");
+      navigate("/auth");
+    } catch (error) {
+      toast.error("Erro ao sair");
+    }
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -231,9 +295,9 @@ const FranchiseeDashboard = () => {
               <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
             </Button>
             <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">
-              {franchisee?.notes ? "F" : "F"}
+              F
             </div>
-            <Button variant="outline" size="sm" onClick={() => navigate("/")}>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               Sair
             </Button>
           </div>
@@ -243,18 +307,36 @@ const FranchiseeDashboard = () => {
       <main className="container py-8 space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Olá, Franqueado</h2>
+            <h2 className="text-2xl font-bold">Olá, {franchisee?.name || "Franqueado"}</h2>
             <p className="text-muted-foreground">Gerencie o crescimento da rede em sua região.</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
-              <Calendar className="w-4 h-4" />
-              {format(dateRange.from, "dd/MM")} - {format(dateRange.to, "dd/MM")}
-            </Button>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Parceiro
-            </Button>
+          <div className="flex flex-wrap gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {format(dateRange.from, "dd/MM")} - {format(dateRange.to, "dd/MM")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from}
+                  selected={{
+                    from: dateRange.from,
+                    to: dateRange.to,
+                  }}
+                  onSelect={(range: any) => {
+                    if (range?.from && range?.to) {
+                      setDateRange({ from: range.from, to: range.to });
+                    }
+                  }}
+                  numberOfMonths={2}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -394,9 +476,6 @@ const FranchiseeDashboard = () => {
                       </div>
                     ))}
                   </div>
-                  <Button variant="ghost" className="w-full mt-4 text-primary text-xs" onClick={() => setActiveTab("overview")}>
-                    Ver todos os pedidos
-                  </Button>
                 </CardContent>
               </Card>
             </div>
@@ -483,7 +562,7 @@ const FranchiseeDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                {[
                 { label: "Leads Novos", value: prospects.filter(p => p.status === 'Novo').length, color: "text-blue-500", icon: Building2 },
-                { label: "Em Negociação", value: prospects.filter(p => p.status === 'Em Contato').length, color: "text-amber-500", icon: Users },
+                { label: "Em Negociação", value: prospects.filter(p => p.status === 'Em Contato' || p.status === 'Negociação').length, color: "text-amber-500", icon: Users },
                 { label: "Convertidos", value: prospects.filter(p => p.status === 'Convertido').length, color: "text-emerald-500", icon: CheckCircle },
                 { label: "Recusados", value: prospects.filter(p => p.status === 'Recusado').length, color: "text-red-500", icon: XCircle },
               ].map((stat, i) => (
@@ -505,7 +584,7 @@ const FranchiseeDashboard = () => {
                   <CardTitle>Relacionamento Local (CRM)</CardTitle>
                   <CardDescription>Gerencie seus contatos comerciais e novos parceiros em sua região.</CardDescription>
                 </div>
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={() => setLeadDialogOpen(true)}>
                   <Plus className="w-4 h-4" /> Novo Lead
                 </Button>
               </CardHeader>
@@ -538,7 +617,7 @@ const FranchiseeDashboard = () => {
                               variant="outline" 
                               className={
                                 p.status === 'Novo' ? 'text-blue-500 border-blue-200' :
-                                p.status === 'Em Contato' ? 'text-amber-500 border-amber-200' :
+                                (p.status === 'Em Contato' || p.status === 'Negociação') ? 'text-amber-500 border-amber-200' :
                                 p.status === 'Convertido' ? 'text-emerald-500 border-emerald-200' :
                                 'text-red-500 border-red-200'
                               }
@@ -572,7 +651,7 @@ const FranchiseeDashboard = () => {
                   <CardTitle>Cupons da Região</CardTitle>
                   <CardDescription>Crie promoções locais para incentivar o uso do app em sua cidade.</CardDescription>
                 </div>
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={() => setCouponDialogOpen(true)}>
                   <Plus className="w-4 h-4" /> Novo Cupom
                 </Button>
               </CardHeader>
@@ -582,7 +661,9 @@ const FranchiseeDashboard = () => {
                     <div className="col-span-full py-20 text-center text-muted-foreground border-2 border-dashed rounded-[32px]">
                       <Tag className="w-12 h-12 mx-auto mb-4 opacity-20" />
                       <p>Nenhum cupom regional criado ainda.</p>
-                      <Button variant="link" className="text-primary">Comece criando seu primeiro cupom local</Button>
+                      <Button variant="link" className="text-primary" onClick={() => setCouponDialogOpen(true)}>
+                        Comece criando seu primeiro cupom local
+                      </Button>
                     </div>
                   ) : (
                     coupons.map((coupon) => (
@@ -615,7 +696,23 @@ const FranchiseeDashboard = () => {
                           </div>
                           <div className="mt-4 flex gap-2">
                              <Button variant="outline" size="sm" className="flex-1 text-xs">Editar</Button>
-                             <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></Button>
+                             <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={async () => {
+                                if (confirm("Deseja realmente excluir este cupom?")) {
+                                  const { error } = await supabase.from("coupons").delete().eq("id", coupon.id);
+                                  if (error) toast.error("Erro ao excluir");
+                                  else {
+                                    toast.success("Cupom excluído");
+                                    queryClient.invalidateQueries({ queryKey: ["franchisee-coupons"] });
+                                  }
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -627,6 +724,18 @@ const FranchiseeDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <NewCouponDialog 
+        open={couponDialogOpen} 
+        onOpenChange={setCouponDialogOpen}
+        cities={cities}
+      />
+      
+      <NewLeadDialog 
+        open={leadDialogOpen} 
+        onOpenChange={setLeadDialogOpen}
+        cities={cities}
+      />
     </div>
   );
 };

@@ -101,7 +101,7 @@ const Footer = () => {
               <li><Link to="/entregador/auth" className="hover:text-primary transition-colors">Seja entregador</Link></li>
               <li><Link to="/profissional/auth" className="hover:text-primary transition-colors">Seja um profissional</Link></li>
               <li><Link to="/corretor/auth" className="hover:text-primary transition-colors font-bold text-emerald-600">Portal do Corretor</Link></li>
-              <li><Link to="/auth" className="hover:text-primary transition-colors font-bold text-blue-600">Portal do Franqueado</Link></li>
+              <li><Link to="/franqueado" className="hover:text-primary transition-colors font-bold text-blue-600">Portal do Franqueado</Link></li>
             </ul>
           </div>
 
