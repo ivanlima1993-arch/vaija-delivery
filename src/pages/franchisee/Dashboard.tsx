@@ -21,7 +21,8 @@ import {
   Package,
   Home,
   Wrench,
-  ShieldCheck
+  ShieldCheck,
+  Menu
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
