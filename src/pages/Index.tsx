@@ -32,6 +32,24 @@ const Index = () => {
             <CategorySection />
           </motion.div>
 
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={fadeInUp}
+          >
+            <PromoSection />
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={fadeInUp}
+          >
+            <RestaurantSection />
+          </motion.div>
+
           {/* Nova Seção de Serviços */}
           <motion.section 
             className="container py-8"
@@ -127,24 +145,6 @@ const Index = () => {
               <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-emerald-400/20 rounded-full blur-[80px]" />
             </motion.div>
           </motion.section>
-
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={fadeInUp}
-          >
-            <PromoSection />
-          </motion.div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={fadeInUp}
-          >
-            <RestaurantSection />
-          </motion.div>
         </div>
       </main>
       <Footer />
