@@ -47,6 +47,7 @@ import AdminServiceProviders from "./pages/admin/ServiceProviders";
 import AdminRealtors from "./pages/admin/Realtors";
 import AdminProspects from "./pages/admin/Prospects";
 import AdminFranchisees from "./pages/admin/Franchisees";
+import AdminBanners from "./pages/admin/Banners";
 import DriverDashboard from "./pages/driver/Dashboard";
 import AvailableOrders from "./pages/driver/AvailableOrders";
 import InRoute from "./pages/driver/InRoute";
@@ -163,6 +164,7 @@ const App = () => {
                 <Route path="/admin/corretores" element={<AdminRealtors />} />
                 <Route path="/admin/prospeccao" element={<AdminProspects />} />
                 <Route path="/admin/configuracoes" element={<AdminSettings />} />
+                <Route path="/admin/banners" element={<AdminBanners />} />
                 <Route path="/entregador" element={<DriverDashboard />} />
                 <Route path="/entregador/disponiveis" element={<AvailableOrders />} />
                 <Route path="/entregador/em-rota" element={<InRoute />} />

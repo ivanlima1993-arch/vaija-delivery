@@ -18,6 +18,7 @@ import {
   Banknote,
   Wrench,
   Building,
+  Image,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -62,6 +63,11 @@ const AdminSidebar = ({ open, onClose, pendingEstablishments = 0 }: AdminSidebar
       icon: Megaphone,
       label: "Promoções",
       path: "/admin/promocoes",
+    },
+    {
+      icon: Image,
+      label: "Banners da Home",
+      path: "/admin/banners",
     },
     {
       icon: FileText,
