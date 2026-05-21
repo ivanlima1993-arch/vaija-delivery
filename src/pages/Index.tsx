@@ -8,6 +8,7 @@ import CategorySection from "@/components/home/CategorySection";
 import PromoSection from "@/components/home/PromoSection";
 import RestaurantSection from "@/components/home/RestaurantSection";
 import Footer from "@/components/layout/Footer";
+import HomeBannerCarousel from "@/components/home/HomeBannerCarousel";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Index = () => {
       <Header />
       <main className="pb-20">
         <HeroSection />
+        <HomeBannerCarousel />
         <div className="space-y-4 md:space-y-0">
           <motion.div
             initial="hidden"
