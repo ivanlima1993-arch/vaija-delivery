@@ -25,7 +25,7 @@ const CategorySection = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+        <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 md:gap-6">
           {categories.map((category, index) => {
             const categoryLink = 
               category.id === 'real-estate' ? '/imoveis' : 
@@ -44,12 +44,12 @@ const CategorySection = () => {
                   <motion.button
                     whileHover={{ y: -8, scale: 1.02 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full h-full flex flex-col items-center gap-3 p-5 rounded-[32px] bg-card text-card-foreground border-none shadow-soft hover:shadow-elevated transition-all group"
+                    className="w-full h-full flex flex-col items-center gap-1.5 sm:gap-3 p-2.5 sm:p-5 rounded-[20px] sm:rounded-[32px] bg-card text-card-foreground border-none shadow-soft hover:shadow-elevated transition-all group"
                   >
-                    <div className={`w-16 h-16 rounded-3xl ${category.color} flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform group-hover:shadow-glow`}>
-                      <category.icon className="w-8 h-8 text-inherit" />
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-3xl ${category.color} flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform group-hover:shadow-glow`}>
+                      <category.icon className="w-6 h-6 sm:w-8 sm:h-8 text-inherit" />
                     </div>
-                    <span className="text-sm font-black text-center">{category.name}</span>
+                    <span className="text-[11px] sm:text-sm font-black text-center line-clamp-1">{category.name}</span>
                   </motion.button>
                 </Link>
               </motion.div>

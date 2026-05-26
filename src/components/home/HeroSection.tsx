@@ -82,13 +82,14 @@ const HeroSection = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="O que você está procurando hoje?"
-                  className="w-full h-16 md:h-20 pl-16 pr-40 rounded-3xl bg-white shadow-card border-none text-lg focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/60"
+                  className="w-full h-16 md:h-20 pl-16 pr-16 md:pr-40 rounded-3xl bg-white shadow-card border-none text-base md:text-lg focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/60"
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-12 md:h-16 px-8 gradient-primary text-primary-foreground font-black rounded-2xl shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-12 md:h-16 px-4 md:px-8 gradient-primary text-primary-foreground font-black rounded-2xl shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center"
                 >
-                  BUSCAR
+                  <span className="hidden md:inline">BUSCAR</span>
+                  <Search className="w-5 h-5 md:hidden text-white" />
                 </button>
               </form>
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-orange-400/20 rounded-[34px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />

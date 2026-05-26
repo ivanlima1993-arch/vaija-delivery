@@ -139,11 +139,11 @@ const RestaurantSection = () => {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-[28px] overflow-hidden shadow-soft">
+              <div key={i} className="bg-white rounded-2xl sm:rounded-[28px] overflow-hidden shadow-soft">
                 <Skeleton className="aspect-[16/11] w-full" />
-                <div className="p-6 space-y-4">
+                <div className="p-3 sm:p-6 space-y-4">
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
                   <Skeleton className="h-12 w-full rounded-2xl" />
@@ -161,7 +161,7 @@ const RestaurantSection = () => {
             <Button variant="outline" onClick={() => setActiveFilter("all")}>Limpar filtros</Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8">
             {mappedRestaurants.map((restaurant, index) => (
               <RestaurantCard
                 key={restaurant.id}
