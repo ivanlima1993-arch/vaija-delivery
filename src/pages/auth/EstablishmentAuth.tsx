@@ -165,7 +165,7 @@ const EstablishmentAuth = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-card rounded-2xl shadow-xl p-6 border border-orange-200/50 dark:border-orange-800/30">
+        <div className="bg-card text-card-foreground rounded-2xl shadow-xl p-6 border border-orange-200/50 dark:border-orange-800/30">
           <form onSubmit={
             mode === "login" ? handleLogin : 
             mode === "forgot-password" ? handleForgotPassword : 

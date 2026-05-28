@@ -31,6 +31,7 @@ import {
   Clock,
   DollarSign,
   Save,
+  FileText,
 } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -90,6 +91,7 @@ const EditEstablishment = () => {
     maxDeliveryTime: "60",
     isApproved: false,
     isOpen: false,
+    cpfCnpj: "",
   });
 
   useEffect(() => {
@@ -146,6 +148,7 @@ const EditEstablishment = () => {
           maxDeliveryTime: data.max_delivery_time?.toString() || "60",
           isApproved: data.is_approved || false,
           isOpen: data.is_open || false,
+          cpfCnpj: data.cpf_cnpj || "",
         });
         
         // Parse opening hours from database
@@ -200,6 +203,7 @@ const EditEstablishment = () => {
           opening_hours: JSON.parse(JSON.stringify(openingHours)) as Json,
           logo_url: logoUrl,
           cover_url: coverUrl,
+          cpf_cnpj: establishmentData.cpfCnpj || null,
         })
         .eq("id", id);
 
@@ -345,18 +349,33 @@ const EditEstablishment = () => {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="phone" className="flex items-center gap-2 mb-2">
-                    <Phone className="w-4 h-4 text-primary" />
-                    Telefone do Estabelecimento
-                  </Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={establishmentData.phone}
-                    onChange={handleChange}
-                    placeholder="(00) 00000-0000"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone" className="flex items-center gap-2 mb-2">
+                      <Phone className="w-4 h-4 text-primary" />
+                      Telefone do Estabelecimento
+                    </Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={establishmentData.phone}
+                      onChange={handleChange}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cpfCnpj" className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      CPF ou CNPJ
+                    </Label>
+                    <Input
+                      id="cpfCnpj"
+                      name="cpfCnpj"
+                      value={establishmentData.cpfCnpj}
+                      onChange={handleChange}
+                      placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

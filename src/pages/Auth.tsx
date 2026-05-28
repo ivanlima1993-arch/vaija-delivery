@@ -275,7 +275,7 @@ const Auth = () => {
         {pendingApproval && createdAt ? (
           <ApprovalTimer createdAt={createdAt} />
         ) : (
-          <div className="bg-card rounded-2xl shadow-xl p-6 border border-border">
+          <div className="bg-card text-card-foreground rounded-2xl shadow-xl p-6 border border-border">
             <form onSubmit={
               mode === "login" ? handleLogin : 
               mode === "forgot-password" ? handleForgotPassword : 

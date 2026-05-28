@@ -54,6 +54,7 @@ import {
   Star,
   Pencil,
   Trash2,
+  FileText,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -326,9 +327,12 @@ const AdminEstablishments = () => {
                               )}
                               <div>
                                 <p className="font-medium">{establishment.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {new Date(establishment.created_at).toLocaleDateString("pt-BR")}
-                                </p>
+                                <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                                  {establishment.cpf_cnpj && (
+                                    <span className="font-mono">CPF/CNPJ: {establishment.cpf_cnpj}</span>
+                                  )}
+                                  <span>{new Date(establishment.created_at).toLocaleDateString("pt-BR")}</span>
+                                </div>
                               </div>
                             </div>
                           </TableCell>
@@ -336,9 +340,13 @@ const AdminEstablishments = () => {
                             <Badge variant="outline">{establishment.category}</Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="text-sm">
-                              <p>{establishment.neighborhood || "-"}</p>
-                              <p className="text-muted-foreground">{establishment.city || "-"}</p>
+                            <div className="text-sm max-w-[200px] truncate">
+                              <p className="font-medium truncate" title={establishment.address || ""}>
+                                {establishment.address || "Sem endereço"}
+                              </p>
+                              <p className="text-muted-foreground truncate" title={`${establishment.neighborhood || ""}, ${establishment.city || ""}`}>
+                                {establishment.neighborhood ? `${establishment.neighborhood}, ` : ""}{establishment.city || "-"}
+                              </p>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -456,7 +464,7 @@ const AdminEstablishments = () => {
                 </p>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
                   <div className="text-sm">
@@ -467,18 +475,27 @@ const AdminEstablishments = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {selectedEstablishment.phone || "Não informado"}
-                  </span>
-                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">
+                      {selectedEstablishment.phone || "Não informado"}
+                    </span>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm">
-                    {selectedEstablishment.rating || 0} ({selectedEstablishment.total_reviews || 0} avaliações)
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-mono">
+                      CPF/CNPJ: {selectedEstablishment.cpf_cnpj || "Não informado"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm">
+                      {selectedEstablishment.rating || 0} ({selectedEstablishment.total_reviews || 0} avaliações)
+                    </span>
+                  </div>
                 </div>
               </div>
 

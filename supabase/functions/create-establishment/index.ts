@@ -93,6 +93,7 @@ serve(async (req) => {
                 opening_hours: establishmentData.opening_hours || {},
                 logo_url: establishmentData.logo_url || null,
                 cover_url: establishmentData.cover_url || null,
+                cpf_cnpj: establishmentData.cpfCnpj || establishmentData.cpf_cnpj || null,
             })
             .select()
             .single();

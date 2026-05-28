@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import ImageUpload from "@/components/admin/ImageUpload";
 import {
   Menu,
   Plus,
@@ -212,17 +213,13 @@ const AdminBanners = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2 space-y-2">
-                      <Label>URL da Imagem *</Label>
-                      <Input
-                        placeholder="https://... (cole o link da imagem)"
+                      <ImageUpload
                         value={form.image_url}
-                        onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+                        onChange={url => setForm(f => ({ ...f, image_url: url || "" }))}
+                        folder="banners"
+                        label="Imagem do Banner *"
+                        aspectRatio="banner"
                       />
-                      {form.image_url && (
-                        <div className="mt-2 rounded-xl overflow-hidden aspect-[16/5] bg-muted">
-                          <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
-                        </div>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Título</Label>

@@ -33,6 +33,7 @@ import {
   MapPin,
   Clock,
   DollarSign,
+  FileText,
 } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 import { ESTABLISHMENT_CATEGORIES } from "@/constants/categories";
@@ -72,6 +73,7 @@ const CreateEstablishment = () => {
     minOrderValue: "",
     minDeliveryTime: "30",
     maxDeliveryTime: "60",
+    cpfCnpj: "",
   });
 
   const [autoApprove, setAutoApprove] = useState(true);
@@ -360,18 +362,33 @@ const CreateEstablishment = () => {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="establishmentPhone" className="flex items-center gap-2 mb-2">
-                    <Phone className="w-4 h-4 text-primary" />
-                    Telefone do Estabelecimento
-                  </Label>
-                  <Input
-                    id="establishmentPhone"
-                    name="phone"
-                    value={establishmentData.phone}
-                    onChange={handleEstablishmentChange}
-                    placeholder="(00) 00000-0000"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="establishmentPhone" className="flex items-center gap-2 mb-2">
+                      <Phone className="w-4 h-4 text-primary" />
+                      Telefone do Estabelecimento
+                    </Label>
+                    <Input
+                      id="establishmentPhone"
+                      name="phone"
+                      value={establishmentData.phone}
+                      onChange={handleEstablishmentChange}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cpfCnpj" className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      CPF ou CNPJ
+                    </Label>
+                    <Input
+                      id="cpfCnpj"
+                      name="cpfCnpj"
+                      value={establishmentData.cpfCnpj}
+                      onChange={handleEstablishmentChange}
+                      placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
