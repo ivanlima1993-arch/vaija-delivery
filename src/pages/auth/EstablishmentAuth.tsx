@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Store, Mail, Lock, User, Phone, ArrowLeft, FileText } from "lucide-react";
+import { Store, Mail, Lock, User, Phone, ArrowLeft, FileText, MapPin, Search } from "lucide-react";
 import { ESTABLISHMENT_CATEGORIES } from "@/constants/categories";
 
 type AuthMode = "login" | "register" | "forgot-password";
@@ -30,10 +30,47 @@ const EstablishmentAuth = () => {
     establishmentName: "",
     cpfCnpj: "",
     category: "restaurant",
+    cep: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
   });
+  const [loadingCep, setLoadingCep] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCepSearch = async () => {
+    const cep = formData.cep.replace(/\D/g, "");
+    if (cep.length !== 8) {
+      toast.error("CEP inválido. Digite 8 dígitos.");
+      return;
+    }
+    setLoadingCep(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado.");
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          street: data.logradouro || prev.street,
+          neighborhood: data.bairro || prev.neighborhood,
+          city: data.localidade || prev.city,
+          state: data.uf || prev.state,
+        }));
+        toast.success("Endereço preenchido automaticamente!");
+      }
+    } catch {
+      toast.error("Erro ao buscar CEP. Verifique sua conexão.");
+    } finally {
+      setLoadingCep(false);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -96,12 +133,16 @@ const EstablishmentAuth = () => {
           });
 
           // Create establishment
+          const fullAddress = [formData.street, formData.number, formData.complement].filter(Boolean).join(", ");
           await supabase.from("establishments").insert({
             owner_id: data.user.id,
             name: formData.establishmentName,
             phone: formData.phone,
             cpf_cnpj: formData.cpfCnpj,
             category: formData.category,
+            address: fullAddress || null,
+            neighborhood: formData.neighborhood || null,
+            city: formData.city || null,
           });
 
           // Force a small delay to ensure DB consistency and check session
@@ -259,6 +300,148 @@ const EstablishmentAuth = () => {
                       onChange={handleChange}
                       required
                       className="h-12 focus-visible:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* Endereço */}
+                  <div className="pt-2 pb-1">
+                    <p className="flex items-center gap-2 text-sm font-semibold text-orange-600">
+                      <MapPin className="w-4 h-4" />
+                      Endereço do Estabelecimento
+                    </p>
+                  </div>
+
+                  {/* CEP */}
+                  <div>
+                    <Label htmlFor="cep" className="flex items-center gap-2 mb-2">
+                      <MapPin className="w-4 h-4 text-orange-500" />
+                      CEP
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="cep"
+                        name="cep"
+                        type="text"
+                        placeholder="00000-000"
+                        value={formData.cep}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                          const formatted = val.length > 5 ? val.slice(0,5) + "-" + val.slice(5) : val;
+                          setFormData({ ...formData, cep: formatted });
+                        }}
+                        className="h-12 focus-visible:ring-orange-500"
+                        maxLength={9}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 px-4 border-orange-300 text-orange-600 hover:bg-orange-50"
+                        onClick={handleCepSearch}
+                        disabled={loadingCep}
+                      >
+                        {loadingCep ? (
+                          <span className="animate-spin">⏳</span>
+                        ) : (
+                          <Search className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Rua e Número */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-2">
+                      <Label htmlFor="street" className="flex items-center gap-2 mb-2">
+                        Rua / Av.
+                      </Label>
+                      <Input
+                        id="street"
+                        name="street"
+                        type="text"
+                        placeholder="Nome da rua"
+                        value={formData.street}
+                        onChange={handleChange}
+                        className="h-12 focus-visible:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="number" className="flex items-center gap-2 mb-2">
+                        Número
+                      </Label>
+                      <Input
+                        id="number"
+                        name="number"
+                        type="text"
+                        placeholder="Nº"
+                        value={formData.number}
+                        onChange={handleChange}
+                        className="h-12 focus-visible:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Complemento */}
+                  <div>
+                    <Label htmlFor="complement" className="flex items-center gap-2 mb-2">
+                      Complemento (opcional)
+                    </Label>
+                    <Input
+                      id="complement"
+                      name="complement"
+                      type="text"
+                      placeholder="Sala, loja, bloco..."
+                      value={formData.complement}
+                      onChange={handleChange}
+                      className="h-12 focus-visible:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* Bairro e Cidade */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="neighborhood" className="flex items-center gap-2 mb-2">
+                        Bairro
+                      </Label>
+                      <Input
+                        id="neighborhood"
+                        name="neighborhood"
+                        type="text"
+                        placeholder="Bairro"
+                        value={formData.neighborhood}
+                        onChange={handleChange}
+                        className="h-12 focus-visible:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="city" className="flex items-center gap-2 mb-2">
+                        Cidade
+                      </Label>
+                      <Input
+                        id="city"
+                        name="city"
+                        type="text"
+                        placeholder="Cidade"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="h-12 focus-visible:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Estado */}
+                  <div>
+                    <Label htmlFor="state" className="flex items-center gap-2 mb-2">
+                      Estado (UF)
+                    </Label>
+                    <Input
+                      id="state"
+                      name="state"
+                      type="text"
+                      placeholder="Ex: SP"
+                      value={formData.state}
+                      onChange={handleChange}
+                      maxLength={2}
+                      className="h-12 focus-visible:ring-orange-500 uppercase"
                     />
                   </div>
                 </>
