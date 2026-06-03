@@ -73,3 +73,84 @@ CREATE POLICY "Franqueados podem ver estabelecimentos de suas cidades"
       AND public.has_role(auth.uid(), 'franchisee')
     )
   );
+
+-- Permite que franqueados atualizem estabelecimentos de suas cidades (abrir/fechar, editar)
+CREATE POLICY "Franqueados podem atualizar estabelecimentos de suas cidades"
+  ON public.establishments FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.cities c
+      WHERE c.id = establishments.city_id
+      AND c.franchisee_id = auth.uid()
+      AND public.has_role(auth.uid(), 'franchisee')
+    )
+  );
+
+-- Permite que franqueados gerenciem categorias de suas cidades
+CREATE POLICY "Franqueados podem gerenciar categorias de suas cidades"
+  ON public.product_categories FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.establishments e
+      JOIN public.cities c ON e.city_id = c.id
+      WHERE e.id = product_categories.establishment_id
+      AND c.franchisee_id = auth.uid()
+      AND public.has_role(auth.uid(), 'franchisee')
+    )
+  );
+
+-- Permite que franqueados gerenciem produtos de suas cidades
+CREATE POLICY "Franqueados podem gerenciar produtos de suas cidades"
+  ON public.products FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.establishments e
+      JOIN public.cities c ON e.city_id = c.id
+      WHERE e.id = products.establishment_id
+      AND c.franchisee_id = auth.uid()
+      AND public.has_role(auth.uid(), 'franchisee')
+    )
+  );
+
+-- Permite que franqueados gerenciem cupons de suas cidades
+CREATE POLICY "Franqueados podem gerenciar cupons de suas cidades"
+  ON public.coupons FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.cities c
+      WHERE c.id = coupons.city_id
+      AND c.franchisee_id = auth.uid()
+      AND public.has_role(auth.uid(), 'franchisee')
+    )
+  );
+
+-- Permite que franqueados gerenciem promocoes de suas cidades
+CREATE POLICY "Franqueados podem gerenciar promocoes de suas cidades"
+  ON public.promotions FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.cities c
+      WHERE c.id = promotions.city_id
+      AND c.franchisee_id = auth.uid()
+      AND public.has_role(auth.uid(), 'franchisee')
+    )
+  );
+
+-- Permite que franqueados gerenciem prospects de suas cidades
+CREATE POLICY "Franqueados podem gerenciar prospects de suas cidades"
+  ON public.prospects FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.cities c
+      WHERE c.name = prospects.city
+      AND c.franchisee_id = auth.uid()
+      AND public.has_role(auth.uid(), 'franchisee')
+    )
+  );
+
