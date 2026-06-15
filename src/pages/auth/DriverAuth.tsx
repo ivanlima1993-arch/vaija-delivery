@@ -226,7 +226,7 @@ const DriverAuth = () => {
               {mode === "register" && (
                 <>
                   <div>
-                    <Label htmlFor="fullName" className="flex items-center gap-2 mb-2">
+                    <Label htmlFor="fullName" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <User className="w-4 h-4 text-emerald-500" />
                       Nome Completo
                     </Label>
@@ -242,7 +242,7 @@ const DriverAuth = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone" className="flex items-center gap-2 mb-2">
+                    <Label htmlFor="phone" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <Phone className="w-4 h-4 text-emerald-500" />
                       Telefone/WhatsApp
                     </Label>
@@ -258,7 +258,7 @@ const DriverAuth = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="cpf" className="flex items-center gap-2 mb-2">
+                    <Label htmlFor="cpf" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <FileText className="w-4 h-4 text-emerald-500" />
                       CPF
                     </Label>
@@ -274,7 +274,7 @@ const DriverAuth = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="vehiclePlate" className="flex items-center gap-2 mb-2">
+                    <Label htmlFor="vehiclePlate" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <FileText className="w-4 h-4 text-emerald-500" />
                       Placa do Veículo
                     </Label>
@@ -290,7 +290,7 @@ const DriverAuth = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="birthDate" className="flex items-center gap-2 mb-2">
+                    <Label htmlFor="birthDate" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <Calendar className="w-4 h-4 text-emerald-500" />
                       Data de Nascimento
                     </Label>
@@ -305,7 +305,7 @@ const DriverAuth = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="address" className="flex items-center gap-2 mb-2">
+                    <Label htmlFor="address" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <MapPin className="w-4 h-4 text-emerald-500" />
                       Endereço Completo
                     </Label>
@@ -321,7 +321,7 @@ const DriverAuth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2 mb-2">
+                    <Label className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <Camera className="w-4 h-4 text-emerald-500" />
                       Foto do Rosto (Selfie)
                     </Label>
@@ -346,7 +346,7 @@ const DriverAuth = () => {
                         </div>
                       ) : (
                         <div className="text-center">
-                          <p className="text-sm text-muted-foreground mb-2">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                             Tire uma foto nítida do seu rosto
                           </p>
                           <Button
@@ -371,7 +371,7 @@ const DriverAuth = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2 mb-2">
+                    <Label className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <Camera className="w-4 h-4 text-emerald-500" />
                       Foto do RG (Frente)
                     </Label>
@@ -396,7 +396,7 @@ const DriverAuth = () => {
                         </div>
                       ) : (
                         <div className="text-center">
-                          <p className="text-sm text-muted-foreground mb-2">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                             Tire uma foto nítida da frente do seu RG
                           </p>
                           <Button
@@ -420,7 +420,7 @@ const DriverAuth = () => {
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="vehicleType" className="flex items-center gap-2 mb-2">
+                    <Label htmlFor="vehicleType" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                       <Bike className="w-4 h-4 text-emerald-500" />
                       Veículo
                     </Label>
@@ -430,7 +430,7 @@ const DriverAuth = () => {
                       value={formData.vehicleType}
                       onChange={handleChange}
                       required
-                      className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900 dark:text-slate-100"
                     >
                       <option value="moto">Moto</option>
                       <option value="bicicleta">Bicicleta</option>
@@ -442,7 +442,7 @@ const DriverAuth = () => {
               )}
 
               <div>
-                <Label htmlFor="email" className="flex items-center gap-2 mb-2">
+                <Label htmlFor="email" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                   <Mail className="w-4 h-4 text-emerald-500" />
                   E-mail
                 </Label>
@@ -460,7 +460,7 @@ const DriverAuth = () => {
 
               {mode !== "forgot-password" && (
                 <div>
-                  <Label htmlFor="password" className="flex items-center gap-2 mb-2">
+                  <Label htmlFor="password" className="flex items-center gap-2 mb-2 text-slate-900 dark:text-slate-100">
                     <Lock className="w-4 h-4 text-emerald-500" />
                     Senha
                   </Label>

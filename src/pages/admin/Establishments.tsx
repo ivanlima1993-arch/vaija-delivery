@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -162,6 +164,28 @@ const AdminEstablishments = () => {
       toast.success("Estabelecimento rejeitado");
     } catch (error) {
       toast.error("Erro ao rejeitar estabelecimento");
+    }
+  };
+
+  const handleToggleChatbot = async (id: string, currentStatus: boolean | null | undefined) => {
+    const newStatus = !currentStatus;
+    try {
+      const { error } = await supabase
+        .from("establishments")
+        .update({ whatsapp_chatbot_enabled: newStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setEstablishments((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, whatsapp_chatbot_enabled: newStatus } : e))
+      );
+      if (selectedEstablishment?.id === id) {
+        setSelectedEstablishment({ ...selectedEstablishment, whatsapp_chatbot_enabled: newStatus });
+      }
+      toast.success(`Chatbot WhatsApp ${newStatus ? "ativado" : "desativado"} com sucesso!`);
+    } catch (error) {
+      toast.error("Erro ao alterar status do chatbot");
     }
   };
 
@@ -518,6 +542,17 @@ const AdminEstablishments = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">Tempo entrega</p>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg mt-4">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Chatbot WhatsApp</Label>
+                  <p className="text-xs text-muted-foreground">Permitir que o estabelecimento utilize o bot</p>
+                </div>
+                <Switch 
+                  checked={selectedEstablishment.whatsapp_chatbot_enabled ?? false} 
+                  onCheckedChange={() => handleToggleChatbot(selectedEstablishment.id, selectedEstablishment.whatsapp_chatbot_enabled)}
+                />
               </div>
             </div>
           )}

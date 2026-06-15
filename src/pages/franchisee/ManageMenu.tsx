@@ -512,7 +512,7 @@ const ManageMenu = () => {
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center space-x-2"><Switch checked={productForm.is_featured} onCheckedChange={v => setProductForm({...productForm, is_featured: v})} /><Label>Destaque</Label></div>
+                <div className="flex items-center space-x-2"><Switch checked={productForm.is_featured} onCheckedChange={v => setProductForm({...productForm, is_featured: v})} /><Label className="text-black dark:text-white">Destaque</Label></div>
               </div>
            </div>
            <DialogFooter>

@@ -76,6 +76,7 @@ import Partners from "./pages/Partners";
 import RealEstate from "./pages/RealEstate";
 import RealEstateProperties from "./pages/provider/RealEstateProperties";
 import RealtorAuth from "./pages/auth/RealtorAuth";
+import FranchiseeAuth from "./pages/auth/FranchiseeAuth";
 import PropertyDetails from "./pages/PropertyDetails";
 import Help from "./pages/Help";
 import FranchiseeLanding from "./pages/FranchiseeLanding";
@@ -188,6 +189,7 @@ const App = () => {
                 <Route path="/imoveis/:id" element={<PropertyDetails />} />
                 <Route path="/termos-corretor" element={<RealtorTerms />} />
                 <Route path="/seja-franqueado" element={<FranchiseeLanding />} />
+                <Route path="/franqueado/auth" element={<FranchiseeAuth />} />
                 <Route path="/franqueado" element={<FranchiseeDashboard />} />
                 <Route path="/franqueado/estabelecimentos/novo" element={<CreateFranchiseeEstablishment />} />
                 <Route path="/franqueado/estabelecimentos/:id/editar" element={<EditFranchiseeEstablishment />} />

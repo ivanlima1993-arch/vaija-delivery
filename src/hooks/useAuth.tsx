@@ -14,6 +14,9 @@ interface AuthState {
   driverRejectionReason: string | null;
   driverRegistrationSubmittedAt: string | null;
   driverIdPhotoUrl: string | null;
+  facePhotoUrl: string | null;
+  avatarUrl: string | null;
+  fullName: string | null;
 }
 
 export const useAuth = () => {
@@ -29,6 +32,9 @@ export const useAuth = () => {
     driverRejectionReason: null,
     driverRegistrationSubmittedAt: null,
     driverIdPhotoUrl: null,
+    facePhotoUrl: null,
+    avatarUrl: null,
+    fullName: null,
   });
 
   useEffect(() => {
@@ -43,7 +49,7 @@ export const useAuth = () => {
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("is_driver_approved, driver_rejection_reason, driver_registration_submitted_at, driver_id_photo_url")
+          .select("is_driver_approved, driver_rejection_reason, driver_registration_submitted_at, driver_id_photo_url, face_photo_url, avatar_url, full_name")
           .eq("user_id", userId)
           .maybeSingle();
 
@@ -58,6 +64,9 @@ export const useAuth = () => {
           driverRejectionReason: profile?.driver_rejection_reason ?? null,
           driverRegistrationSubmittedAt: profile?.driver_registration_submitted_at ?? null,
           driverIdPhotoUrl: profile?.driver_id_photo_url ?? null,
+          facePhotoUrl: profile?.face_photo_url ?? null,
+          avatarUrl: profile?.avatar_url ?? null,
+          fullName: profile?.full_name ?? null,
         };
       } catch (error) {
         console.error("Error in fetchRoles:", error);
@@ -69,6 +78,9 @@ export const useAuth = () => {
           driverRejectionReason: null,
           driverRegistrationSubmittedAt: null,
           driverIdPhotoUrl: null,
+          facePhotoUrl: null,
+          avatarUrl: null,
+          fullName: null,
         };
       }
     };
@@ -101,6 +113,9 @@ export const useAuth = () => {
             driverRejectionReason: null,
             driverRegistrationSubmittedAt: null,
             driverIdPhotoUrl: null,
+            facePhotoUrl: null,
+            avatarUrl: null,
+            fullName: null,
           });
         }
       } catch (error) {
@@ -143,6 +158,9 @@ export const useAuth = () => {
             driverRejectionReason: null,
             driverRegistrationSubmittedAt: null,
             driverIdPhotoUrl: null,
+            facePhotoUrl: null,
+            avatarUrl: null,
+            fullName: null,
           });
         }
       }

@@ -451,6 +451,7 @@ export type Database = {
           rating: number | null
           total_reviews: number | null
           updated_at: string
+          whatsapp_chatbot_enabled?: boolean | null
         }
         Insert: {
           address?: string | null
@@ -479,6 +480,7 @@ export type Database = {
           rating?: number | null
           total_reviews?: number | null
           updated_at?: string
+          whatsapp_chatbot_enabled?: boolean | null
         }
         Update: {
           address?: string | null
@@ -507,6 +509,7 @@ export type Database = {
           rating?: number | null
           total_reviews?: number | null
           updated_at?: string
+          whatsapp_chatbot_enabled?: boolean | null
         }
         Relationships: [
           {

@@ -49,7 +49,7 @@ import ProviderAlerts from "@/components/provider/ProviderAlerts";
 import ServiceRequestCard from "@/components/provider/ServiceRequestCard";
 import AcceptedServiceCard from "@/components/provider/AcceptedServiceCard";
 import ChatDrawer from "@/components/provider/ChatDrawer";
-import { Trophy, Zap, Star as StarIcon, TrendingUp, MessageSquare, CheckCircle2, Calendar as CalendarIcon } from "lucide-react";
+import { Trophy, Zap, Star as StarIcon, TrendingUp } from "lucide-react";
 import { useProviderNotifications } from "@/hooks/useProviderNotifications";
 
 
@@ -741,7 +741,7 @@ const ProviderDashboard = () => {
                         <p className="text-xs font-bold opacity-80 uppercase tracking-widest">Passo {depositStep} de 3</p>
                     </div>
 
-                    <div className="p-8 space-y-6 bg-card">
+                    <div className="p-8 space-y-6 bg-card text-slate-900 dark:text-slate-100">
                         {depositStep === 1 && (
                             <div className="space-y-6">
                                 <div className="space-y-2">
@@ -964,7 +964,7 @@ const ProviderDashboard = () => {
                         <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">Agendar Serviço</DialogTitle>
                         <DialogDescription className="font-bold">Escolha a melhor data e horário para este atendimento.</DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4">
+                    <div className="py-4 space-y-4 text-slate-900 dark:text-slate-100">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Data e Hora</Label>
                             <Input 
@@ -996,7 +996,7 @@ const ProviderDashboard = () => {
                         <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-primary">Solicitar Saque</DialogTitle>
                         <DialogDescription className="font-bold">Informe o valor e os dados para recebimento.</DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4">
+                    <div className="py-4 space-y-4 text-slate-900 dark:text-slate-100">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Valor do Saque</Label>
                             <div className="relative">
@@ -1085,7 +1085,7 @@ const ProviderDashboard = () => {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-6 text-sm text-muted-foreground font-medium leading-relaxed">
+                    <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-6 text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
                         <section className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
                             <h3 className="font-black text-primary uppercase text-xs mb-2 tracking-widest flex items-center gap-2">
                                 <Clock className="w-4 h-4" /> 1. Aceitação dos Termos

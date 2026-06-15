@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Bike,
   Package,
@@ -50,7 +51,7 @@ interface Order {
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
-  const { user, isDriver, isDriverApproved, driverRejectionReason, driverRegistrationSubmittedAt, loading: authLoading } = useAuth();
+  const { user, isDriver, isDriverApproved, driverRejectionReason, driverRegistrationSubmittedAt, facePhotoUrl, avatarUrl, fullName, loading: authLoading } = useAuth();
   const { requestNotificationPermission } = useDriverOrderNotifications();
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
@@ -359,6 +360,15 @@ const DriverDashboard = () => {
                   onCheckedChange={setIsOnline}
                   className="data-[state=checked]:bg-green-500"
                 />
+              </div>
+
+              <div className="flex items-center gap-2 ml-1 pl-3 border-l">
+                <Avatar className="w-9 h-9 border shadow-sm">
+                  <AvatarImage src={facePhotoUrl || avatarUrl || ""} alt={fullName || "Entregador"} className="object-cover" />
+                  <AvatarFallback className="bg-green-100 text-green-700 font-medium">
+                    {fullName ? fullName.charAt(0).toUpperCase() : "E"}
+                  </AvatarFallback>
+                </Avatar>
               </div>
             </div>
           </div>
