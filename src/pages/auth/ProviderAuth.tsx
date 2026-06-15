@@ -18,7 +18,6 @@ import {
     Lock,
     Mail,
     Droplets,
-    Sparkles,
     Camera,
     Upload,
     X
@@ -366,7 +365,7 @@ const ProviderAuth = () => {
                         {authMode === "login" || authMode === "forgot-password" ? (
                             <div className="space-y-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="login_cpf" className="font-bold flex items-center gap-2">
+                                    <Label htmlFor="login_cpf" className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                         <FileText className="w-4 h-4 text-primary" /> Seu CPF
                                     </Label>
                                     <Input 
@@ -380,7 +379,7 @@ const ProviderAuth = () => {
                                 </div>
                                 {authMode === "login" && (
                                     <div className="grid gap-2">
-                                        <Label htmlFor="login_pass" className="font-bold flex items-center gap-2">
+                                        <Label htmlFor="login_pass" className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                             <Lock className="w-4 h-4 text-primary" /> Sua Senha
                                         </Label>
                                         <Input 
@@ -398,7 +397,7 @@ const ProviderAuth = () => {
                         ) : (
                             <div className="space-y-4">
                                 <div className="grid gap-4">
-                                    <Label className="font-bold flex items-center gap-2">
+                                    <Label className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                         <Camera className="w-4 h-4 text-primary" /> Foto do Perfil
                                     </Label>
                                     
@@ -452,7 +451,7 @@ const ProviderAuth = () => {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name" className="font-bold flex items-center gap-2">
+                                    <Label htmlFor="name" className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                         <User className="w-4 h-4 text-primary" /> Nome Completo
                                     </Label>
                                     <Input 
@@ -467,7 +466,7 @@ const ProviderAuth = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="cpf" className="font-bold">CPF</Label>
+                                        <Label htmlFor="cpf" className="font-bold text-slate-900 dark:text-slate-100">CPF</Label>
                                         <Input 
                                             id="cpf"
                                             placeholder="000.000.000-00"
@@ -478,7 +477,7 @@ const ProviderAuth = () => {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="birth_date" className="font-bold">Data de Nascimento</Label>
+                                        <Label htmlFor="birth_date" className="font-bold text-slate-900 dark:text-slate-100">Data de Nascimento</Label>
                                         <Input 
                                             id="birth_date"
                                             type="date"
@@ -492,7 +491,7 @@ const ProviderAuth = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="phone" className="font-bold flex items-center gap-2">
+                                        <Label htmlFor="phone" className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                             <Phone className="w-4 h-4 text-primary" /> WhatsApp
                                         </Label>
                                         <Input 
@@ -505,7 +504,7 @@ const ProviderAuth = () => {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label className="font-bold flex items-center gap-2">
+                                        <Label className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                             <Briefcase className="w-4 h-4 text-primary" /> Sua Especialidade
                                         </Label>
                                         <Select 
@@ -526,7 +525,7 @@ const ProviderAuth = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="city" className="font-bold">Cidade onde vai atuar</Label>
+                                        <Label htmlFor="city" className="font-bold text-slate-900 dark:text-slate-100">Cidade onde vai atuar</Label>
                                         <Select 
                                             value={formData.city_id}
                                             onValueChange={(v) => setFormData({...formData, city_id: v})}
@@ -542,7 +541,7 @@ const ProviderAuth = () => {
                                         </Select>
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="address" className="font-bold">Endereço Completo</Label>
+                                        <Label htmlFor="address" className="font-bold text-slate-900 dark:text-slate-100">Endereço Completo</Label>
                                         <Input 
                                             id="address"
                                             placeholder="Rua, Número, Bairro"
@@ -556,7 +555,7 @@ const ProviderAuth = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email" className="font-bold flex items-center gap-2">
+                                        <Label htmlFor="email" className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                             <Mail className="w-4 h-4 text-primary" /> E-mail (Acesso)
                                         </Label>
                                         <Input 
@@ -570,7 +569,7 @@ const ProviderAuth = () => {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="pass" className="font-bold flex items-center gap-2">
+                                        <Label htmlFor="pass" className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                             <Lock className="w-4 h-4 text-primary" /> Senha (Mín. 6 caracteres)
                                         </Label>
                                         <Input 
@@ -587,7 +586,7 @@ const ProviderAuth = () => {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="desc" className="font-bold flex items-center gap-2">
+                                    <Label htmlFor="desc" className="font-bold flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                         <FileText className="w-4 h-4 text-primary" /> Conte um pouco sobre seu trabalho
                                     </Label>
                                     <Textarea 

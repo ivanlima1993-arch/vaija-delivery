@@ -34,7 +34,7 @@ const DriverSidebar = ({ open = true, onClose }: DriverSidebarProps) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/auth");
+    navigate("/entregador/auth");
   };
 
   const handleNavigate = (path: string) => {

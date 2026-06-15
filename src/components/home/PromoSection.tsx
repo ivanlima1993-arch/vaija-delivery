@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Truck, Percent, Wallet, Loader2, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ const MOCK_PROMOS = [
     icon: Truck,
     gradient: "from-orange-500 to-primary",
     pattern: "bg-orange-400/20",
+    target_route: "/restaurantes"
   },
   {
     id: "2",
@@ -38,6 +40,7 @@ const MOCK_PROMOS = [
     icon: Percent,
     gradient: "from-emerald-500 to-green-600",
     pattern: "bg-emerald-400/20",
+    target_route: "/restaurantes"
   },
   {
     id: "3",
@@ -47,6 +50,7 @@ const MOCK_PROMOS = [
     icon: Wallet,
     gradient: "from-blue-500 to-info",
     pattern: "bg-blue-400/20",
+    target_route: "/carteira"
   },
 ];
 
@@ -54,6 +58,7 @@ const PromoSection = () => {
   const { selectedCityId } = useAddress();
   const [promotions, setPromotions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPromotions = async () => {
@@ -113,7 +118,8 @@ const PromoSection = () => {
               icon: icon,
               gradient: gradient,
               pattern: pattern,
-              banner_url: p.banner_url
+              banner_url: p.banner_url,
+              establishment_id: p.establishment_id
             };
           });
           setPromotions(mapped);
@@ -130,6 +136,16 @@ const PromoSection = () => {
 
     fetchPromotions();
   }, [selectedCityId]);
+
+  const handlePromoClick = (promo: any) => {
+    if (promo.establishment_id) {
+      navigate(`/restaurant/${promo.establishment_id}`);
+    } else if (promo.target_route) {
+      navigate(promo.target_route);
+    } else {
+      navigate("/restaurantes");
+    }
+  };
 
   if (loading) {
     return (
@@ -156,6 +172,7 @@ const PromoSection = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5, scale: 1.02 }}
+              onClick={() => handlePromoClick(promo)}
               className={`relative min-w-[300px] md:min-w-0 h-[180px] p-6 rounded-[32px] bg-gradient-to-br ${promo.gradient} text-white cursor-pointer shadow-elevated overflow-hidden group`}
               style={promo.banner_url ? { 
                 backgroundImage: `linear-gradient(to bottom right, rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${promo.banner_url})`,

@@ -2,13 +2,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, TrendingUp, Users, CheckCircle, ArrowRight, Loader2, Send } from "lucide-react";
+import { MapPin, TrendingUp, Users, CheckCircle, ArrowRight, Loader2, Send, LogIn } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const FranchiseeLanding = () => {
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -83,6 +85,15 @@ const FranchiseeLanding = () => {
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full" onClick={() => document.getElementById('form')?.scrollIntoView({ behavior: 'smooth' })}>
                     Quero ser Franqueado
                     <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 px-8 text-lg rounded-full border-primary/40 text-primary hover:bg-primary/5"
+                    onClick={() => navigate("/franqueado/auth")}
+                  >
+                    <LogIn className="mr-2 w-5 h-5" />
+                    Já sou Franqueado
                   </Button>
                 </div>
               </motion.div>

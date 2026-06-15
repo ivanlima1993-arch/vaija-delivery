@@ -22,7 +22,8 @@ import {
   Home,
   Wrench,
   ShieldCheck,
-  Menu
+  Menu,
+  Bike
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -487,6 +488,19 @@ const FranchiseeDashboard = () => {
               </div>
               <h3 className="font-bold text-lg">Gestão de Serviços</h3>
               <p className="text-muted-foreground text-sm">Controle de profissionais e serviços locais.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => navigate("/franqueado/entregadores")}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-600">
+                  <Bike className="w-6 h-6" />
+                </div>
+                <TrendingUp className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Gestão de Entregadores</h3>
+              <p className="text-muted-foreground text-sm">Aprovação e controle regional de entregadores.</p>
             </CardContent>
           </Card>
         </div>

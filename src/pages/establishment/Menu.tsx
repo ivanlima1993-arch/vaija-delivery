@@ -873,8 +873,8 @@ const EstablishmentMenu = () => {
                   
                   <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border">
                     <div className="space-y-0.5">
-                      <Label className="text-sm font-bold">Destaque</Label>
-                      <p className="text-[10px] text-muted-foreground">Aparecerá no topo do cardápio</p>
+                      <Label className="text-sm font-bold text-black dark:text-white">Destaque</Label>
+                      <p className="text-[10px] text-slate-900 dark:text-slate-100">Aparecerá no topo do cardápio</p>
                     </div>
                     <Switch
                       checked={productForm.is_featured}
@@ -884,8 +884,8 @@ const EstablishmentMenu = () => {
                   
                   <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border">
                     <div className="space-y-0.5">
-                      <Label className="text-sm font-bold">Disponível</Label>
-                      <p className="text-[10px] text-muted-foreground">Clientes podem pedir este item</p>
+                      <Label className="text-sm font-bold text-black dark:text-white">Disponível</Label>
+                      <p className="text-[10px] text-slate-900 dark:text-slate-100">Clientes podem pedir este item</p>
                     </div>
                     <Switch
                       checked={productForm.is_available}
