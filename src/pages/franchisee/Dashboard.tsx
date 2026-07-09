@@ -503,6 +503,19 @@ const FranchiseeDashboard = () => {
               <p className="text-muted-foreground text-sm">Aprovação e controle regional de entregadores.</p>
             </CardContent>
           </Card>
+
+          <Card className="bg-white hover:bg-muted/50 cursor-pointer transition-all border-none shadow-soft group" onClick={() => navigate("/franqueado/financeiro")}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+                <TrendingUp className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
+              <h3 className="font-bold text-lg">Gestão Financeira</h3>
+              <p className="text-muted-foreground text-sm">Controle de faturamento, comissões e saques.</p>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

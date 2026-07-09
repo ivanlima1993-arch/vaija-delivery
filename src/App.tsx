@@ -89,6 +89,7 @@ import ManageFranchiseePromotions from "./pages/franchisee/ManagePromotions";
 import ManageFranchiseeRealtors from "./pages/franchisee/ManageRealtors";
 import ManageFranchiseeServices from "./pages/franchisee/ManageServiceProviders";
 import ManageFranchiseeDrivers from "./pages/franchisee/ManageDrivers";
+import ManageFranchiseeFinancial from "./pages/franchisee/ManageFinancial";
 
 const queryClient = new QueryClient();
 
@@ -200,6 +201,7 @@ const App = () => {
                 <Route path="/franqueado/corretores" element={<ManageFranchiseeRealtors />} />
                 <Route path="/franqueado/servicos" element={<ManageFranchiseeServices />} />
                 <Route path="/franqueado/entregadores" element={<ManageFranchiseeDrivers />} />
+                <Route path="/franqueado/financeiro" element={<ManageFranchiseeFinancial />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>
