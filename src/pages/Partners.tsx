@@ -29,8 +29,27 @@ export default function Partners() {
     name: "",
     type: "business",
     contact_info: "",
-    city: location.state?.city || ""
+    city: location.state?.city || "",
+    cpf_cnpj: ""
   });
+
+  const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 14) value = value.slice(0, 14);
+    
+    if (value.length <= 11) {
+      if (value.length > 9) {
+        value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6, 9)}-${value.slice(9)}`;
+      } else if (value.length > 6) {
+        value = `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6)}`;
+      } else if (value.length > 3) {
+        value = `${value.slice(0, 3)}.${value.slice(3)}`;
+      }
+    } else {
+      value = `${value.slice(0, 2)}.${value.slice(2, 5)}.${value.slice(5, 8)}/${value.slice(8, 12)}-${value.slice(12)}`;
+    }
+    setFormData({ ...formData, cpf_cnpj: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +69,7 @@ export default function Partners() {
           contact_info: formData.contact_info,
           city: formData.city,
           status: 'Novo',
-          notes: 'Lead capturado pela Landing Page Pública.'
+          notes: `${formData.cpf_cnpj ? `CPF/CNPJ: ${formData.cpf_cnpj}. ` : ''}Lead capturado pela Landing Page Pública.`
         }]);
 
       if (error) throw error;
@@ -205,6 +224,16 @@ export default function Partners() {
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpf_cnpj">{formData.type === 'business' ? 'CNPJ' : 'CPF ou CNPJ'} (opcional)</Label>
+                  <Input 
+                    id="cpf_cnpj" 
+                    placeholder={formData.type === 'business' ? "00.000.000/0000-00" : "000.000.000-00"} 
+                    value={formData.cpf_cnpj}
+                    onChange={handleCpfCnpjChange}
                   />
                 </div>
 
