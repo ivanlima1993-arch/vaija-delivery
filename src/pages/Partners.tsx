@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function Partners() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   
@@ -28,7 +29,7 @@ export default function Partners() {
     name: "",
     type: "business",
     contact_info: "",
-    city: ""
+    city: location.state?.city || ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
