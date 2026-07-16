@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Store, Mail, Lock, User, Phone, ArrowLeft, FileText, MapPin, Search } from "lucide-react";
+import { Store, Mail, Lock, User, Phone, ArrowLeft, FileText, MapPin, Search, ScrollText, ShieldCheck } from "lucide-react";
 import { ESTABLISHMENT_CATEGORIES } from "@/constants/categories";
 
 type AuthMode = "login" | "register" | "forgot-password";
@@ -22,6 +23,7 @@ const EstablishmentAuth = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<AuthMode>("login");
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -109,6 +111,10 @@ const EstablishmentAuth = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!acceptedTerms) {
+      toast.error("Você precisa ler e aceitar os Termos de Uso para prosseguir.");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -484,16 +490,74 @@ const EstablishmentAuth = () => {
                 </div>
               )}
 
+              {/* Contract acceptance block - only shown in register mode */}
+              {mode === "register" && (
+                <div className="space-y-3">
+                  {/* Contract scroll area */}
+                  <div className="rounded-xl border border-orange-200 dark:border-orange-800/50 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 dark:bg-orange-950/30 border-b border-orange-200 dark:border-orange-800/50">
+                      <ScrollText className="w-4 h-4 text-orange-500 shrink-0" />
+                      <p className="text-xs font-bold text-orange-700 dark:text-orange-400 uppercase tracking-widest">
+                        Contrato de Adesão — Leia antes de prosseguir
+                      </p>
+                    </div>
+                    <div className="h-48 overflow-y-auto p-4 bg-white dark:bg-card text-[11px] text-muted-foreground leading-relaxed space-y-3">
+                      <p className="font-bold text-foreground text-xs">TERMOS DE USO PARA ESTABELECIMENTOS PARCEIROS</p>
+                      <p>Este instrumento regula a relação entre <strong>VAI JA DELIVERY LTDA</strong> (CNPJ nº 30.086.202/0001-69, doravante &quot;Vai Já Delivery&quot;) e o Estabelecimento ora cadastrado (doravante &quot;Parceiro&quot;).</p>
+                      <p><strong>1. Natureza da Parceria.</strong> A plataforma atua exclusivamente como intermediária, conectando o Parceiro ao consumidor final. Não há relação de emprego, sociedade ou exclusividade entre as partes.</p>
+                      <p><strong>2. Cadastro e Documentação.</strong> O Parceiro declara que as informações fornecidas são verdadeiras, incluindo CNPJ/CPF ativo e regular, dados bancários de mesma titularidade e licenças sanitárias/alvarás quando exigíveis por lei.</p>
+                      <p><strong>3. Gestão de Cardápio e Preços.</strong> É de exclusiva responsabilidade do Parceiro manter fotos reais, descrições fidedignas e preços atualizados, garantindo compatibilidade com os praticados no balcão.</p>
+                      <p><strong>4. Taxas e Comissões.</strong> O Vai Já Delivery cobrará uma porcentagem sobre o valor bruto de cada pedido, conforme plano contratado. O repasse (deduzida a comissão) ocorrerá no prazo acordado na conta bancária cadastrada.</p>
+                      <p><strong>5. Responsabilidade Civil.</strong> O Parceiro é o único responsável pela qualidade, validade, temperatura e segurança alimentar dos produtos fornecidos. O Vai Já Delivery não responde por danos ao consumidor decorrentes de itens impróprios ou erros na montagem do pedido.</p>
+                      <p><strong>6. Proteção de Dados (LGPD).</strong> O Parceiro compromete-se a não utilizar dados de clientes (telefone, endereço etc.) para fins além da entrega do pedido específico, sendo vedado o marketing direto não autorizado e o compartilhamento com terceiros.</p>
+                      <p><strong>7. Rescisão.</strong> Qualquer das partes pode encerrar a parceria mediante comunicação prévia. Em caso de descumprimento grave por parte do Parceiro, o Vai Já Delivery pode suspender ou encerrar o acesso imediatamente.</p>
+                      <p><strong>8. Foro.</strong> Fica eleito o foro da Comarca de Aracaju/SE para dirimir quaisquer controvérsias oriundas deste instrumento, com renúncia expressa a qualquer outro.</p>
+                      <p className="text-orange-600 font-semibold">Ao marcar a caixa abaixo, o Parceiro declara ter lido, compreendido e aceito integralmente os termos acima, bem como a Política de Privacidade da plataforma.</p>
+                    </div>
+                  </div>
+
+                  {/* Acceptance checkbox */}
+                  <div className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all ${acceptedTerms ? 'border-orange-400 bg-orange-50 dark:bg-orange-950/20' : 'border-border bg-muted/30'}`}>
+                    <Checkbox
+                      id="acceptTerms"
+                      checked={acceptedTerms}
+                      onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                      className="mt-0.5 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                    />
+                    <label htmlFor="acceptTerms" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
+                      Li, compreendi e <strong className="text-foreground">aceito e assino eletronicamente</strong> os{" "}
+                      <Link to="/termos-estabelecimento" target="_blank" className="text-orange-600 hover:underline font-semibold">
+                        Termos de Uso para Estabelecimentos
+                      </Link>{" "}e a{" "}
+                      <Link to="/privacidade" target="_blank" className="text-orange-600 hover:underline font-semibold">
+                        Política de Privacidade
+                      </Link>{" "}da VAI JA DELIVERY LTDA (CNPJ 30.086.202/0001-69).
+                    </label>
+                  </div>
+
+                  {acceptedTerms && (
+                    <div className="flex items-center gap-2 text-emerald-600 text-xs">
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
+                      <span>Assinatura eletrônica registrada com data, hora e IP desta sessão.</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Button
                 type="submit"
                 size="lg"
-                className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                disabled={loading}
+                className={`w-full h-12 text-white transition-all ${
+                  mode === "register" && !acceptedTerms
+                    ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                }`}
+                disabled={loading || (mode === "register" && !acceptedTerms)}
               >
                 {loading ? "Carregando..." : 
                  mode === "login" ? "Entrar" : 
                  mode === "forgot-password" ? "Enviar E-mail" :
-                 "Cadastrar"}
+                 "Assinar e Cadastrar"}
               </Button>
               
               {mode === "login" && (
@@ -506,15 +570,6 @@ const EstablishmentAuth = () => {
                     Esqueceu sua senha?
                   </button>
                 </div>
-              )}
-
-              {mode === "register" && (
-                <p className="text-[10px] text-center text-muted-foreground mt-2">
-                  Ao cadastrar, você concorda com nossos{" "}
-                  <Link to="/termos-estabelecimento" className="text-orange-600 hover:underline">
-                    Termos de Uso para Estabelecimentos
-                  </Link>.
-                </p>
               )}
             </div>
           </form>
