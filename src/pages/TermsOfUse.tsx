@@ -21,7 +21,7 @@ const TermsOfUse = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">2. Descrição do Serviço</h2>
               <p>
-                O Vai Já Delivery é uma plataforma que conecta usuários a estabelecimentos comerciais, facilitando a realização de pedidos e entregas. Atuamos como intermediários entre consumidores, estabelecimentos parceiros e entregadores.
+                A plataforma Vai Já Delivery é operada por **VAI JA DELIVERY LTDA**, pessoa jurídica de direito privado inscrita no CNPJ sob o nº **30.086.202/0001-69**. Nossos serviços consistem em conectar usuários a estabelecimentos comerciais, facilitando a realização de pedidos e entregas, atuando como intermediários entre consumidores, estabelecimentos parceiros e entregadores.
               </p>
             </section>
 

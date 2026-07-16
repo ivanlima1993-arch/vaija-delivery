@@ -29,7 +29,7 @@ const EstablishmentTerms = () => {
                   <h2>1. Natureza da Parceria</h2>
                 </div>
                 <p>
-                  O Presente Termo regula a relação entre o **Vai Já Delivery** e o **Estabelecimento Parceiro**. A plataforma atua exclusivamente como intermediária, conectando o estabelecimento ao consumidor final e, opcionalmente, ao serviço de logística de terceiros.
+                  O Presente Termo regula a relação entre o **Vai Já Delivery** (operado por **VAI JA DELIVERY LTDA**, pessoa jurídica inscrita no CNPJ sob o nº **30.086.202/0001-69**) e o **Estabelecimento Parceiro**. A plataforma atua exclusivamente como intermediária, conectando o estabelecimento ao consumidor final e, opcionalmente, ao serviço de logística de terceiros.
                 </p>
               </section>
 
