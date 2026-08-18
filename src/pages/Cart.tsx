@@ -288,7 +288,7 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border text-card-foreground">
           <div className="container flex items-center gap-4 h-16">
             <Link to="/"><Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button></Link>
             <h1 className="font-display font-bold text-lg">Carrinho</h1>
@@ -310,14 +310,14 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-background pb-40">
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border text-card-foreground">
         <div className="container flex items-center gap-4 h-16">
           <Link to="/"><Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button></Link>
           <h1 className="font-display font-bold text-lg">Carrinho</h1>
         </div>
       </header>
 
-      <div className="container py-6 space-y-6">
+      <div className="container py-6 space-y-6 text-card-foreground">
         <DeliveryAddressSelector selectedAddress={deliveryAddress} onAddressChange={setDeliveryAddress} />
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex items-center gap-3 p-4 bg-accent/50 rounded-xl">
@@ -416,7 +416,7 @@ const Cart = () => {
                 onChange={(e) => setCpf(e.target.value.replace(/\D/g, ""))}
                 placeholder="000.000.000-00"
                 maxLength={14}
-                className="w-full h-12 px-4 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-12 px-4 rounded-xl border border-input bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 placeholder:text-muted-foreground/75 focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <p className="text-[10px] text-muted-foreground italic">
                 Necessário para emissão do comprovante de pagamento via Asaas.

@@ -12,9 +12,10 @@ interface MapPickerProps {
   initialCoordinates?: Coordinates;
   onLocationSelect: (address: GeocodedAddress) => void;
   height?: string;
+  cityName?: string | null;
 }
 
-const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: MapPickerProps) => {
+const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px", cityName }: MapPickerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
@@ -23,14 +24,14 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
   const [currentCoords, setCurrentCoords] = useState<Coordinates | null>(initialCoordinates || null);
 
   const { getCurrentPosition, isLoading: geoLoading } = useGeolocation();
-  const { reverseGeocode, isLoading: mapboxLoading } = useMapbox();
+  const { reverseGeocode, geocode, isLoading: mapboxLoading } = useMapbox();
 
   const isLoading = geoLoading || mapboxLoading;
 
-  // Default to Brazil center
+  // Default to Brazil center (Curitiba as default fallback)
   const defaultCenter: [number, number] = initialCoordinates
     ? [initialCoordinates.longitude, initialCoordinates.latitude]
-    : [-49.2648, -25.4284]; // Curitiba as default
+    : [-49.2648, -25.4284];
 
   const updateMarkerPosition = useCallback(
     async (lng: number, lat: number) => {
@@ -128,10 +129,27 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px" }: M
         });
 
         // Ensure map is resized correctly
-        map.current.on("load", () => {
+        map.current.on("load", async () => {
           if (cancelled) return;
           setMapLoaded(true);
           map.current?.resize();
+
+          if (!initialCoordinates && cityName) {
+            try {
+              const results = await geocode(cityName);
+              if (results && results.length > 0 && map.current) {
+                const { latitude, longitude } = results[0].coordinates;
+                map.current.flyTo({
+                  center: [longitude, latitude],
+                  zoom: 14,
+                });
+                marker.current?.setLngLat([longitude, latitude]);
+                updateMarkerPosition(longitude, latitude);
+              }
+            } catch (err) {
+              console.error("Error geocoding city name on load:", err);
+            }
+          }
         });
 
         // Add navigation controls

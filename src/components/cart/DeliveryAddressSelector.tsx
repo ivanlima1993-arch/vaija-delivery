@@ -384,6 +384,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                       <MapPicker
                         onLocationSelect={handleMapLocationSelect}
                         height="250px"
+                        cityName={selectedCityName}
                       />
                     </div>
 
@@ -424,7 +425,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                             });
                           }}
                         >
-                          <SelectTrigger className="bg-background">
+                          <SelectTrigger className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50">
                             <SelectValue placeholder="Selecione o bairro" />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border border-border z-50 max-h-[200px]">
@@ -520,7 +521,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                   <TabsContent value="manual" className="space-y-4 mt-4">
                     <div className="space-y-2">
                       <Label>Cidade</Label>
-                      <div className="p-3 rounded-lg bg-muted text-sm">
+                      <div className="p-3 rounded-lg bg-muted text-sm text-zinc-900 dark:text-zinc-50">
                         {selectedCityName || "Nenhuma cidade selecionada"}
                       </div>
                     </div>
@@ -537,7 +538,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
                             setNewAddress({ ...newAddress, neighborhoodId: value, neighborhoodName: "" })
                           }
                         >
-                          <SelectTrigger className="bg-background">
+                          <SelectTrigger className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50">
                             <SelectValue placeholder="Selecione o bairro" />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border border-border z-50">
