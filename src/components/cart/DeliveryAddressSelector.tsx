@@ -148,7 +148,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
     setOpen(false);
   }, [establishmentId, calculateFee, onAddressChange]);
 
-  const handleMapLocationSelect = (geocoded: GeocodedAddress) => {
+  const handleMapLocationSelect = useCallback((geocoded: GeocodedAddress) => {
     setMapAddress(geocoded);
 
     // Auto-fill the form fields
@@ -182,7 +182,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
         }));
       }
     }
-  };
+  }, [neighborhoods]);
 
   const handleAddAddressManual = () => {
     const hasNeighborhoodList = neighborhoods.length > 0;

@@ -94,6 +94,14 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px", cit
     }
   }, []);
 
+  const updateMarkerPositionRef = useRef(updateMarkerPosition);
+  useEffect(() => {
+    updateMarkerPositionRef.current = updateMarkerPosition;
+  }, [updateMarkerPosition]);
+
+  const defaultCenterRef = useRef(defaultCenter);
+
+  // Initialize Mapbox
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
@@ -124,32 +132,15 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px", cit
         map.current = new mapboxgl.Map({
           container: mapContainer.current!,
           style: "mapbox://styles/mapbox/streets-v12",
-          center: defaultCenter,
+          center: defaultCenterRef.current,
           zoom: 15,
         });
 
         // Ensure map is resized correctly
-        map.current.on("load", async () => {
+        map.current.on("load", () => {
           if (cancelled) return;
           setMapLoaded(true);
           map.current?.resize();
-
-          if (!initialCoordinates && cityName) {
-            try {
-              const results = await geocode(cityName);
-              if (results && results.length > 0 && map.current) {
-                const { latitude, longitude } = results[0].coordinates;
-                map.current.flyTo({
-                  center: [longitude, latitude],
-                  zoom: 14,
-                });
-                marker.current?.setLngLat([longitude, latitude]);
-                updateMarkerPosition(longitude, latitude);
-              }
-            } catch (err) {
-              console.error("Error geocoding city name on load:", err);
-            }
-          }
         });
 
         // Add navigation controls
@@ -160,20 +151,20 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px", cit
           draggable: true,
           color: "hsl(var(--primary))",
         })
-          .setLngLat(defaultCenter)
+          .setLngLat(defaultCenterRef.current)
           .addTo(map.current);
 
         // Handle marker drag
         marker.current.on("dragend", () => {
           const lngLat = marker.current!.getLngLat();
-          updateMarkerPosition(lngLat.lng, lngLat.lat);
+          updateMarkerPositionRef.current(lngLat.lng, lngLat.lat);
         });
 
         // Handle map click
         map.current.on("click", (e) => {
           const { lng, lat } = e.lngLat;
           marker.current?.setLngLat([lng, lat]);
-          updateMarkerPosition(lng, lat);
+          updateMarkerPositionRef.current(lng, lat);
         });
 
         map.current.on("error", (e) => {
@@ -202,7 +193,34 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px", cit
         map.current = null;
       }
     };
-  }, [checkWebGLSupport, defaultCenter, fetchMapboxToken, updateMarkerPosition]);
+  }, [checkWebGLSupport, fetchMapboxToken]);
+
+  const geocodedRef = useRef(false);
+
+  // Focus and center on the selected city when the map loads
+  useEffect(() => {
+    if (!map.current || !mapLoaded || !cityName || initialCoordinates || geocodedRef.current) return;
+
+    const centerOnCity = async () => {
+      try {
+        geocodedRef.current = true;
+        const results = await geocode(cityName);
+        if (results && results.length > 0 && map.current) {
+          const { latitude, longitude } = results[0].coordinates;
+          map.current.flyTo({
+            center: [longitude, latitude],
+            zoom: 14,
+          });
+          marker.current?.setLngLat([longitude, latitude]);
+          updateMarkerPositionRef.current(longitude, latitude);
+        }
+      } catch (err) {
+        console.error("Error geocoding city name on load:", err);
+      }
+    };
+
+    centerOnCity();
+  }, [cityName, mapLoaded, geocode, initialCoordinates]);
 
   const handleUseMyLocation = async () => {
     try {
