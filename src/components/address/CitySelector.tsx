@@ -48,9 +48,9 @@ const CitySelector = () => {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full md:w-auto min-w-[170px] max-w-[240px] justify-between gap-2 rounded-full bg-muted border-0 hover:bg-accent hover:text-accent-foreground transition-all text-sm font-semibold pl-4 pr-3 h-10 shadow-sm text-left"
+          className="w-full md:w-auto min-w-[170px] max-w-[240px] justify-between gap-2 rounded-full bg-muted border-0 text-zinc-900 dark:text-zinc-50 hover:bg-accent hover:text-accent-foreground transition-all text-sm font-semibold pl-4 pr-3 h-10 shadow-sm text-left"
         >
-          <div className="flex items-center gap-2 truncate text-foreground">
+          <div className="flex items-center gap-2 truncate">
             <MapPin className="w-4 h-4 text-primary shrink-0" />
             <span className="truncate">
               {selectedCity ? `${selectedCity.name} - ${selectedCity.state}` : "Selecione a cidade"}
