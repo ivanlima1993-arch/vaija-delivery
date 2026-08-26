@@ -1,0 +1,29 @@
+{
+    "name": "Vai Já Serviços",
+    "short_name": "Vai Já Serviços",
+    "description": "Contrate profissionais qualificados (reformas, limpeza, beleza, etc) em tempo real com o Vai Já",
+    "theme_color": "#f97316",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "scope": ".",
+    "start_url": "./#/prestador",
+    "icons": [
+        {
+            "src": "pwa-services-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "pwa-services-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "pwa-services-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
