@@ -102,6 +102,19 @@ const App = () => {
     if (splashShown) {
       setShowSplash(false);
     }
+
+    // Android Hardware Back Button Support
+    import("@capacitor/app").then(({ App: CapApp }) => {
+      CapApp.addListener("backButton", ({ canGoBack }) => {
+        if (canGoBack) {
+          window.history.back();
+        } else {
+          CapApp.exitApp();
+        }
+      }).catch(() => {
+        // Ignored on standard web browsers
+      });
+    }).catch(() => {});
   }, []);
 
   const handleSplashComplete = () => {

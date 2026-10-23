@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { CreditCard, Banknote, QrCode, Wallet, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEstablishmentPaymentMethods } from "@/hooks/useEstablishmentPaymentMethods";
@@ -25,6 +25,15 @@ const PaymentMethodSelector = ({
   userBalance,
 }: PaymentMethodSelectorProps) => {
   const { methods, loading } = useEstablishmentPaymentMethods(establishmentId);
+
+  useEffect(() => {
+    if (!loading && methods.length > 0) {
+      const isCurrentValid = methods.some((m) => m.method_key === selectedPayment);
+      if (!isCurrentValid) {
+        onSelect(methods[0].method_key);
+      }
+    }
+  }, [loading, methods, selectedPayment, onSelect]);
 
   if (loading) {
     return (
@@ -60,14 +69,6 @@ const PaymentMethodSelector = ({
     );
   }
 
-  // Auto-select first method if current selection is not available
-  const isCurrentValid = methods.some((m) => m.method_key === selectedPayment);
-  if (!isCurrentValid && methods.length > 0) {
-    // Use setTimeout to avoid state update during render
-    setTimeout(() => onSelect(methods[0].method_key), 0);
-  }
-
-  const cols = methods.length <= 3 ? `grid-cols-${methods.length}` : "grid-cols-3";
 
   return (
     <motion.div

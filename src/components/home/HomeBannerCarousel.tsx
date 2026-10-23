@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,10 +34,20 @@ const FALLBACK_BANNERS = [
 ];
 
 const HomeBannerCarousel = () => {
+  const navigate = useNavigate();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const handleBannerClick = (url: string | null) => {
+    if (!url || url === "#") return;
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      window.open(url, "_blank");
+    } else {
+      navigate(url);
+    }
+  };
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -171,7 +182,7 @@ const HomeBannerCarousel = () => {
                 >
                   <Button 
                     className="bg-white text-black hover:bg-white/90 font-black rounded-2xl h-14 px-8 group shadow-glow"
-                    onClick={() => window.location.href = currentBanner.link_url || "#"}
+                    onClick={() => handleBannerClick(currentBanner.link_url)}
                   >
                     {currentBanner.button_text || "Ver Mais"}
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

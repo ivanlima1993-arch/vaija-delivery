@@ -26,3 +26,10 @@ dist-ssr
 .env.*
 !.env.example
 
+# Vite & build artifacts
+vite.config.ts.timestamp-*
+build_errors.txt
+build_error_new.txt
+build_success.txt
+errors.txt
+

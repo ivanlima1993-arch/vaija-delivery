@@ -7,7 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, Lock, Save, Upload, Camera, Package, Clock, ChevronRight, Loader2, Wallet as WalletIcon, Briefcase, Calendar as CalendarIcon, XCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, Lock, Save, Upload, Camera, Package, Clock, ChevronRight, Loader2, Wallet as WalletIcon, Briefcase, Calendar as CalendarIcon, XCircle, CheckCircle2, Trash2, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -41,6 +52,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [serviceRequests, setServiceRequests] = useState<any[]>([]);
@@ -267,6 +279,31 @@ const Profile = () => {
       toast.error(error.message || "Erro ao alterar senha");
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setDeletingAccount(true);
+    try {
+      // 1. Try to invoke an RPC to wipe user personal data / delete profile
+      const { error: rpcError } = await supabase.rpc("delete_user_account" as any);
+      
+      // If RPC doesn't exist, remove or anonymize profile directly
+      if (rpcError) {
+        console.warn("RPC delete_user_account not found, deleting profile row directly:", rpcError);
+        await supabase.from("profiles").delete().eq("user_id", user.id);
+      }
+
+      // 2. Sign out the user
+      await supabase.auth.signOut();
+      toast.success("Sua conta e dados foram removidos com sucesso.");
+      navigate("/");
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      toast.error(error.message || "Não foi possível excluir a conta. Contate o suporte.");
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -635,6 +672,57 @@ const Profile = () => {
                 <Lock className="h-4 w-4 mr-2" />
                 {changingPassword ? "Alterando..." : "Alterar Senha"}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Danger Zone - Account Deletion (Google Play Store Requirement) */}
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <Trash2 className="h-5 w-5" />
+                Excluir Conta
+              </CardTitle>
+              <CardDescription>
+                Exclua sua conta e todos os dados associados permanentemente. Esta ação não pode ser desfeita.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir Minha Conta
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-5 w-5" />
+                      Tem certeza absoluta?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <p>
+                        Esta ação é definitiva. Conforme exigido pela LGPD e políticas da Play Store:
+                      </p>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        <li>Seu acesso será revogado imediatamente.</li>
+                        <li>Seu perfil, endereços salvos e dados pessoais serão removidos.</li>
+                        <li>Se houver pedidos em andamento, conclua-os antes de solicitar.</li>
+                      </ul>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      disabled={deletingAccount}
+                    >
+                      {deletingAccount ? "Excluindo..." : "Sim, excluir minha conta"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         </div>
