@@ -328,12 +328,16 @@ const ProviderDashboard = () => {
                 try {
                     const errorBody = await error.context.text();
                     errorMsg = `${error.message} - Body: ${errorBody}`;
-                } catch (e) {}
+                } catch (_error) {
+                    // Ignore parsing failures and preserve the original error message.
+                }
             } else if (error.context && typeof error.context.json === 'function') {
                 try {
                     const errorJson = await error.context.json();
                     errorMsg = `${error.message} - JSON: ${JSON.stringify(errorJson)}`;
-                } catch (e) {}
+                } catch (_error) {
+                    // Ignore parsing failures and preserve the original error message.
+                }
             }
             
             toast.error("Erro no pagamento: " + errorMsg);
@@ -781,7 +785,7 @@ const ProviderDashboard = () => {
                                         maxLength={18}
                                         className="h-12 rounded-2xl border-muted focus-visible:ring-primary"
                                         value={cpf}
-                                        onChange={(e) => setCpf(e.target.value.replace(/[^\d.\-\/]/g, ""))}
+                                        onChange={(e) => setCpf(e.target.value.replace(/[^\d./-]/g, ""))}
                                     />
                                     <p className="text-[10px] text-muted-foreground italic pl-1">Necessário para emissão do comprovante via Asaas.</p>
                                 </div>
