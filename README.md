@@ -32,9 +32,13 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Copy .env.example to .env.local and add the Supabase API URL and public keys.
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
+
+Use the Supabase project URL, publishable key, and anon key from the project's API settings. These `VITE_` values are included in the browser bundle; never use a service-role or other secret key here.
 
 **Edit a file directly in GitHub**
 
