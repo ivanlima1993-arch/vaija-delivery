@@ -14,10 +14,8 @@ import {
   ShoppingBag,
   DollarSign,
   TrendingUp,
-  Clock,
   Menu,
   CheckCircle,
-  XCircle,
   AlertCircle,
 } from "lucide-react";
 import {
@@ -30,7 +28,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -115,12 +112,6 @@ const AdminDashboard = () => {
       });
 
       // Prepare chart data (last 7 days)
-      const last7Days = [...Array(7)].map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        return d.toLocaleDateString("pt-BR", { weekday: "short" });
-      }).reverse();
-
       const dailyData = [...Array(7)].map((_, i) => {
         const date = new Date();
         date.setDate(date.getDate() - (6 - i));

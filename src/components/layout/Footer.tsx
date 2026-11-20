@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 
 interface CityLinks {
-  instagram_url?: string;
-  facebook_url?: string;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
 }
 
 const Footer = () => {

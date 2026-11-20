@@ -63,7 +63,18 @@ const CATEGORIES = [
     { id: 17, name: "Pedreiro", icon: HardHat, color: "text-orange-700", bg: "bg-orange-200" },
 ];
 
-const MOCK_PROS = [
+interface ServiceProviderCard {
+    id: string;
+    name: string;
+    category: string;
+    rating: number | null;
+    reviews: number;
+    distance: string;
+    image: string;
+    available: boolean | null;
+}
+
+const MOCK_PROS: ServiceProviderCard[] = [
     {
         id: "1",
         name: "Ricardo Silva",
@@ -90,10 +101,10 @@ const Services = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
-    const [pros, setPros] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [pros, setPros] = useState<ServiceProviderCard[]>([]);
+    const [, setLoading] = useState(true);
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-    const [selectedPro, setSelectedPro] = useState<any>(null);
+    const [selectedPro, setSelectedPro] = useState<ServiceProviderCard | null>(null);
     const [requestData, setRequestData] = useState({
         serviceType: "",
         description: "",
@@ -106,7 +117,7 @@ const Services = () => {
         const fetchPros = async () => {
             try {
                 const { data, error } = await supabase
-                    .from("service_providers" as any)
+                    .from("service_providers")
                     .select("*")
                     .eq("is_active", true);
 
@@ -116,6 +127,7 @@ const Services = () => {
                 } else if (data && data.length > 0) {
                     setPros(data.map(p => ({
                         ...p,
+                        rating: p.rating ?? 0,
                         reviews: Math.floor(Math.random() * 100) + 10,
                         distance: (Math.random() * 5 + 1).toFixed(1) + " km",
                         image: p.image_url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=400&fit=crop",
@@ -142,14 +154,14 @@ const Services = () => {
                     .eq("user_id", user.id)
                     .single();
                 if (data?.phone) {
-                    setRequestData(prev => ({ ...prev, phone: data.phone }));
+                    setRequestData(prev => ({ ...prev, phone: data.phone ?? "" }));
                 }
             };
             fetchProfile();
         }
     }, [user]);
 
-    const handleOpenRequest = (pro: any) => {
+    const handleOpenRequest = (pro: ServiceProviderCard) => {
         if (!user) {
             toast.error("Você precisa estar logado para solicitar um orçamento");
             navigate("/auth");
@@ -161,6 +173,10 @@ const Services = () => {
     };
 
     const handleSendRequest = async () => {
+        if (!user || !selectedPro) {
+            toast.error("Não foi possível identificar seu usuário ou o profissional.");
+            return;
+        }
         if (!requestData.description || !requestData.address || !requestData.phone) {
             toast.error("Por favor, preencha todos os campos");
             return;
@@ -172,13 +188,13 @@ const Services = () => {
             const { data: profile } = await supabase
                 .from("profiles")
                 .select("full_name")
-                .eq("user_id", user?.id)
+                .eq("user_id", user.id)
                 .single();
 
             const { error } = await supabase
                 .from("service_requests")
                 .insert([{
-                    customer_id: user?.id,
+                    customer_id: user.id,
                     customer_name: profile?.full_name || "Usuário Vai Já",
                     provider_id: selectedPro.id,
                     service_type: requestData.serviceType,
@@ -194,9 +210,9 @@ const Services = () => {
             setIsRequestModalOpen(false);
             setRequestData({ serviceType: "", description: "", address: "", phone: "" });
             navigate("/perfil");
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error sending request:", error);
-            toast.error("Erro ao enviar solicitação: " + error.message);
+            toast.error("Erro ao enviar solicitação: " + (error instanceof Error ? error.message : "Erro desconhecido"));
         } finally {
             setSending(false);
         }

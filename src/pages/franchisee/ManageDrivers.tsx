@@ -1,24 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-    Bike, ShieldCheck, CheckCircle2, XCircle, 
+    Bike, ShieldCheck, CheckCircle2,
     Search, ExternalLink, Loader2, UserPlus,
-    Phone, FileText, MapPin, Calendar, Clock, ArrowLeft, Eye, EyeOff
+    MapPin, Clock, ArrowLeft, Eye, EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
     Dialog, 
     DialogContent, 
-    DialogHeader, 
     DialogTitle, 
     DialogDescription,
     DialogFooter 
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";

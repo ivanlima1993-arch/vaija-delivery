@@ -4,14 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  Megaphone,
   Plus,
   Search,
   Pencil,
@@ -31,7 +30,7 @@ const ManagePromotions = () => {
   
   const [promotions, setPromotions] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
-  const [establishments, setEstablishments] = useState<any[]>([]);
+  const [, setEstablishments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 

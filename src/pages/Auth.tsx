@@ -356,7 +356,7 @@ const Auth = () => {
                   />
                 </div>
 
-                {(mode !== "forgot-password" || mode === "update-password") && (
+                {mode !== "forgot-password" && (
                   <div>
                     <Label htmlFor="password" className="flex items-center gap-2 mb-2">
                       <Lock className="w-4 h-4 text-primary" />

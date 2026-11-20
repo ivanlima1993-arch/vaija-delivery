@@ -7,7 +7,6 @@ import {
   Bell, 
   Search, 
   Plus, 
-  MapPin, 
   Tag, 
   BarChart3, 
   Building2, 
@@ -19,14 +18,12 @@ import {
   Pencil,
   Calendar as CalendarIcon,
   Package,
-  Home,
   Wrench,
   ShieldCheck,
   Menu,
   Bike
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,7 +32,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   AreaChart, 
   Area, 
@@ -44,8 +41,6 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  BarChart,
-  Bar
 } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -141,6 +136,7 @@ const FranchiseeDashboard = () => {
     queryKey: ["franchisee-cities", franchisee?.user_id],
     enabled: !!franchisee,
     queryFn: async () => {
+      if (!franchisee) throw new Error("Franqueado não encontrado");
       const { data, error } = await supabase
         .from("cities")
         .select("*")
@@ -314,7 +310,7 @@ const FranchiseeDashboard = () => {
       <main className="container py-8 space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Olá, {franchisee?.name || "Franqueado"}</h2>
+            <h2 className="text-2xl font-bold">Olá, Franqueado</h2>
             <p className="text-muted-foreground">Gerencie o crescimento da rede em sua região.</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -645,7 +641,7 @@ const FranchiseeDashboard = () => {
                           </TableCell>
                           <TableCell>{cities.find(c => c.id === est.city_id)?.name || "N/A"}</TableCell>
                           <TableCell>
-                            <Badge variant={est.is_open ? "success" : "secondary"}>
+                            <Badge variant={est.is_open ? "default" : "secondary"}>
                               {est.is_open ? "Aberto" : "Fechado"}
                             </Badge>
                           </TableCell>
@@ -682,7 +678,7 @@ const FranchiseeDashboard = () => {
                               variant="outline" 
                               size="sm"
                               className="text-xs"
-                              onClick={() => handleToggleEst(est.id, est.is_open)}
+                              onClick={() => handleToggleEst(est.id, est.is_open ?? false)}
                             >
                               {est.is_open ? "Fechar" : "Abrir"}
                             </Button>
@@ -807,7 +803,7 @@ const FranchiseeDashboard = () => {
                     coupons.map((coupon) => (
                       <Card key={coupon.id} className="border border-primary/10 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-2">
-                          <Badge variant={coupon.is_active ? "success" : "secondary"}>
+                          <Badge variant={coupon.is_active ? "default" : "secondary"}>
                             {coupon.is_active ? "Ativo" : "Inativo"}
                           </Badge>
                         </div>

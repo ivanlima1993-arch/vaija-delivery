@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Pencil, X, Save, GripVertical } from "lucide-react";
+import { Plus, Trash2, Pencil, GripVertical } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 interface ProductOptionsEditorProps {
   productId: string;
   onClose: () => void;
 }
 
-const ProductOptionsEditor = ({ productId, onClose }: ProductOptionsEditorProps) => {
+const ProductOptionsEditor = ({ productId }: ProductOptionsEditorProps) => {
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingGroup, setEditingGroup] = useState<any | null>(null);

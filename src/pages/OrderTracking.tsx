@@ -21,7 +21,6 @@ import {
   CheckCircle,
   Clock,
   MapPin,
-  Phone,
   Loader2,
   Star,
   Bell,
@@ -168,6 +167,11 @@ const OrderTracking = () => {
   };
 
   const fetchOrder = async () => {
+    if (!orderId) {
+      toast.error("Pedido não encontrado");
+      setLoading(false);
+      return;
+    }
     try {
       const { data: orderData, error } = await supabase
         .from("orders")
@@ -247,10 +251,8 @@ const OrderTracking = () => {
   }
 
   const currentStatusIndex = statusOrder.indexOf(order.status);
-  const StatusIcon = statusConfig[order.status]?.icon || Package;
   const isDelivering = order.status === "out_for_delivery";
   const isDelivered = order.status === "delivered";
-  const canReview = isDelivered && !existingReview;
 
   return (
     <div className="min-h-screen bg-background pb-20">

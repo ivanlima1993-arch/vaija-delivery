@@ -53,7 +53,10 @@ export type Database = {
       cities: {
         Row: {
           created_at: string
+          facebook_url: string | null
+          franchisee_id: string | null
           id: string
+          instagram_url: string | null
           is_active: boolean | null
           name: string
           state: string
@@ -61,7 +64,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          facebook_url?: string | null
+          franchisee_id?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean | null
           name: string
           state: string
@@ -69,7 +75,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          facebook_url?: string | null
+          franchisee_id?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean | null
           name?: string
           state?: string
@@ -351,6 +360,7 @@ export type Database = {
           loyalty_enabled: boolean
           loyalty_reward_description: string | null
           loyalty_stamps_required: number
+          own_delivery_enabled: boolean | null
           updated_at: string
         }
         Insert: {
@@ -362,6 +372,7 @@ export type Database = {
           loyalty_enabled?: boolean
           loyalty_reward_description?: string | null
           loyalty_stamps_required?: number
+          own_delivery_enabled?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -373,6 +384,7 @@ export type Database = {
           loyalty_enabled?: boolean
           loyalty_reward_description?: string | null
           loyalty_stamps_required?: number
+          own_delivery_enabled?: boolean | null
           updated_at?: string
         }
         Relationships: [
@@ -451,7 +463,12 @@ export type Database = {
           rating: number | null
           total_reviews: number | null
           updated_at: string
-          whatsapp_chatbot_enabled?: boolean | null
+          whatsapp_chatbot_enabled: boolean | null
+          whatsapp_closing_message: string | null
+          whatsapp_enabled: boolean | null
+          whatsapp_instance_name: string | null
+          whatsapp_status: string | null
+          whatsapp_welcome_message: string | null
         }
         Insert: {
           address?: string | null
@@ -481,6 +498,11 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string
           whatsapp_chatbot_enabled?: boolean | null
+          whatsapp_closing_message?: string | null
+          whatsapp_enabled?: boolean | null
+          whatsapp_instance_name?: string | null
+          whatsapp_status?: string | null
+          whatsapp_welcome_message?: string | null
         }
         Update: {
           address?: string | null
@@ -510,6 +532,11 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string
           whatsapp_chatbot_enabled?: boolean | null
+          whatsapp_closing_message?: string | null
+          whatsapp_enabled?: boolean | null
+          whatsapp_instance_name?: string | null
+          whatsapp_status?: string | null
+          whatsapp_welcome_message?: string | null
         }
         Relationships: [
           {
@@ -822,6 +849,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          cpf_cnpj: string | null
           driver_address: string | null
           driver_birth_date: string | null
           driver_id_photo_url: string | null
@@ -841,6 +869,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          cpf_cnpj?: string | null
           driver_address?: string | null
           driver_birth_date?: string | null
           driver_id_photo_url?: string | null
@@ -860,6 +889,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          cpf_cnpj?: string | null
           driver_address?: string | null
           driver_birth_date?: string | null
           driver_id_photo_url?: string | null
@@ -1096,6 +1126,829 @@ export type Database = {
           }
         ]
       }
+      franchisees: {
+        Row: {
+          active: boolean | null
+          bank_account_info: Json | null
+          commission_rate: number | null
+          created_at: string
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          bank_account_info?: Json | null
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          bank_account_info?: Json | null
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      franchisee_cities: {
+        Row: {
+          city_id: string | null
+          created_at: string
+          franchisee_id: string | null
+          id: string
+        }
+        Insert: {
+          city_id?: string | null
+          created_at?: string
+          franchisee_id?: string | null
+          id?: string
+        }
+        Update: {
+          city_id?: string | null
+          created_at?: string
+          franchisee_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "franchisee_cities_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      franchisee_withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          franchisee_id: string
+          id: string
+          pix_key: string | null
+          processed_at: string | null
+          rejection_reason: string | null
+          requested_at: string
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          franchisee_id: string
+          id?: string
+          pix_key?: string | null
+          processed_at?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          franchisee_id?: string
+          id?: string
+          pix_key?: string | null
+          processed_at?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      home_banners: {
+        Row: {
+          button_text: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          link_url: string | null
+          position: number | null
+          subtitle: string | null
+          title: string | null
+        }
+        Insert: {
+          button_text?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          link_url?: string | null
+          position?: number | null
+          subtitle?: string | null
+          title?: string | null
+        }
+        Update: {
+          button_text?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          position?: number | null
+          subtitle?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      real_estate_images: {
+        Row: {
+          created_at: string
+          id: string
+          is_featured: boolean | null
+          property_id: string
+          sort_order: number | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_featured?: boolean | null
+          property_id: string
+          sort_order?: number | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_featured?: boolean | null
+          property_id?: string
+          sort_order?: number | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "real_estate_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      real_estate_leads: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string
+          id: string
+          message: string | null
+          property_id: string
+          realtor_id: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          customer_name: string
+          customer_phone: string
+          id?: string
+          message?: string | null
+          property_id: string
+          realtor_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          message?: string | null
+          property_id?: string
+          realtor_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "real_estate_leads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      real_estate_properties: {
+        Row: {
+          address: string | null
+          area_sqm: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          condominium_fee: number | null
+          created_at: string
+          description: string | null
+          id: string
+          iptu_fee: number | null
+          latitude: number | null
+          longitude: number | null
+          owner_id: string
+          parking_spots: number | null
+          price: number
+          property_type: string
+          state: string | null
+          status: Database["public"]["Enums"]["real_estate_status"] | null
+          title: string
+          transaction_type: Database["public"]["Enums"]["real_estate_transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          condominium_fee?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          iptu_fee?: number | null
+          latitude?: number | null
+          longitude?: number | null
+          owner_id: string
+          parking_spots?: number | null
+          price: number
+          property_type: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["real_estate_status"] | null
+          title: string
+          transaction_type: Database["public"]["Enums"]["real_estate_transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          condominium_fee?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          iptu_fee?: number | null
+          latitude?: number | null
+          longitude?: number | null
+          owner_id?: string
+          parking_spots?: number | null
+          price?: number
+          property_type?: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["real_estate_status"] | null
+          title?: string
+          transaction_type?: Database["public"]["Enums"]["real_estate_transaction_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_providers: {
+        Row: {
+          address: string | null
+          asaas_customer_id: string | null
+          birth_date: string | null
+          category: string
+          city_id: string | null
+          created_at: string
+          cpf: string | null
+          description: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          neighborhood_id: string | null
+          phone: string | null
+          rating: number | null
+          total_reviews: number | null
+          terms_accepted_at: string | null
+          updated_at: string
+          user_id: string | null
+          wallet_balance: number
+        }
+        Insert: {
+          address?: string | null
+          asaas_customer_id?: string | null
+          birth_date?: string | null
+          category: string
+          city_id?: string | null
+          created_at?: string
+          cpf?: string | null
+          description?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          neighborhood_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+          wallet_balance?: number
+        }
+        Update: {
+          address?: string | null
+          asaas_customer_id?: string | null
+          birth_date?: string | null
+          category?: string
+          city_id?: string | null
+          created_at?: string
+          cpf?: string | null
+          description?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          neighborhood_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+          wallet_balance?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_neighborhood_id_fkey"
+            columns: ["neighborhood_id"]
+            isOneToOne: false
+            referencedRelation: "neighborhoods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_requests: {
+        Row: {
+          address: string
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          description: string | null
+          id: string
+          price: number | null
+          provider_id: string | null
+          scheduled_at: string | null
+          service_type: string
+          status: Database["public"]["Enums"]["service_request_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          id?: string
+          price?: number | null
+          provider_id?: string | null
+          scheduled_at?: string | null
+          service_type: string
+          status?: Database["public"]["Enums"]["service_request_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          id?: string
+          price?: number | null
+          provider_id?: string | null
+          scheduled_at?: string | null
+          service_type?: string
+          status?: Database["public"]["Enums"]["service_request_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          asaas_invoice_url: string | null
+          asaas_payment_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          payment_method: string | null
+          pix_copy_paste: string | null
+          pix_qr_code: string | null
+          provider_id: string | null
+          status: string | null
+          type: Database["public"]["Enums"]["wallet_transaction_type"] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          asaas_invoice_url?: string | null
+          asaas_payment_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          pix_copy_paste?: string | null
+          pix_qr_code?: string | null
+          provider_id?: string | null
+          status?: string | null
+          type?: Database["public"]["Enums"]["wallet_transaction_type"] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          asaas_invoice_url?: string | null
+          asaas_payment_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          pix_copy_paste?: string | null
+          pix_qr_code?: string | null
+          provider_id?: string | null
+          status?: string | null
+          type?: Database["public"]["Enums"]["wallet_transaction_type"] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_sessions: {
+        Row: {
+          context: Json | null
+          created_at: string
+          current_state: string | null
+          customer_phone: string
+          establishment_id: string | null
+          id: string
+          order_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          current_state?: string | null
+          customer_phone: string
+          establishment_id?: string | null
+          id?: string
+          order_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          current_state?: string | null
+          customer_phone?: string
+          establishment_id?: string | null
+          id?: string
+          order_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_sessions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      establishment_drivers: {
+        Row: {
+          created_at: string
+          driver_id: string
+          establishment_id: string
+          id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          establishment_id: string
+          id?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          establishment_id?: string
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      product_option_groups: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          max_options: number
+          min_options: number
+          name: string
+          product_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          max_options?: number
+          min_options?: number
+          name: string
+          product_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          max_options?: number
+          min_options?: number
+          name?: string
+          product_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_options: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          is_available: boolean
+          name: string
+          price: number
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          is_available?: boolean
+          name: string
+          price: number
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          is_available?: boolean
+          name?: string
+          price?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_options_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "product_option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospects: {
+        Row: {
+          city: string
+          contact_info: string
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          city: string
+          contact_info: string
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          status?: string
+          type?: string
+        }
+        Update: {
+          city?: string
+          contact_info?: string
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      provider_withdrawals: {
+        Row: {
+          amount: number
+          bank_details: string | null
+          created_at: string
+          id: string
+          pix_key: string | null
+          provider_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          bank_details?: string | null
+          created_at?: string
+          id?: string
+          pix_key?: string | null
+          provider_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          bank_details?: string | null
+          created_at?: string
+          id?: string
+          pix_key?: string | null
+          provider_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      real_estate_realtors: {
+        Row: {
+          city: string | null
+          created_at: string
+          creci: string
+          full_name: string
+          id: string
+          phone: string
+          state: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          creci: string
+          full_name: string
+          id?: string
+          phone: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          creci?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          request_id: string
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          request_id: string
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1114,7 +1967,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "customer" | "establishment" | "driver"
+      app_role: "admin" | "customer" | "establishment" | "driver" | "provider" | "franchisee"
       order_status:
       | "pending"
       | "confirmed"
@@ -1123,7 +1976,11 @@ export type Database = {
       | "out_for_delivery"
       | "delivered"
       | "cancelled"
-      payment_method: "pix" | "credit_card" | "debit_card" | "cash"
+      payment_method: "pix" | "credit_card" | "debit_card" | "cash" | "wallet"
+      real_estate_status: "available" | "reserved" | "sold" | "rented"
+      real_estate_transaction_type: "sale" | "rent"
+      service_request_status: "pending" | "accepted" | "scheduled" | "completed" | "cancelled"
+      wallet_transaction_type: "credit" | "debit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1251,7 +2108,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer", "establishment", "driver"],
+      app_role: ["admin", "customer", "establishment", "driver", "provider", "franchisee"],
       order_status: [
         "pending",
         "confirmed",
@@ -1261,7 +2118,11 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
-      payment_method: ["pix", "credit_card", "debit_card", "cash"],
+      payment_method: ["pix", "credit_card", "debit_card", "cash", "wallet"],
+      real_estate_status: ["available", "reserved", "sold", "rented"],
+      real_estate_transaction_type: ["sale", "rent"],
+      service_request_status: ["pending", "accepted", "scheduled", "completed", "cancelled"],
+      wallet_transaction_type: ["credit", "debit"],
     },
   },
 } as const

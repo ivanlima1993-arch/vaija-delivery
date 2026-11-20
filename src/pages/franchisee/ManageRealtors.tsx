@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-    Building, ShieldCheck, CheckCircle2, XCircle, 
-    Search, Filter, ExternalLink, Loader2, User,
-    Phone, FileText, MapPin, Calendar, Clock, Menu, X, ArrowLeft
+    Building, ShieldCheck, CheckCircle2,
+    Search, Loader2, User,
+    Clock, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
     Dialog, 
     DialogContent, 
-    DialogHeader, 
     DialogTitle, 
-    DialogDescription,
     DialogFooter 
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";

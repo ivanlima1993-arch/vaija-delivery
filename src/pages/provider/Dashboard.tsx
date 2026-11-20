@@ -1,35 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-    Briefcase,
     Clock,
-    MapPin,
     CheckCircle2,
-    XCircle,
     MessageSquare,
     DollarSign,
-    Menu,
-    Bell,
-    Volume2,
     ShieldCheck,
     AlertCircle,
     History,
-    Settings,
-    User,
-    LogOut,
-    Star,
     CreditCard,
     QrCode,
     Copy,
-    Check,
     Calendar as CalendarIcon,
-    Building
+    Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { 
     Dialog, 
     DialogContent, 
@@ -49,7 +36,7 @@ import ProviderAlerts from "@/components/provider/ProviderAlerts";
 import ServiceRequestCard from "@/components/provider/ServiceRequestCard";
 import AcceptedServiceCard from "@/components/provider/AcceptedServiceCard";
 import ChatDrawer from "@/components/provider/ChatDrawer";
-import { Trophy, Zap, Star as StarIcon, TrendingUp } from "lucide-react";
+import { Trophy, Zap, TrendingUp } from "lucide-react";
 import { useProviderNotifications } from "@/hooks/useProviderNotifications";
 
 
@@ -58,7 +45,7 @@ const ProviderDashboard = () => {
     const navigate = useNavigate();
     const { user, signOut } = useAuth();
     const [isOnline, setIsOnline] = useState(false);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [, setSidebarOpen] = useState(false);
     const [providerData, setProviderData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
@@ -97,12 +84,13 @@ const ProviderDashboard = () => {
     }, [user]);
 
     const fetchRequests = async () => {
+        if (!user) return;
         try {
             // First get the provider's ID
             const { data: provider } = await supabase
                 .from("service_providers")
                 .select("id")
-                .eq("user_id", user?.id)
+                .eq("user_id", user.id)
                 .single();
 
             if (!provider) return;
@@ -116,7 +104,9 @@ const ProviderDashboard = () => {
             if (error) throw error;
             
             // Fetch customer names from profiles for these requests to ensure they appear
-            const customerIds = [...new Set(data?.map(r => r.customer_id).filter(Boolean))];
+            const customerIds = [...new Set(
+                data?.map(r => r.customer_id).filter((id): id is string => Boolean(id)) ?? []
+            )];
             
             if (customerIds.length > 0) {
                 const { data: profiles } = await supabase
@@ -125,7 +115,7 @@ const ProviderDashboard = () => {
                     .in("user_id", customerIds);
                 
                 const profileMap = (profiles || []).reduce((acc: Record<string, string>, p) => {
-                    acc[p.user_id] = p.full_name;
+                    if (p.full_name) acc[p.user_id] = p.full_name;
                     return acc;
                 }, {});
 
@@ -144,11 +134,12 @@ const ProviderDashboard = () => {
     };
 
     const fetchProviderData = async () => {
+        if (!user) return;
         try {
             const { data, error } = await supabase
                 .from("service_providers")
                 .select("*")
-                .eq("user_id", user?.id)
+                .eq("user_id", user.id)
                 .maybeSingle();
 
             if (error) throw error;
@@ -163,7 +154,7 @@ const ProviderDashboard = () => {
             const { data: profile } = await supabase
                 .from("profiles")
                 .select("cpf_cnpj")
-                .eq("user_id", user?.id)
+                .eq("user_id", user.id)
                 .maybeSingle();
             if (profile?.cpf_cnpj) setCpf(profile.cpf_cnpj);
         } catch (error) {
@@ -376,6 +367,7 @@ const ProviderDashboard = () => {
     };
 
     const handleAcceptService = async (requestId: string) => {
+        if (!user) return;
         const CALL_FEE = 1.50;
         const MIN_ORDER_BALANCE = 15.00;
         
@@ -392,7 +384,7 @@ const ProviderDashboard = () => {
             const { error: txError } = await supabase
                 .from("wallet_transactions")
                 .insert([{
-                    user_id: user?.id,
+                    user_id: user.id,
                     amount: CALL_FEE,
                     type: "debit",
                     status: "confirmed",
@@ -422,6 +414,7 @@ const ProviderDashboard = () => {
     };
 
     const handleScheduleService = async () => {
+        if (!user || !selectedRequest) return;
         if (!scheduleDate) {
             toast.error("Selecione uma data e horário");
             return;
@@ -443,7 +436,7 @@ const ProviderDashboard = () => {
             const { error: txError } = await supabase
                 .from("wallet_transactions")
                 .insert([{
-                    user_id: user?.id,
+                    user_id: user.id,
                     amount: CALL_FEE,
                     type: "debit",
                     status: "confirmed",
@@ -483,7 +476,7 @@ const ProviderDashboard = () => {
             setProcessing(true);
             const { error } = await supabase
                 .from("service_requests")
-                .update({ status: 'rejected' })
+                .update({ status: 'cancelled' })
                 .eq("id", requestId);
 
             if (error) throw error;
@@ -499,6 +492,7 @@ const ProviderDashboard = () => {
     };
 
     const toggleOnline = async (checked: boolean) => {
+        if (!user) return;
         if (checked && (providerData?.wallet_balance || 0) < 15.00) {
             toast.error("Saldo mínimo de R$ 15,00 necessário para ficar Online");
             setIsOnline(false);
@@ -510,7 +504,7 @@ const ProviderDashboard = () => {
             await supabase
                 .from("service_providers")
                 .update({ is_active: checked })
-                .eq("user_id", user?.id);
+                .eq("user_id", user.id);
         } catch (error) {
             console.error("Error updating status:", error);
         }
@@ -723,12 +717,13 @@ const ProviderDashboard = () => {
                     </section>
                 </div>
 
-                <ChatDrawer 
+                {user && chatRequest && <ChatDrawer 
                     isOpen={isChatOpen}
                     onClose={() => setIsChatOpen(false)}
                     requestId={chatRequest?.id}
                     customerName={chatRequest?.customer_full_name || chatRequest?.customer_name || "Cliente"}
-                />
+                    currentUserId={user.id}
+                />}
             </main>
 
             {/* Deposit Dialog */}
@@ -949,7 +944,7 @@ const ProviderDashboard = () => {
                                 <div className="pt-6 flex flex-col gap-3">
                                     <Button 
                                         className="w-full h-16 rounded-2xl font-black text-lg bg-primary shadow-xl shadow-primary/20"
-                                        onClick={handleDeposit}
+                                        onClick={() => handleDeposit()}
                                         disabled={processing}
                                     >
                                         {processing ? "PROCESSANDO..." : "PAGAR R$ " + parseFloat(depositValue).toFixed(2)}

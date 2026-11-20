@@ -13,7 +13,7 @@ export const NotificationPermissionBanner = ({
   variant = "full",
   className,
 }: NotificationPermissionBannerProps) => {
-  const { isSupported, permission, isGranted, isDenied, requestPermission } = usePushNotifications();
+  const { isSupported, isGranted, isDenied, requestPermission } = usePushNotifications();
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {

@@ -27,8 +27,6 @@ import {
   Image as ImageIcon,
   Zap,
   TrendingUp,
-  History,
-  CheckCircle2,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import type { Database } from "@/integrations/supabase/types";
@@ -38,7 +36,7 @@ type Order = Database["public"]["Tables"]["orders"]["Row"];
 
 const EstablishmentDashboard = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, isEstablishment, signOut } = useAuth();
+  const { user, loading: authLoading, isEstablishment } = useAuth();
   const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +84,7 @@ const EstablishmentDashboard = () => {
   const checkApproval = async (retry = true) => {
     if (!user?.id) return;
 
-    const { data: est, error } = await supabase
+    const { data: est } = await supabase
       .from("establishments")
       .select("*")
       .eq("owner_id", user.id)
@@ -114,29 +112,8 @@ const EstablishmentDashboard = () => {
     }
   };
 
-  const fetchEstablishment = async () => {
-    try {
-      const { data: estab, error } = await supabase
-        .from("establishments")
-        .select("*")
-        .eq("owner_id", user!.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (estab) {
-        setEstablishment(estab);
-        fetchOrders(estab.id);
-      }
-    } catch (error: any) {
-      toast.error("Erro ao carregar estabelecimento");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchOrders = async (establishmentId: string) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("orders")
       .select("*")
       .eq("establishment_id", establishmentId)

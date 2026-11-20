@@ -31,8 +31,8 @@ interface Banner {
   subtitle: string | null;
   button_text: string | null;
   link_url: string | null;
-  position: number;
-  is_active: boolean;
+  position: number | null;
+  is_active: boolean | null;
   expires_at: string | null;
   created_at: string;
 }

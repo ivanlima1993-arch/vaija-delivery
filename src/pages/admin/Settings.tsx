@@ -15,8 +15,6 @@ import {
   Settings,
   Bell,
   Shield,
-  Palette,
-  Globe,
   Save,
 } from "lucide-react";
 
@@ -80,8 +78,31 @@ const AdminSettings = () => {
         const platform = data.find(s => s.key === "general");
         const support = data.find(s => s.key === "support");
 
-        if (platform) setSettings(prev => ({ ...prev, ...platform.value }));
-        if (support) setSupportSettings(prev => ({ ...prev, ...support.value }));
+        if (platform && typeof platform.value === "object" && platform.value !== null && !Array.isArray(platform.value)) {
+          const value = platform.value;
+          setSettings(prev => ({
+            ...prev,
+            ...(typeof value.platformName === "string" ? { platformName: value.platformName } : {}),
+            ...(typeof value.supportEmail === "string" ? { supportEmail: value.supportEmail } : {}),
+            ...(typeof value.supportPhone === "string" ? { supportPhone: value.supportPhone } : {}),
+            ...(typeof value.autoApproveEstablishments === "boolean" ? { autoApproveEstablishments: value.autoApproveEstablishments } : {}),
+            ...(typeof value.emailNotifications === "boolean" ? { emailNotifications: value.emailNotifications } : {}),
+            ...(typeof value.pushNotifications === "boolean" ? { pushNotifications: value.pushNotifications } : {}),
+            ...(typeof value.maintenanceMode === "boolean" ? { maintenanceMode: value.maintenanceMode } : {}),
+          }));
+        }
+        if (support && typeof support.value === "object" && support.value !== null && !Array.isArray(support.value)) {
+          const value = support.value;
+          setSupportSettings(prev => ({
+            ...prev,
+            ...(typeof value.whatsapp === "string" ? { whatsapp: value.whatsapp } : {}),
+            ...(typeof value.email === "string" ? { email: value.email } : {}),
+            ...(typeof value.chatUrl === "string" ? { chatUrl: value.chatUrl } : {}),
+            ...(Array.isArray(value.days) ? { days: value.days.filter((day): day is string => typeof day === "string") } : {}),
+            ...(typeof value.startTime === "string" ? { startTime: value.startTime } : {}),
+            ...(typeof value.endTime === "string" ? { endTime: value.endTime } : {}),
+          }));
+        }
       }
     } catch (error) {
       console.error("Error loading settings:", error);

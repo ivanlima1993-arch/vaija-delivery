@@ -4,7 +4,7 @@ import { Building, ShieldCheck, FileText, Phone, User, CheckCircle2, Loader2, Ar
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -34,7 +34,7 @@ const RealtorAuth = () => {
 
     const checkRealtorStatus = async () => {
         try {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from("real_estate_realtors")
                 .select("status, full_name, creci, phone, city, state")
                 .eq("user_id", user?.id)

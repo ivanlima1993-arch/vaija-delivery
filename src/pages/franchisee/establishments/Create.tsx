@@ -24,12 +24,8 @@ import {
   Store,
   ArrowLeft,
   User,
-  Mail,
-  Lock,
-  Phone,
   MapPin,
   Clock,
-  DollarSign,
   Loader2
 } from "lucide-react";
 import { ESTABLISHMENT_CATEGORIES } from "@/constants/categories";
@@ -38,7 +34,7 @@ const CreateEstablishment = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState<any[]>([]);
-  const [franchisee, setFranchisee] = useState<any>(null);
+  const [, setFranchisee] = useState<any>(null);
 
   // Owner data
   const [ownerData, setOwnerData] = useState({

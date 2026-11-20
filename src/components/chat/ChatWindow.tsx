@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, X, Loader2, User } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 interface Message {
@@ -55,7 +55,7 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
   }, [messages]);
 
   const initChat = async () => {
-    if (initializingRef.current || roomId) return;
+    if (!user || initializingRef.current || roomId) return;
     
     try {
       initializingRef.current = true;
@@ -132,10 +132,11 @@ const ChatWindow = ({ orderId, participantId, participantName, participantAvatar
         await fetchMessages(room.id);
         unsubscribeRef.current = await subscribeToMessages(room.id);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Chat init error:", error);
-      if (error.message !== "ID do participante não identificado.") {
-        toast.error(`Erro ao iniciar chat: ${error.message || 'Erro desconhecido'}`);
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      if (errorMessage !== "ID do participante não identificado.") {
+        toast.error(`Erro ao iniciar chat: ${errorMessage}`);
       }
     } finally {
       initializingRef.current = false;

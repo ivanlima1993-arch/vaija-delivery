@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Send, X, User, Check, CheckCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ interface Message {
     sender_id: string;
     content: string;
     created_at: string;
-    status: 'sent' | 'delivered' | 'read';
+    status: string;
 }
 
 interface ChatDrawerProps {
@@ -28,13 +28,6 @@ const ChatDrawer = ({ isOpen, onClose, requestId, customerName, currentUserId }:
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (isOpen && requestId) {
-            fetchMessages();
-            subscribeToMessages();
-        }
-    }, [isOpen, requestId]);
-
-    useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
@@ -44,19 +37,24 @@ const ChatDrawer = ({ isOpen, onClose, requestId, customerName, currentUserId }:
         }
     };
 
-    const fetchMessages = async () => {
+    const fetchMessages = useCallback(async () => {
         setLoading(true);
         const { data, error } = await supabase
-            .from("service_messages" as any)
+            .from("service_messages")
             .select("*")
             .eq("request_id", requestId)
             .order("created_at", { ascending: true });
 
-        if (data) setMessages(data);
+        if (error) {
+            console.error("Error fetching service messages:", error);
+            setMessages([]);
+        } else if (data) {
+            setMessages(data);
+        }
         setLoading(false);
-    };
+    }, [requestId]);
 
-    const subscribeToMessages = () => {
+    const subscribeToMessages = useCallback(() => {
         const channel = supabase
             .channel(`chat:${requestId}`)
             .on(
@@ -76,7 +74,13 @@ const ChatDrawer = ({ isOpen, onClose, requestId, customerName, currentUserId }:
         return () => {
             supabase.removeChannel(channel);
         };
-    };
+    }, [requestId]);
+
+    useEffect(() => {
+        if (!isOpen || !requestId) return;
+        fetchMessages();
+        return subscribeToMessages();
+    }, [isOpen, requestId, fetchMessages, subscribeToMessages]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,7 +94,7 @@ const ChatDrawer = ({ isOpen, onClose, requestId, customerName, currentUserId }:
         };
 
         setNewMessage("");
-        const { error } = await supabase.from("service_messages" as any).insert([messageData]);
+        const { error } = await supabase.from("service_messages").insert([messageData]);
         if (error) {
             console.error("Error sending message:", error);
         }

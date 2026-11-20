@@ -18,7 +18,6 @@ const ProviderHeader = ({
     toggleOnline, 
     onSignOut, 
     onMenuClick,
-    hasPendingSounds 
 }: ProviderHeaderProps) => {
     return (
         <header className="sticky top-0 z-30 bg-card/95 backdrop-blur border-b px-4 py-3">

@@ -3,7 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useDriverLocationSubscription } from "@/hooks/useDriverLocationSubscription";
 import { supabase } from "@/integrations/supabase/client";
-import { Bike, MapPin, Store, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface DriverTrackingMapProps {

@@ -6,21 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAddress } from "@/contexts/AddressContext";
 
-interface Promotion {
-  id: string;
-  title: string;
-  description: string | null;
-  discount_type: string;
-  discount_value: number | null;
-  banner_url: string | null;
-  valid_from: string;
-  valid_until: string | null;
-  is_active: boolean | null;
-  city_id: string | null;
-  neighborhood_id: string | null;
-  establishment_id: string | null;
-}
-
 const MOCK_PROMOS = [
   {
     id: "1",

@@ -181,32 +181,34 @@ export const useOrderNotification = ({
     const orderNumber = order.order_number || '---';
     const orderTotal = Number(order.total || 0).toFixed(2);
 
-    const toastId = toastVariant(
-      <div
-        className="flex items-center gap-4 w-full cursor-pointer p-1"
-        onClick={() => {
-          navigate("/estabelecimento/pedidos");
-          toast.dismiss(toastsRef.current.get(order.id));
-          toastsRef.current.delete(order.id);
-        }}
-      >
-        <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center relative overflow-hidden group">
-          <div className="absolute inset-0 bg-primary opacity-20 animate-ping rounded-full"></div>
-          <span className="text-primary text-xl relative z-10">🔔</span>
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <p className="font-extrabold text-base text-primary uppercase tracking-tight">Novo Pedido Recebido!</p>
-            <span className="text-[10px] bg-primary/10 px-2 py-0.5 rounded-full font-bold">AGORA</span>
+    const toastId = toast.custom(
+      () => (
+        <div
+          className="flex items-center gap-4 w-full cursor-pointer p-1"
+          onClick={() => {
+            navigate("/estabelecimento/pedidos");
+            toast.dismiss(toastsRef.current.get(order.id));
+            toastsRef.current.delete(order.id);
+          }}
+        >
+          <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-primary opacity-20 animate-ping rounded-full"></div>
+            <span className="text-primary text-xl relative z-10">🔔</span>
           </div>
-          <p className="text-sm font-medium mt-0.5">
-            Ref: <span className="font-bold">#{orderNumber}</span> • Total: <span className="text-green-600 font-bold">R$ {orderTotal}</span>
-          </p>
-          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 italic">
-            Clique para aceitar ou recusar este pedido
-          </p>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <p className="font-extrabold text-base text-primary uppercase tracking-tight">Novo Pedido Recebido!</p>
+              <span className="text-[10px] bg-primary/10 px-2 py-0.5 rounded-full font-bold">AGORA</span>
+            </div>
+            <p className="text-sm font-medium mt-0.5">
+              Ref: <span className="font-bold">#{orderNumber}</span> • Total: <span className="text-green-600 font-bold">R$ {orderTotal}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 italic">
+              Clique para aceitar ou recusar este pedido
+            </p>
+          </div>
         </div>
-      </div>,
+      ),
       {
         duration: Infinity,
         position: "top-center",
@@ -243,7 +245,7 @@ export const useOrderNotification = ({
         }
       });
     }
-  }, [addOrderToSoundList]);
+  }, [addOrderToSoundList, navigate]);
 
   const requestNotificationPermission = useCallback(async () => {
     if ("Notification" in window && Notification.permission === "default") {

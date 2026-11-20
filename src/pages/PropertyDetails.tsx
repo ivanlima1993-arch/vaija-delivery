@@ -11,7 +11,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { 
     Dialog, 
     DialogContent, 
-    DialogHeader, 
     DialogTitle, 
     DialogDescription,
     DialogFooter 
@@ -47,6 +46,10 @@ const PropertyDetails = () => {
     }, [id]);
 
     const fetchPropertyDetails = async () => {
+        if (!id) {
+            setLoading(false);
+            return;
+        }
         try {
             setLoading(true);
             const { data, error } = await supabase

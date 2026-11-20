@@ -4,8 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { 
     Building, Search, MapPin, Bed, Bath, Car, 
-    Filter, MessageCircle, X, Loader2, Sparkles, 
-    ArrowRight, ChevronDown, SlidersHorizontal
+    MessageCircle, Loader2, Sparkles, SlidersHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
     Dialog, 
     DialogContent, 
-    DialogHeader, 
     DialogTitle, 
     DialogDescription,
     DialogFooter 

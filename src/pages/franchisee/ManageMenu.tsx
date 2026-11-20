@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,8 +17,6 @@ import {
   Trash2,
   Package,
   FolderOpen,
-  X,
-  Image,
   Search,
   Clock,
   ArrowUp,
@@ -26,7 +24,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
-import ProductOptionsEditor from "@/components/establishment/ProductOptionsEditor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -48,9 +45,6 @@ const ManageMenu = () => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [selectedProductForOptions, setSelectedProductForOptions] = useState<string | null>(null);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 

@@ -10,9 +10,6 @@ import {
     FileText, 
     CheckCircle2,
     Sparkles,
-    HardHat,
-    Hammer,
-    Paintbrush,
     Zap,
     Loader2,
     Lock,
@@ -34,6 +31,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 const CATEGORIES = [
@@ -80,7 +78,7 @@ const ProviderAuth = () => {
         image_url: "",
     });
 
-    const [cities, setCities] = useState<any[]>([]);
+    const [cities, setCities] = useState<Tables<"cities">[]>([]);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -160,7 +158,7 @@ const ProviderAuth = () => {
 
                 // 4. Create Service Provider Record
                 const { error: insertError } = await supabase
-                    .from("service_providers" as any)
+                    .from("service_providers")
                     .insert([{
                         id: crypto.randomUUID(),
                         user_id: authData.user.id,
@@ -183,9 +181,9 @@ const ProviderAuth = () => {
                 setSubmitted(true);
                 toast.success("Cadastro enviado com sucesso! Aguarde a aprovação.");
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Erro no cadastro:", error);
-            toast.error("Erro ao enviar cadastro: " + error.message);
+            toast.error("Erro ao enviar cadastro: " + (error instanceof Error ? error.message : "Erro desconhecido"));
         } finally {
             setLoading(false);
         }
@@ -206,7 +204,11 @@ const ProviderAuth = () => {
             if (fetchError) throw fetchError;
             if (!provider) {
                 toast.error("CPF não encontrado nos nossos registros de profissionais.");
-                setLoading(false);
+                return;
+            }
+
+            if (!provider.email) {
+                toast.error("Este cadastro não possui um e-mail associado.");
                 return;
             }
 
@@ -220,9 +222,12 @@ const ProviderAuth = () => {
 
             toast.success("Login realizado com sucesso!");
             navigate("/profissional");
-    } finally {
-        setLoading(false);
-    }
+        } catch (error) {
+            console.error("Erro no login:", error);
+            toast.error(error instanceof Error ? error.message : "Erro ao fazer login");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleForgotPassword = async (e: React.FormEvent) => {
@@ -255,8 +260,8 @@ const ProviderAuth = () => {
 
             toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
             setAuthMode("login");
-        } catch (error: any) {
-            toast.error(error.message || "Erro ao enviar e-mail de recuperação");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Erro ao enviar e-mail de recuperação");
         } finally {
             setLoading(false);
         }

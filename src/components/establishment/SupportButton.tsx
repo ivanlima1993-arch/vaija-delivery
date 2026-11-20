@@ -8,13 +8,10 @@ import {
   Headset,
   Send,
   ChevronDown,
-  Smile,
-  Paperclip,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -74,7 +71,18 @@ export const SupportButton = () => {
   const fetchSettings = async () => {
     try {
       const { data } = await supabase.from("site_settings").select("*").eq("key", "support").maybeSingle();
-      if (data) setSettings(prev => ({ ...prev, ...data.value }));
+      if (data && typeof data.value === "object" && data.value !== null && !Array.isArray(data.value)) {
+        const value = data.value;
+        setSettings(prev => ({
+          ...prev,
+          ...(typeof value.whatsapp === "string" ? { whatsapp: value.whatsapp } : {}),
+          ...(typeof value.email === "string" ? { email: value.email } : {}),
+          ...(typeof value.chatUrl === "string" ? { chatUrl: value.chatUrl } : {}),
+          ...(Array.isArray(value.days) ? { days: value.days.filter((day): day is string => typeof day === "string") } : {}),
+          ...(typeof value.startTime === "string" ? { startTime: value.startTime } : {}),
+          ...(typeof value.endTime === "string" ? { endTime: value.endTime } : {}),
+        }));
+      }
     } catch (e) {
       console.error("Error fetching support settings:", e);
     }

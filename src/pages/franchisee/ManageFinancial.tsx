@@ -1,36 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-    Wallet, ArrowLeft, Loader2, DollarSign, 
-    ArrowUpRight, Clock, CheckCircle2, XCircle, 
-    TrendingUp, ShieldCheck, Landmark, Copy, Save
+    Wallet, ArrowLeft, Loader2, DollarSign,
+    ArrowUpRight, Clock, TrendingUp, Landmark, Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface FranchiseeData {
-    id: string;
-    user_id: string;
-    commission_rate: number;
-    bank_account_info: any;
-}
-
-interface WithdrawalRequest {
-    id: string;
-    amount: number;
-    status: string;
-    requested_at: string;
-    processed_at: string | null;
-    rejection_reason: string | null;
-    pix_key: string | null;
-}
+type FranchiseeData = Tables<"franchisees">;
+type WithdrawalRequest = Tables<"franchisee_withdrawals">;
 
 const ManageFranchiseeFinancial = () => {
     const navigate = useNavigate();
@@ -83,11 +68,18 @@ const ManageFranchiseeFinancial = () => {
             setFranchisee(franchiseeData);
 
             // Populate bank form state
-            const bankInfo = franchiseeData.bank_account_info || {};
-            setPixKey(bankInfo.pix_key || "");
-            setBankName(bankInfo.bank_name || "");
-            setPixType(bankInfo.pix_key_type || "cpf_cnpj");
-            setHolderName(bankInfo.holder_name || "");
+            const bankInfo = franchiseeData.bank_account_info;
+            if (bankInfo && typeof bankInfo === "object" && !Array.isArray(bankInfo)) {
+                setPixKey(typeof bankInfo.pix_key === "string" ? bankInfo.pix_key : "");
+                setBankName(typeof bankInfo.bank_name === "string" ? bankInfo.bank_name : "");
+                setPixType(typeof bankInfo.pix_key_type === "string" ? bankInfo.pix_key_type : "cpf_cnpj");
+                setHolderName(typeof bankInfo.holder_name === "string" ? bankInfo.holder_name : "");
+            } else {
+                setPixKey("");
+                setBankName("");
+                setPixType("cpf_cnpj");
+                setHolderName("");
+            }
 
             // 2. Fetch managed cities
             const { data: cities, error: citiesError } = await supabase
@@ -129,13 +121,13 @@ const ManageFranchiseeFinancial = () => {
 
             // 5. Fetch withdrawals
             const { data: wRes, error: wError } = await supabase
-                .from("franchisee_withdrawals" as any)
+                .from("franchisee_withdrawals")
                 .select("*")
                 .eq("franchisee_id", user!.id)
                 .order("requested_at", { ascending: false });
 
             if (wError) throw wError;
-            const withdrawalsList = (wRes || []) as WithdrawalRequest[];
+            const withdrawalsList: WithdrawalRequest[] = wRes || [];
             setWithdrawals(withdrawalsList);
 
             // 6. Calculate breakdown

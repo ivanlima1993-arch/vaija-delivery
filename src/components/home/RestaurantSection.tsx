@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAddress } from "@/contexts/AddressContext";
 import RestaurantCard from "./RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Zap, Star, Bike, Clock, Search, MapPin, MessageSquare, Send, CheckCircle2, Phone, Building2 } from "lucide-react";
+import { Zap, Star, Bike, Clock, Search, MapPin, Send, CheckCircle2, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";

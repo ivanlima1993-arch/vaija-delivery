@@ -21,7 +21,7 @@ const MapPicker = ({ initialCoordinates, onLocationSelect, height = "300px", cit
   const marker = useRef<mapboxgl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [currentCoords, setCurrentCoords] = useState<Coordinates | null>(initialCoordinates || null);
+  const [, setCurrentCoords] = useState<Coordinates | null>(initialCoordinates || null);
 
   const { getCurrentPosition, isLoading: geoLoading } = useGeolocation();
   const { reverseGeocode, geocode, isLoading: mapboxLoading } = useMapbox();

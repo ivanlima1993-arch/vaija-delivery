@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
-import { Menu, Users, Star, MapPin, UserPlus, Trash2, Settings } from "lucide-react";
+import { Menu, Users, MapPin, UserPlus, Trash2, Settings } from "lucide-react";
 import { useEstablishment } from "@/hooks/useEstablishment";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,14 +29,7 @@ const EstablishmentDrivers = () => {
   const [ownDeliveryEnabled, setOwnDeliveryEnabled] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
 
-  useEffect(() => {
-    if (establishment) {
-      fetchData();
-      fetchSettings();
-    }
-  }, [establishment]);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     if (!establishment) return;
 
     try {
@@ -58,7 +50,7 @@ const EstablishmentDrivers = () => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [establishment]);
 
   const handleToggleOwnDelivery = async (enabled: boolean) => {
     if (!establishment) return;
@@ -76,7 +68,7 @@ const EstablishmentDrivers = () => {
 
       setOwnDeliveryEnabled(enabled);
       toast.success(enabled ? "Entregas próprias ativadas" : "Entregas próprias desativadas");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating settings:", error);
       toast.error("Erro ao atualizar configuração. Verifique se a coluna own_delivery_enabled existe na tabela establishment_settings.");
     } finally {
@@ -84,13 +76,7 @@ const EstablishmentDrivers = () => {
     }
   };
 
-  const fetchData = async () => {
-    setLoadingData(true);
-    await Promise.all([fetchDrivers(), fetchLinkedDrivers()]);
-    setLoadingData(false);
-  };
-
-  const fetchDrivers = async () => {
+  const fetchDrivers = useCallback(async () => {
     // Get unique drivers from delivered orders for this establishment
     const { data: orders } = await supabase
       .from("orders")
@@ -133,16 +119,13 @@ const EstablishmentDrivers = () => {
 
     driverList.sort((a, b) => b.deliveries - a.deliveries);
     setDrivers(driverList);
-  };
+  }, [establishment]);
 
-  const fetchLinkedDrivers = async () => {
+  const fetchLinkedDrivers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("establishment_drivers")
-        .select(`
-          driver_id,
-          profiles:driver_id (full_name)
-        `)
+        .select("driver_id")
         .eq("establishment_id", establishment!.id)
         .eq("status", "active");
 
@@ -151,9 +134,20 @@ const EstablishmentDrivers = () => {
         return;
       }
 
-      const list: DriverInfo[] = (data || []).map((d: any) => ({
+      const driverIds = data.map((driver) => driver.driver_id);
+      const { data: profiles, error: profilesError } = driverIds.length
+        ? await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", driverIds)
+        : { data: [], error: null };
+
+      if (profilesError) throw profilesError;
+
+      const namesByUserId = new Map((profiles || []).map((profile) => [profile.user_id, profile.full_name]));
+      const list: DriverInfo[] = data.map((d) => ({
         driver_id: d.driver_id,
-        name: d.profiles?.full_name || "Entregador",
+        name: namesByUserId.get(d.driver_id) || "Entregador",
         deliveries: 0, // We could fetch this too but keeping it simple
         isActive: false,
         isLinked: true
@@ -163,7 +157,20 @@ const EstablishmentDrivers = () => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [establishment]);
+
+  const fetchData = useCallback(async () => {
+    setLoadingData(true);
+    await Promise.all([fetchDrivers(), fetchLinkedDrivers()]);
+    setLoadingData(false);
+  }, [fetchDrivers, fetchLinkedDrivers]);
+
+  useEffect(() => {
+    if (establishment) {
+      void fetchData();
+      void fetchSettings();
+    }
+  }, [establishment, fetchData, fetchSettings]);
 
   const handleUnlinkDriver = async (driverId: string) => {
     if (!establishment) return;
@@ -179,7 +186,7 @@ const EstablishmentDrivers = () => {
 
       toast.success("Entregador desvinculado");
       fetchLinkedDrivers();
-    } catch (error: any) {
+    } catch {
       toast.error("Erro ao desvincular entregador");
     }
   };

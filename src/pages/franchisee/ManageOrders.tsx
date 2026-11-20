@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
@@ -18,11 +18,7 @@ import {
   Truck,
   Package,
   ArrowLeft,
-  Printer,
-  CreditCard,
-  Wallet,
   Building2,
-  Filter,
 } from "lucide-react";
 import ChatButton from "@/components/chat/ChatButton";
 import type { Database } from "@/integrations/supabase/types";

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-    Building, Plus, MapPin, DollarSign, Bed, Bath, Car, 
+    Building, Plus, Bed, Bath,
     ArrowLeft, Loader2, Image as ImageIcon, X, LogOut, 
     MessageSquare, User, Calendar, Trash2, ExternalLink,
-    Sparkles, Info, Lightbulb, MessageCircle
+    Sparkles, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { 
     Dialog, 
     DialogContent, 
-    DialogHeader, 
     DialogTitle, 
     DialogDescription,
     DialogFooter 

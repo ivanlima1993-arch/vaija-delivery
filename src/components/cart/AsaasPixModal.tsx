@@ -18,16 +18,12 @@ interface AsaasPixModalProps {
 
 const AsaasPixModal = ({ open, onClose, pixData, onPaymentConfirmed }: AsaasPixModalProps) => {
   const [status, setStatus] = useState<"waiting" | "confirmed" | "failed">("waiting");
-  const [checking, setChecking] = useState(false);
-
   useEffect(() => {
     if (!open || !pixData) return;
     setStatus("waiting");
 
     const interval = setInterval(async () => {
-      setChecking(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         const res = await supabase.functions.invoke("asaas-payment", {
           body: { action: "check_status", paymentId: pixData.paymentId },
         });
@@ -43,7 +39,6 @@ const AsaasPixModal = ({ open, onClose, pixData, onPaymentConfirmed }: AsaasPixM
       } catch (e) {
         console.error("Error checking payment status:", e);
       }
-      setChecking(false);
     }, 5000);
 
     return () => clearInterval(interval);

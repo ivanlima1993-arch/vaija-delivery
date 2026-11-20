@@ -7,6 +7,7 @@ import { Menu, MapPin, Clock, Package, Eye, UserPlus, Printer } from "lucide-rea
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import { useEstablishment } from "@/hooks/useEstablishment";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const EstablishmentDeliveries = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

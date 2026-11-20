@@ -74,6 +74,7 @@ export const useAuth = () => {
           isEstablishment: false,
           isAdmin: false,
           isDriver: false,
+          isProvider: false,
           isDriverApproved: false,
           driverRejectionReason: null,
           driverRegistrationSubmittedAt: null,
@@ -109,6 +110,7 @@ export const useAuth = () => {
             isEstablishment: false,
             isAdmin: false,
             isDriver: false,
+            isProvider: false,
             isDriverApproved: false,
             driverRejectionReason: null,
             driverRegistrationSubmittedAt: null,
@@ -128,7 +130,7 @@ export const useAuth = () => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         const user = session?.user ?? null;
 
         if (user) {
@@ -154,6 +156,7 @@ export const useAuth = () => {
             isEstablishment: false,
             isAdmin: false,
             isDriver: false,
+            isProvider: false,
             isDriverApproved: false,
             driverRejectionReason: null,
             driverRegistrationSubmittedAt: null,

@@ -24,11 +24,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  ArrowLeft,
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Calendar,
   Package,
   Wallet,
   PiggyBank,
@@ -36,7 +34,7 @@ import {
   Star,
   Menu,
 } from "lucide-react";
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
+import { format, subDays, startOfWeek, startOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Database } from "@/integrations/supabase/types";
 

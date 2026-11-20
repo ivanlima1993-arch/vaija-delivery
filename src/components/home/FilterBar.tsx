@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Star, Clock, Bike, DollarSign, X } from "lucide-react";
+import { Star, Clock, Bike, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export interface FilterOptions {

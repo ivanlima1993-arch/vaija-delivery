@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Plus, Check, Home, Briefcase, Map, Navigation, Loader2, Route } from "lucide-react";
+import { MapPin, Plus, Check, Home, Briefcase, Map, Navigation, Route } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -67,7 +67,7 @@ const DeliveryAddressSelector = ({ selectedAddress, onAddressChange }: DeliveryA
   const { selectedCityId, selectedCityName } = useAddress();
   const [addressMode, setAddressMode] = useState<"manual" | "map">("manual");
   const [mapAddress, setMapAddress] = useState<GeocodedAddress | null>(null);
-  const { calculateFee, isLoading: calculatingFee } = useDeliveryFee();
+  const { calculateFee } = useDeliveryFee();
   const { establishmentId } = useCart();
 
   const [newAddress, setNewAddress] = useState<{

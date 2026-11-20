@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Tag, X, Loader2, Check, Percent, Gift } from "lucide-react";
+import { Tag, X, Loader2, Check, Gift } from "lucide-react";
 
 interface Coupon {
   id: string;
@@ -66,7 +66,7 @@ export const CouponInput = ({
       }
 
       // Check usage limit
-      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+      if (coupon.usage_limit && (coupon.usage_count ?? 0) >= coupon.usage_limit) {
         toast.error("Este cupom atingiu o limite de uso");
         return;
       }

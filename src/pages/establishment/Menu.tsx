@@ -19,15 +19,12 @@ import {
   Package,
   FolderOpen,
   X,
-  Image,
   Menu,
-  DollarSign,
   UserPlus,
   Search,
   Clock,
   ArrowUp,
   ArrowDown,
-  Filter,
 } from "lucide-react";
 import LinkDriverDialog from "@/components/establishment/LinkDriverDialog";
 import ImageUpload from "@/components/admin/ImageUpload";
@@ -54,7 +51,7 @@ const EstablishmentMenu = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [selectedProductForOptions, setSelectedProductForOptions] = useState<string | null>(null);
+  const [selectedProductForOptions] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");

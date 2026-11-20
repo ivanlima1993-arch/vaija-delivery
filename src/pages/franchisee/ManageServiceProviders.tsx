@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -32,22 +31,9 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import {
-    Wrench,
     Search,
-    Menu,
     Plus,
-    Trash2,
     User,
-    Star,
-    MapPin,
-    FileText,
-    Calendar,
-    Home,
-    DollarSign,
-    CheckCircle,
-    XCircle,
-    Check,
-    X,
     ArrowLeft,
     Loader2
 } from "lucide-react";
@@ -82,7 +68,7 @@ const ManageServiceProviders = () => {
     const [isAddMode, setIsAddMode] = useState(false);
     const [selectedProvider, setSelectedProvider] = useState<any>(null);
     const [cities, setCities] = useState<any[]>([]);
-    const [managedCityIds, setManagedCityIds] = useState<string[]>([]);
+    const [, setManagedCityIds] = useState<string[]>([]);
     const [processing, setProcessing] = useState(false);
 
     // Form state
@@ -117,18 +103,18 @@ const ManageServiceProviders = () => {
             setLoading(true);
             // 1. Fetch managed cities
             const { data: citiesRes } = await supabase
-                .from("franchisee_cities" as any)
+                .from("franchisee_cities")
                 .select("city_id, cities(name, id)")
                 .eq("franchisee_id", user!.id);
 
-            const cityIds = citiesRes?.map(c => c.city_id) || [];
+            const cityIds = citiesRes?.map(c => c.city_id).filter((id): id is string => Boolean(id)) || [];
             const managedCitiesData = citiesRes?.map(c => c.cities) || [];
             setManagedCityIds(cityIds);
             setCities(managedCitiesData);
 
             // 2. Fetch providers in these cities
             const { data, error } = await supabase
-                .from("service_providers" as any)
+                .from("service_providers")
                 .select("*")
                 .in("city_id", cityIds)
                 .order("created_at", { ascending: false });
@@ -159,29 +145,6 @@ const ManageServiceProviders = () => {
             toast.success(currentStatus ? "Profissional desativado" : "Profissional aprovado!");
         } catch (error) {
             toast.error("Erro ao atualizar status");
-        }
-    };
-
-    const handleUpdateBalance = async (provider: any, newBalance: number) => {
-        const diff = newBalance - (provider.wallet_balance || 0);
-        if (diff === 0) return;
-
-        try {
-            const { error } = await supabase
-                .from("wallet_transactions" as any)
-                .insert([{
-                    user_id: provider.user_id,
-                    amount: Math.abs(diff),
-                    type: diff > 0 ? "credit" : "debit",
-                    description: `Ajuste Regional - Franqueado: ${user?.email}`
-                }]);
-            
-            if (error) throw error;
-            
-            setProviders(providers.map(p => p.id === provider.id ? { ...p, wallet_balance: newBalance } : p));
-            toast.success("Saldo atualizado");
-        } catch (error: any) {
-            toast.error("Erro ao atualizar saldo: " + error.message);
         }
     };
 

@@ -53,18 +53,18 @@ interface City {
   id: string;
   name: string;
   state: string;
-  is_active: boolean;
+  is_active: boolean | null;
   created_at: string;
-  instagram_url?: string;
-  facebook_url?: string;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
 }
 
 interface Neighborhood {
   id: string;
   city_id: string;
   name: string;
-  delivery_fee: number;
-  is_active: boolean;
+  delivery_fee: number | null;
+  is_active: boolean | null;
 }
 
 const BRAZILIAN_STATES = [
@@ -187,7 +187,7 @@ const Regions = () => {
 
   const handleEditCity = (city: City) => {
     setEditingCity(city);
-    setCityForm({ name: city.name, state: city.state, is_active: city.is_active, instagram_url: city.instagram_url || "", facebook_url: city.facebook_url || "" });
+    setCityForm({ name: city.name, state: city.state, is_active: city.is_active ?? false, instagram_url: city.instagram_url || "", facebook_url: city.facebook_url || "" });
     setCityDialogOpen(true);
   };
 
@@ -238,8 +238,8 @@ const Regions = () => {
     setNeighborhoodForm({
       city_id: neighborhood.city_id,
       name: neighborhood.name,
-      delivery_fee: neighborhood.delivery_fee,
-      is_active: neighborhood.is_active,
+      delivery_fee: neighborhood.delivery_fee ?? 0,
+      is_active: neighborhood.is_active ?? false,
     });
     setNeighborhoodDialogOpen(true);
   };
