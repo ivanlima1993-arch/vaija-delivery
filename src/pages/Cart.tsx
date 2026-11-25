@@ -193,21 +193,14 @@ const Cart = () => {
         setCurrentOrderId(order.id);
         setCreditCardModalOpen(true);
       } else if (selectedPayment === "wallet") {
-        // Debit from wallet
-        const order = await createOrder("paid");
+        // Create the order as pending and atomically debit through a trusted database function.
+        const order = await createOrder("pending");
+        const { error: paymentError } = await supabase.rpc("pay_order_with_wallet", {
+          p_order_id: order.id,
+          p_amount: finalTotal,
+        });
 
-        // Create wallet transaction
-        const { error: txError } = await supabase
-          .from("wallet_transactions")
-          .insert({
-            user_id: user.id,
-            amount: finalTotal,
-            type: "debit",
-            description: `Pagamento do Pedido #${order.order_number}`,
-            order_id: order.id
-          });
-
-        if (txError) throw txError;
+        if (paymentError) throw paymentError;
 
         toast.success("Pedido pago com saldo digital! 🎉");
         clearCart();
@@ -257,12 +250,10 @@ const Cart = () => {
       if (error || data?.error) throw new Error(data?.error || "Erro no pagamento");
 
       if (data.status === "CONFIRMED" || data.status === "RECEIVED") {
-        await supabase.from("orders").update({ payment_status: "paid" }).eq("id", currentOrderId);
         toast.success("Pagamento aprovado! 🎉");
         clearCart();
         navigate(`/pedido/${currentOrderId}`);
       } else if (data.status === "PENDING") {
-        await supabase.from("orders").update({ payment_status: "processing" }).eq("id", currentOrderId);
         toast.success("Pedido realizado! Pagamento em processamento.");
         clearCart();
         navigate(`/pedido/${currentOrderId}`);
@@ -279,7 +270,6 @@ const Cart = () => {
 
   const handlePixConfirmed = async () => {
     if (currentOrderId) {
-      await supabase.from("orders").update({ payment_status: "paid" }).eq("id", currentOrderId);
       clearCart();
       navigate(`/pedido/${currentOrderId}`);
     }

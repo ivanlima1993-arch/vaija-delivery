@@ -381,15 +381,10 @@ const ProviderDashboard = () => {
             setProcessing(true);
             
             // Create a transaction record
-            const { error: txError } = await supabase
-                .from("wallet_transactions")
-                .insert([{
-                    user_id: user.id,
-                    amount: CALL_FEE,
-                    type: "debit",
-                    status: "confirmed",
-                    description: `Taxa de serviço - Chamado #${requestId.slice(0, 8)} aceito`
-                }]);
+            const { error: txError } = await supabase.rpc("charge_provider_fee", {
+                p_amount: CALL_FEE,
+                p_description: `Taxa de serviço - Chamado #${requestId.slice(0, 8)} aceito`
+            });
 
             if (txError) throw txError;
 
@@ -433,15 +428,10 @@ const ProviderDashboard = () => {
             setProcessing(true);
             
             // Create a transaction record
-            const { error: txError } = await supabase
-                .from("wallet_transactions")
-                .insert([{
-                    user_id: user.id,
-                    amount: CALL_FEE,
-                    type: "debit",
-                    status: "confirmed",
-                    description: `Taxa de serviço - Chamado #${selectedRequest.id.slice(0, 8)} agendado`
-                }]);
+            const { error: txError } = await supabase.rpc("charge_provider_fee", {
+                p_amount: CALL_FEE,
+                p_description: `Taxa de serviço - Chamado #${selectedRequest.id.slice(0, 8)} agendado`
+            });
 
             if (txError) throw txError;
 

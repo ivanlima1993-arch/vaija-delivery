@@ -156,6 +156,22 @@ serve(async (req) => {
         }),
       });
 
+      if (payment.status === "CONFIRMED" || payment.status === "RECEIVED") {
+        const { data: order } = await supabase
+          .from("orders")
+          .select("id, customer_id, total")
+          .eq("id", orderId)
+          .eq("customer_id", user.id)
+          .maybeSingle();
+
+        if (order && Math.abs(Number(order.total) - Number(amount)) <= 0.01) {
+          await supabase
+            .from("orders")
+            .update({ payment_status: "paid" })
+            .eq("id", orderId);
+        }
+      }
+
       // Get PIX QR code
       const pixQr = await asaasFetch(`/payments/${payment.id}/pixQrCode`);
 
@@ -218,6 +234,22 @@ serve(async (req) => {
           },
         }),
       });
+
+      if (payment.status === "CONFIRMED" || payment.status === "RECEIVED") {
+        const { data: order } = await supabase
+          .from("orders")
+          .select("id, customer_id, total")
+          .eq("id", orderId)
+          .eq("customer_id", user.id)
+          .maybeSingle();
+
+        if (order && Math.abs(Number(order.total) - Number(amount)) <= 0.01) {
+          await supabase
+            .from("orders")
+            .update({ payment_status: "paid" })
+            .eq("id", orderId);
+        }
+      }
 
       return new Response(
         JSON.stringify({

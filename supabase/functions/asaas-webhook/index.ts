@@ -8,6 +8,14 @@ const supabaseAdmin = createClient(
 
 serve(async (req) => {
   try {
+    const configuredWebhookToken = Deno.env.get('ASAAS_WEBHOOK_TOKEN')
+    if (configuredWebhookToken) {
+      const webhookToken = req.headers.get('asaas-access-token') ?? req.headers.get('access_token')
+      if (webhookToken !== configuredWebhookToken) {
+        return new Response(JSON.stringify({ error: 'Unauthorized webhook' }), { status: 401 })
+      }
+    }
+
     const body = await req.json()
     console.log('Webhook received:', body)
 
@@ -30,6 +38,22 @@ serve(async (req) => {
         console.log('Transaction not found or already confirmed:', paymentId)
       } else if (transaction) {
         console.log('Payment confirmed and balance updated via trigger for:', paymentId)
+      }
+
+      if (payment.externalReference && !payment.externalReference.startsWith('recharge:')) {
+        const { data: order } = await supabaseAdmin
+          .from('orders')
+          .select('id, total')
+          .eq('id', payment.externalReference)
+          .maybeSingle()
+
+        if (order && Number(payment.value) > 0 &&
+            Math.abs(Number(order.total) - Number(payment.value)) <= 0.01) {
+          await supabaseAdmin
+            .from('orders')
+            .update({ payment_status: 'paid' })
+            .eq('id', order.id)
+        }
       }
     }
 

@@ -195,14 +195,11 @@ const AdminServiceProviders = () => {
         if (diff === 0) return;
 
         try {
-            const { error } = await supabase
-                .from("wallet_transactions")
-                .insert([{
-                    user_id: provider.user_id,
-                    amount: Math.abs(diff),
-                    type: diff > 0 ? "credit" : "debit",
-                    description: `Ajuste administrativo - Admin: ${user?.email}`
-                }]);
+            const { error } = await supabase.rpc("admin_adjust_wallet", {
+                p_user_id: provider.user_id,
+                p_amount: diff,
+                p_description: `Ajuste administrativo - Admin: ${user?.email}`
+            });
             
             if (error) throw error;
             
