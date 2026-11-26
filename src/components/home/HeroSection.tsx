@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Zap, Clock, Shield } from "lucide-react";
+import { Search } from "lucide-react";
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,18 +39,6 @@ const HeroSection = () => {
           </motion.div>
 
           <div className="text-left space-y-6 md:space-y-8">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="flex justify-center lg:justify-start"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-white text-sm font-bold border border-white/30 backdrop-blur-sm">
-                <Zap className="w-4 h-4 fill-white" />
-                <span>EXPRESS DELIVERY • 20 MIN</span>
-              </div>
-            </motion.div>
-
             <div className="hidden sm:block space-y-6">
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -92,25 +80,6 @@ const HeroSection = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-orange-400/20 rounded-[34px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.div>
 
-            {/* Feature Badges */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.9, ease: "easeOut" }}
-              className="flex flex-wrap items-center gap-6 pt-4"
-            >
-              {[
-                { icon: Clock, label: "Entrega em 20 min", color: "text-orange-600", bg: "bg-white" },
-                { icon: Shield, label: "Pagamento 100% Seguro", color: "text-blue-600", bg: "bg-white" },
-              ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-soft">
-                  <div className={`w-8 h-8 rounded-full ${feature.bg} flex items-center justify-center`}>
-                    <feature.icon className={`w-4 h-4 ${feature.color}`} />
-                  </div>
-                  <span className="text-sm font-bold text-gray-700">{feature.label}</span>
-                </div>
-              ))}
-            </motion.div>
           </div>
 
         </div>
