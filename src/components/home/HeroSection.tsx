@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Zap, Clock, Shield, Star } from "lucide-react";
+import { Search, Zap, Clock, Shield } from "lucide-react";
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,12 +23,27 @@ const HeroSection = () => {
       </div>
 
       <div className="container relative z-10 py-12">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="text-left space-y-8">
+        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-12 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -30, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="relative mx-auto w-full max-w-[520px]"
+          >
+            <div className="absolute inset-3 translate-x-3 translate-y-3 rounded-[32px] bg-white/10 blur-sm" />
+            <img
+              src="/Gemini_Generated_Image_twyfurtwyfurtwyf.jpg"
+              alt="Tudo da sua cidade em um único app"
+              className="relative w-full max-h-[560px] object-contain object-center rounded-[32px] shadow-elevated"
+            />
+          </motion.div>
+
+          <div className="text-left space-y-6 md:space-y-8">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
+              className="flex justify-center lg:justify-start"
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-white text-sm font-bold border border-white/30 backdrop-blur-sm">
                 <Zap className="w-4 h-4 fill-white" />
@@ -36,25 +51,7 @@ const HeroSection = () => {
               </div>
             </motion.div>
 
-            <div className="space-y-6">
-              <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight leading-[1.1] text-white">
-                <motion.span
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-                  className="block"
-                >
-                  Tudo da sua cidade
-                </motion.span>
-                <motion.span
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-                  className="block mt-2 text-white/90"
-                >
-                  em um único app.
-                </motion.span>
-              </h1>
+            <div className="hidden sm:block space-y-6">
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -116,63 +113,6 @@ const HeroSection = () => {
             </motion.div>
           </div>
 
-          {/* Hero Visual Elements */}
-          <div className="hidden lg:block relative">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="relative aspect-square max-w-[500px] ml-auto"
-            >
-              {/* Main Illustration Placeholder (Transparent PNG of food/bike would go here) */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-orange-400/10 rounded-[60px] transform rotate-6 border border-primary/5" />
-              <div className="absolute inset-0 bg-white shadow-2xl rounded-[60px] overflow-hidden border border-white flex items-center justify-center p-12">
-                <img
-                  src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000&auto=format&fit=crop"
-                  alt="Food"
-                  className="w-full h-full object-cover rounded-[40px] shadow-soft"
-                />
-              </div>
-
-              {/* Floating Elements */}
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-6 -right-6 glass-card p-4 rounded-3xl shadow-elevated flex items-center gap-3 border-white/40"
-              >
-                <div className="w-10 h-10 rounded-2xl bg-success/20 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-success fill-success" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-black text-success tracking-wider leading-none">Status</p>
-                  <p className="text-sm font-bold">Entrega Veloz</p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                className="absolute top-1/2 -left-12 glass-card p-4 rounded-3xl shadow-elevated flex items-center gap-3 border-white/40"
-              >
-                <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center">
-                  <Star className="w-5 h-5 text-orange-500 fill-orange-500" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-black text-orange-500 tracking-wider leading-none">Ranking</p>
-                  <p className="text-sm font-bold">Top da Região</p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -bottom-8 right-12 bg-white p-6 rounded-[32px] shadow-elevated border border-orange-50"
-              >
-                <p className="text-3xl font-black text-primary leading-tight">150+</p>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Opções Próximas</p>
-              </motion.div>
-            </motion.div>
-          </div>
         </div>
       </div>
     </section>
